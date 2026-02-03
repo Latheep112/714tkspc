@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">Calendar</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Calendar</li>
+{% endblock %}
+{% block content %}
+  <form class="row g-3 mb-3" method="get" action="{{ url_for('calendar') }}">
+    <div class="col-auto">
+      <label for="start" class="col-form-label">Start</label>
+    </div>
+    <div class="col-auto">
+      <input type="date" id="start" name="start" class="form-control" value="{{ start }}">
+    </div>
+    <div class="col-auto">
+      <label for="end" class="col-form-label">End</label>
+    </div>
+    <div class="col-auto">
+      <input type="date" id="end" name="end" class="form-control" value="{{ end }}">
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary">Filter</button>
+      <a href="{{ url_for('calendar') }}" class="btn btn-outline-secondary">Reset</a>
+    </div>
+  </form>
+
+  {% if dates %}
+    {% for d in dates %}
+      <div class="card mb-3">
+        <div class="card-header"><strong>{{ d }}</strong></div>
+        <ul class="list-group list-group-flush">
+          {% for s in (grouped.get(d) or []) %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <strong><i class="fas fa-book mr-1"></i>{{ s.course.name }}</strong> {% if s.title %}<span class="text-muted">• {{ s.title }}</span>{% endif %}
+              </div>
+              <div>
+                <a href="{{ url_for('mark_attendance', session_id=s.id) }}" class="btn btn-sm btn-info btn-icon"><i class="fas fa-clipboard-check"></i> Mark</a>
+                <a href="{{ url_for('attendance_report', session_id=s.id) }}" class="btn btn-sm btn-secondary btn-icon"><i class="fas fa-file-alt"></i> Report</a>
+              </div>
+            </li>
+          {% endfor %}
+          {% for b in (grouped_rb.get(d) or []) %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <strong><i class="fas fa-cube mr-1"></i>Resource: {{ b.resource.name }}</strong> {% if b.title %}<span class="text-muted">• {{ b.title }}</span>{% endif %}
+                <div class="small text-muted">{{ b.start_time }} → {{ b.end_time }}</div>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endfor %}
+  {# Removed duplicated resource block and unmatched tags #}
+  {% else %}
+    <p class="text-muted">No events in this range.</p>
+  {% endif %}
+{% endblock %}

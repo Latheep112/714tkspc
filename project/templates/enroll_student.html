@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">Enroll Students in {{ course.name }}</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('courses') }}">Courses</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Enroll</li>
+{% endblock %}
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <p class="text-muted mb-2">
+                        Capacity: {{ course.capacity if course.capacity is not none else 'Unlimited' }} •
+                        Currently Enrolled: {{ course.students|length }}
+                    </p>
+                    <form method="POST" action="">
+                        <div class="form-group">
+                            <label for="filter">Filter students</label>
+                            <input type="text" class="form-control" id="filter" placeholder="Type to filter by name">
+                        </div>
+                        <div class="form-group">
+                            <label for="students">Select Students</label>
+                            <select multiple class="form-control" id="students" name="students" size="10">
+                                {% for student in students %}
+                                    <option value="{{ student.id }}">{{ student.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple students.</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Enroll</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+      (function(){
+        var filter = document.getElementById('filter');
+        var select = document.getElementById('students');
+        if(filter && select){
+          filter.addEventListener('input', function(){
+            var term = filter.value.toLowerCase();
+            Array.from(select.options).forEach(function(opt){
+              var show = opt.text.toLowerCase().indexOf(term) !== -1;
+              opt.style.display = show ? '' : 'none';
+            });
+          });
+        }
+      })();
+    </script>
+{% endblock %}

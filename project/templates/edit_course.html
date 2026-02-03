@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">{{ title }}</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('courses') }}">Courses</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Edit</li>
+{% endblock %}
+{% block content %}
+    <form method="POST" action="">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ course.name }}" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea class="form-control" id="description" name="description">{{ course.description }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="code">Course Code</label>
+            <input type="text" class="form-control" id="code" name="code" value="{{ course.code }}">
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="department">Department</label>
+                    <input type="text" class="form-control" id="department" name="department" value="{{ course.department or '' }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="semester">Semester</label>
+                    <input type="text" class="form-control" id="semester" name="semester" value="{{ course.semester or '' }}">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="level">Level</label>
+                    <select class="form-control" id="level" name="level">
+                        <option value="">Select Level</option>
+                        {% for lvl in ['Undergraduate', 'Postgraduate', 'Diploma', 'Certification'] %}
+                        <option value="{{ lvl }}" {% if course.level == lvl %}selected{% endif %}>{{ lvl }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="syllabus_url">Syllabus URL</label>
+                    <input type="url" class="form-control" id="syllabus_url" name="syllabus_url" value="{{ course.syllabus_url or '' }}" placeholder="https://example.com/syllabus.pdf">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="course_type">Course Type</label>
+                    <select class="form-control" id="course_type" name="course_type">
+                        <option value="">Select Type</option>
+                        {% for ct in ['Core', 'Elective', 'Lab', 'Seminar'] %}
+                        <option value="{{ ct }}" {% if course.course_type == ct %}selected{% endif %}>{{ ct }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="academic_year">Academic Year</label>
+                    <input type="text" class="form-control" id="academic_year" name="academic_year" value="{{ course.academic_year or '' }}" placeholder="e.g. 2023-2024">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="start_date">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ course.start_date or '' }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="end_date">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ course.end_date or '' }}">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="prerequisites">Prerequisites</label>
+            <textarea class="form-control" id="prerequisites" name="prerequisites" rows="2">{{ course.prerequisites or '' }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="learning_outcomes">Learning Outcomes</label>
+            <textarea class="form-control" id="learning_outcomes" name="learning_outcomes" rows="3">{{ course.learning_outcomes or '' }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="credits">Credits</label>
+            <input type="number" class="form-control" id="credits" name="credits" min="0" value="{{ course.credits }}">
+        </div>
+        <div class="form-group">
+            <label for="teacher">Teacher</label>
+            <select class="form-control" id="teacher" name="teacher" required>
+                {% for teacher in teachers %}
+                    {% if teacher.id == course.teacher_id %}
+                        <option value="{{ teacher.id }}" selected>{{ teacher.name }}</option>
+                    {% else %}
+                        <option value="{{ teacher.id }}">{{ teacher.name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="room">Room</label>
+            <input type="text" class="form-control" id="room" name="room" value="{{ course.room or '' }}">
+        </div>
+        <div class="form-group">
+            <label for="capacity">Capacity</label>
+            <input type="number" class="form-control" id="capacity" name="capacity" min="0" value="{{ course.capacity }}">
+        </div>
+        <div class="form-group">
+            <label for="schedule_notes">Schedule Notes</label>
+            <textarea class="form-control" id="schedule_notes" name="schedule_notes">{{ course.schedule_notes or '' }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Update Course</button>
+    </form>
+{% endblock %}

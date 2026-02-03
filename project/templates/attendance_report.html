@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">{{ title }} for {{ course.name }} on {{ course_session.session_date }}</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('courses') }}">Courses</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('course_sessions', course_id=course.id) }}">Sessions</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Report</li>
+{% endblock %}
+{% block content %}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h6 class="card-title text-muted">Total Students</h6>
+                    <h2 class="mb-0">{{ total }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Present</h6>
+                    <h2 class="mb-0">{{ present|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Late / Excused</h6>
+                    <h2 class="mb-0">{{ late|length + excused|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h6 class="card-title">Attendance Rate</h6>
+                    <h2 class="mb-0">{{ attendance_rate|round(1) }}%</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Present ({{ present|length }})</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for r in present %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ r.student.name }}
+                        {% if r.remarks %}<small class="text-muted">{{ r.remarks }}</small>{% endif %}
+                    </li>
+                    {% endfor %}
+                    {% if not present %}<li class="list-group-item text-muted text-center">None</li>{% endif %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">Late/Excused ({{ late|length + excused|length }})</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for r in late %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            {{ r.student.name }} <span class="badge bg-secondary">Late</span>
+                        </div>
+                        {% if r.remarks %}<small class="text-muted">{{ r.remarks }}</small>{% endif %}
+                    </li>
+                    {% endfor %}
+                    {% for r in excused %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            {{ r.student.name }} <span class="badge bg-info">Excused</span>
+                        </div>
+                        {% if r.remarks %}<small class="text-muted">{{ r.remarks }}</small>{% endif %}
+                    </li>
+                    {% endfor %}
+                    {% if not late and not excused %}<li class="list-group-item text-muted text-center">None</li>{% endif %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Absent ({{ absent|length }})</h5>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for r in absent %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ r.student.name }}
+                        {% if r.remarks %}<small class="text-muted">{{ r.remarks }}</small>{% endif %}
+                    </li>
+                    {% endfor %}
+                    {% if not absent %}<li class="list-group-item text-muted text-center">None</li>{% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <a href="{{ url_for('course_sessions', course_id=course.id) }}" class="btn btn-secondary">Back to Sessions</a>
+        <a href="{{ url_for('session_attendance_csv', session_id=course_session.id) }}" class="btn btn-outline-primary">Export CSV</a>
+    </div>
+{% endblock %}

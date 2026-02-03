@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% block page_title %}<h2 class="mb-0">Profile</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Profile</li>
+{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="h6 text-muted">Account</div>
+        <div class="h5 mb-2">{{ (user and user.username) or session.get('user') }}</div>
+        <span class="badge bg-secondary text-uppercase">{{ role }}</span>
+        <div class="mt-3">
+          {% if photo_url %}
+          <img src="{{ photo_url }}" alt="Profile Photo" class="img-thumbnail" style="max-width: 180px;">
+          {% else %}
+          <div class="text-muted">No profile photo</div>
+          {% endif %}
+        </div>
+        <form class="mt-3" method="post" action="{{ url_for('upload_profile_photo') }}" enctype="multipart/form-data">
+          <div class="input-group">
+            <input type="file" name="photo" class="form-control" accept="image/png, image/jpeg" required>
+            <button type="submit" class="btn btn-outline-primary">Upload</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% if role == 'student' and student %}
+  <div class="col-md-8">
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="h6 text-muted">Student Details</div>
+        <div class="row">
+          <div class="col-md-6">
+            <div><strong>Name:</strong> {{ student.name }}</div>
+            <div><strong>Email:</strong> {{ student.email }}</div>
+            <div><strong>Phone:</strong> {{ student.phone }}</div>
+            <div><strong>Roll #:</strong> {{ student.roll_number or '-' }}</div>
+            <div><strong>Year/Sem/Sec:</strong> {{ student.current_year or '-' }} / {{ student.current_semester or '-' }} / {{ student.section or '-' }}</div>
+            <div><strong>Status:</strong> {{ student.status }}</div>
+          </div>
+          <div class="col-md-6">
+            <div><strong>DOB:</strong> {{ student.date_of_birth or '-' }}</div>
+            <div><strong>Admission Date:</strong> {{ student.admission_date or '-' }}</div>
+            <div><strong>Department:</strong> {{ student.department or '-' }}</div>
+            <div><strong>Father:</strong> {{ student.father_name or '-' }}</div>
+            <div><strong>Mother:</strong> {{ student.mother_name or '-' }}</div>
+            <div><strong>Guardian:</strong> {{ student.guardian_name or '-' }}</div>
+            <div><strong>Guardian Phone:</strong> {{ student.guardian_phone or '-' }}</div>
+          </div>
+        </div>
+        <div class="row mt-2 border-top pt-2">
+          <div class="col-md-6">
+            <div><strong>Emergency Contact:</strong> {{ student.emergency_contact_name or '-' }}</div>
+            <div><strong>Emergency Phone:</strong> {{ student.emergency_contact_phone or '-' }}</div>
+            <div><strong>Nationality:</strong> {{ student.nationality or '-' }}</div>
+            <div><strong>Blood Group:</strong> {{ student.blood_group or '-' }}</div>
+          </div>
+          <div class="col-md-6">
+            <div><strong>Religion:</strong> {{ student.religion or '-' }}</div>
+            <div><strong>Community:</strong> {{ student.community or '-' }}</div>
+            <div><strong>Previous School:</strong> {{ student.previous_school or '-' }}</div>
+            <div><strong>SSLC Marks:</strong> {{ student.sslc_marks or '-' }}</div>
+            <div><strong>HSC Marks:</strong> {{ student.hsc_marks or '-' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="h6 text-muted">Enrolled Courses</div>
+        {% if student.courses %}
+        <ul class="list-unstyled mb-0">
+          {% for c in student.courses %}
+          <li><a href="{{ url_for('course_details', course_id=c.id) }}">{{ c.name }}</a></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-muted">No courses enrolled.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% elif role in ['faculty','teacher'] and teacher %}
+  <div class="col-md-8">
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="h6 text-muted">Faculty Details</div>
+        <div class="row">
+          <div class="col-md-6">
+            <div><strong>Name:</strong> {{ teacher.name }}</div>
+            <div><strong>Email:</strong> {{ teacher.email }}</div>
+            <div><strong>Phone:</strong> {{ teacher.phone }}</div>
+            <div><strong>Department:</strong> {{ teacher.department or '-' }}</div>
+            <div><strong>Designation:</strong> {{ teacher.designation or '-' }}</div>
+            <div><strong>Experience:</strong> {{ teacher.experience_years or '0' }} yrs</div>
+          </div>
+          <div class="col-md-6">
+            <div><strong>DOB:</strong> {{ teacher.date_of_birth or '-' }}</div>
+            <div><strong>Joining Date:</strong> {{ teacher.joining_date or '-' }}</div>
+            <div><strong>Qualification:</strong> {{ teacher.qualification or '-' }}</div>
+            <div><strong>Expertise:</strong> {{ teacher.subject_expertise or '-' }}</div>
+            <div><strong>Office Hours:</strong> {{ teacher.office_hours or '-' }}</div>
+            <div><strong>Employment:</strong> {{ teacher.employment_status or '-' }}</div>
+          </div>
+        </div>
+        <div class="row mt-2 border-top pt-2">
+          <div class="col-md-6">
+            <div><strong>PAN Number:</strong> {{ teacher.pan_number or '-' }}</div>
+          </div>
+          <div class="col-md-6">
+            <div><strong>Aadhaar Number:</strong> {{ teacher.aadhaar_number or '-' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="h6 text-muted">Assigned Courses</div>
+        {% if teacher.courses %}
+        <ul class="list-unstyled mb-0">
+          {% for c in teacher.courses %}
+          <li><a href="{{ url_for('course_details', course_id=c.id) }}">{{ c.name }}</a></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-muted">No courses assigned.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-body">
+        <div class="h6 text-muted">Profile</div>
+        <div>Welcome, {{ user.username }}.</div>
+        {% if role == 'admin' %}
+        <div class="mt-2">
+          <a class="btn btn-outline-primary btn-sm me-2" href="{{ url_for('admin_users') }}">Manage Users</a>
+          <a class="btn btn-outline-secondary btn-sm me-2" href="{{ url_for('admin_policies') }}">Policies</a>
+          <a class="btn btn-outline-info btn-sm me-2" href="{{ url_for('admin_parent_links') }}">Parent Links</a>
+        </div>
+        {% elif role == 'staff' %}
+        <div class="mt-2">
+          <a class="btn btn-outline-primary btn-sm me-2" href="{{ url_for('students') }}">Students</a>
+          <a class="btn btn-outline-primary btn-sm me-2" href="{{ url_for('courses') }}">Courses</a>
+          <a class="btn btn-outline-primary btn-sm me-2" href="{{ url_for('admissions') }}">Admissions</a>
+          <a class="btn btn-outline-primary btn-sm me-2" href="{{ url_for('resources') }}">Resources</a>
+        </div>
+        {% elif role == 'parent' %}
+        <div class="h6 text-muted">Linked Students</div>
+        {% if parent_students %}
+        <ul class="list-unstyled mb-0">
+          {% for s in parent_students %}
+          <li>
+            <a href="{{ url_for('student_courses', student_id=s.id) }}">{{ s.name }}</a>
+            <span class="text-muted"> • </span>
+            <a href="{{ url_for('student_attendance_summary', student_id=s.id) }}">Attendance</a>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-muted">No linked students. Contact admin to link your account.</div>
+        {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

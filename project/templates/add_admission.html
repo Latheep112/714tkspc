@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">New Application</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('admissions') }}">Admissions</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Add</li>
+{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-3">
+  <a href="{{ url_for('admissions') }}" class="btn btn-link ms-auto">Back to Admissions</a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form method="post" action="{{ url_for('add_admission') }}" enctype="multipart/form-data">
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" class="form-control" required>
+        </div>
+        <div class="form-group col-md-4">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" class="form-control" required>
+        </div>
+        <div class="form-group col-md-4">
+          <label for="phone">Phone</label>
+          <input type="text" id="phone" name="phone" class="form-control">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <label for="gender">Gender</label>
+          <select id="gender" name="gender" class="form-control">
+            <option value="">Select</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group col-md-4">
+          <label for="father_name">Father's Name</label>
+          <input type="text" id="father_name" name="father_name" class="form-control">
+        </div>
+        <div class="form-group col-md-4">
+          <label for="mother_name">Mother's Name</label>
+          <input type="text" id="mother_name" name="mother_name" class="form-control">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-3">
+          <label for="sslc_marks">SSLC Marks</label>
+          <input type="number" id="sslc_marks" name="sslc_marks" class="form-control" min="0" max="600" required>
+        </div>
+        <div class="form-group col-md-3">
+          <label for="hsc_marks">HSC Marks</label>
+          <input type="number" id="hsc_marks" name="hsc_marks" class="form-control" min="0" max="1200" required>
+        </div>
+        <div class="form-group col-md-6">
+          <label for="previous_school">Previous School</label>
+          <input type="text" id="previous_school" name="previous_school" class="form-control">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="community">Community</label>
+          <select id="community" name="community" class="form-control" required>
+            <option value="">Select</option>
+            <option>OC</option>
+            <option>BC</option>
+            <option>MBC</option>
+            <option>SC</option>
+            <option>ST</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group col-md-6">
+          <label for="religion">Religion</label>
+          <select id="religion" name="religion" class="form-control" required>
+            <option value="">Select</option>
+            <option>Hindu</option>
+            <option>Muslim</option>
+            <option>Christian</option>
+            <option>Sikh</option>
+            <option>Buddhist</option>
+            <option>Jain</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="emergency_contact_name">Emergency Contact Name</label>
+          <input type="text" id="emergency_contact_name" name="emergency_contact_name" class="form-control">
+        </div>
+        <div class="form-group col-md-6">
+          <label for="emergency_contact_phone">Emergency Contact Phone</label>
+          <input type="text" id="emergency_contact_phone" name="emergency_contact_phone" class="form-control">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="requested_course">Requested Course</label>
+          <select id="requested_course" name="requested_course" class="form-control" required>
+            <option value="">Select a course</option>
+            {% for c in courses %}
+            <option value="{{ c.id }}">{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group col-md-6">
+          <label for="photo">Photo</label>
+          <input type="file" id="photo" name="photo" class="form-control" accept="image/*">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <label for="date_of_birth">Date of Birth</label>
+          <input type="date" id="date_of_birth" name="date_of_birth" class="form-control">
+        </div>
+        <div class="form-group col-md-4">
+          <label for="nationality">Nationality</label>
+          <input type="text" id="nationality" name="nationality" class="form-control" placeholder="e.g. Indian">
+        </div>
+        <div class="form-group col-md-4">
+          <label for="blood_group">Blood Group</label>
+          <select id="blood_group" name="blood_group" class="form-control">
+            <option value="">Select</option>
+            <option>A+</option>
+            <option>A-</option>
+            <option>B+</option>
+            <option>B-</option>
+            <option>O+</option>
+            <option>O-</option>
+            <option>AB+</option>
+            <option>AB-</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-12">
+          <label for="address">Address</label>
+          <input type="text" id="address" name="address" class="form-control">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <label for="guardian_name">Guardian Name</label>
+          <input type="text" id="guardian_name" name="guardian_name" class="form-control">
+        </div>
+        <div class="form-group col-md-4">
+          <label for="guardian_phone">Guardian Phone</label>
+          <input type="text" id="guardian_phone" name="guardian_phone" class="form-control">
+        </div>
+        <div class="form-group col-md-4">
+          <label for="guardian_email">Guardian Email</label>
+          <input type="email" id="guardian_email" name="guardian_email" class="form-control">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="Optional"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit Application</button>
+    </form>
+  </div>
+  </div>
+{% endblock %}

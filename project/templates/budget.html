@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block page_title %}<h2 class="mb-0">Budget</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Budget</li>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <form class="form-inline" method="post" action="{{ url_for('finance_budget') }}">
+    <label class="mr-2">Category</label>
+    <input type="text" name="category" class="form-control form-control-sm mr-2" placeholder="e.g., Labs" required>
+    <label class="mr-2">Type</label>
+    <select name="type" class="form-control form-control-sm mr-2" required>
+      <option value="income">income</option>
+      <option value="expense">expense</option>
+    </select>
+    <label class="mr-2">Amount</label>
+    <input type="number" step="0.01" name="amount" class="form-control form-control-sm mr-2" required>
+    <label class="mr-2">Currency</label>
+    <input type="text" name="currency" class="form-control form-control-sm mr-2" value="{{ config.DEFAULT_CURRENCY }}" style="width: 60px;" required>
+    <input type="text" name="note" class="form-control form-control-sm mr-2" placeholder="note">
+    <button type="submit" class="btn btn-sm btn-primary">Add</button>
+  </form>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-header">Categories & Totals</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped table-hover mb-0">
+            <thead>
+              <tr>
+                <th style="min-width: 150px;">Category</th>
+                <th style="min-width: 100px;">Income</th>
+                <th style="min-width: 100px;">Expense</th>
+                <th style="min-width: 100px;">Net</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in categories %}
+              <tr>
+                <td>{{ c.name }}</td>
+                <td>{{ totals[c.id].income }}</td>
+                <td>{{ totals[c.id].expense }}</td>
+                <td>{{ totals[c.id].net }}</td>
+              </tr>
+              {% endfor %}
+              {% if categories|length == 0 %}
+              <tr>
+                <td colspan="4" class="text-muted p-3">No categories yet.</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-header">Recent Transactions</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped table-hover mb-0">
+            <thead>
+              <tr>
+                <th style="min-width: 150px;">Date</th>
+                <th style="min-width: 120px;">Category</th>
+                <th style="min-width: 80px;">Type</th>
+                <th style="min-width: 120px;">Amount</th>
+                <th style="min-width: 150px;">Note</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in recent %}
+              <tr>
+                <td>{{ t.occurred_at }}</td>
+                <td>{{ t.category.name }}</td>
+                <td><span class="badge bg-{{ 'success' if t.type=='income' else 'danger' }}">{{ t.type }}</span></td>
+                <td>{{ t.amount }} {{ t.currency }}</td>
+                <td class="text-monospace">{{ t.note }}</td>
+              </tr>
+              {% endfor %}
+              {% if recent|length == 0 %}
+              <tr>
+                <td colspan="5" class="text-muted p-3">No transactions yet.</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

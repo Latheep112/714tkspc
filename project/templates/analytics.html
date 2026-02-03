@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">Analytics</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Analytics</li>
+{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-3">
+  <span class="ml-auto text-muted">SIS overview</span>
+</div>
+
+<div class="row">
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="h6 text-muted">Total Students</div>
+        <div class="h3">{{ total_students }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="h6 text-muted">Total Courses</div>
+        <div class="h3">{{ total_courses }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="h6 text-muted">Average GPA</div>
+        <div class="h3">{% if avg_gpa is not none %}{{ '%.2f'|format(avg_gpa) }}{% else %}-{% endif %}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="h6 text-muted">Average Attendance</div>
+    <div class="h4">{% if avg_attendance is not none %}{{ '%.1f'|format(avg_attendance) }}%{% else %}-{% endif %}</div>
+  </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="mb-0">Resources</h2>
+  {% if session.get('role') == 'admin' %}
+  <form class="form-inline" method="post" action="{{ url_for('resources_add') }}">
+    <input type="text" name="name" class="form-control form-control-sm mr-2" placeholder="Name" required>
+    <select name="type" class="form-control form-control-sm mr-2" required>
+      <option value="lab">Lab</option>
+      <option value="classroom">Classroom</option>
+      <option value="equipment">Equipment</option>
+    </select>
+    <input type="number" name="capacity" class="form-control form-control-sm mr-2" placeholder="Capacity">
+    <input type="text" name="location" class="form-control form-control-sm mr-2" placeholder="Location">
+    <select name="status" class="form-control form-control-sm mr-2">
+      <option value="available">Available</option>
+      <option value="unavailable">Unavailable</option>
+      <option value="maintenance">Maintenance</option>
+    </select>
+    <input type="text" name="tags" class="form-control form-control-sm mr-2" placeholder="Tags (comma-separated)">
+    <button type="submit" class="btn btn-sm btn-primary">Add Resource</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-header">All Resources</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Capacity</th>
+                <th>Location</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in resources %}
+              <tr>
+                <td>{{ r.name }}</td>
+                <td>{{ r.type }}</td>
+                <td>{{ r.capacity or '-' }}</td>
+                <td>{{ r.location or '' }}</td>
+                </tr>
+                <tr>
+                  <td colspan="4" class="small text-muted">
+                    Status: {{ r.status }}{% if r.tags %} • Tags: {{ r.tags }}{% endif %}
+                  </td>
+              </tr>
+              {% endfor %}
+              {% if resources|length == 0 %}
+              <tr>
+                <td colspan="4" class="text-muted p-3">No resources yet.</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Upcoming Bookings</span>
+        {% if session.get('role') in ['faculty','teacher','admin'] %}
+        <form class="form-inline" method="post" action="{{ url_for('resources_book') }}">
+          <select name="resource_id" class="form-control form-control-sm mr-2" required>
+            {% for r in resources %}
+            <option value="{{ r.id }}">{{ r.name }} ({{ r.type }})</option>
+            {% endfor %}
+          </select>
+          <input type="text" name="title" class="form-control form-control-sm mr-2" placeholder="Title" required>
+          <input type="datetime-local" name="start_time" class="form-control form-control-sm mr-2" required>
+          <input type="datetime-local" name="end_time" class="form-control form-control-sm mr-2" required>
+          <button type="submit" class="btn btn-sm btn-success">Book</button>
+        </form>
+        {% endif %}
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Start</th>
+                <th>End</th>
+                <th>Resource</th>
+                <th>Title</th>
+                <th>Booked By</th>
+                <th>Approval</th>
+              </tr>
+            </thead>
+            <tbody>
+               {% for b in bookings %}
+               <tr>
+                 <td>{{ b.start_time }}</td>
+                 <td>{{ b.end_time }}</td>
+                 <td>{{ b.resource.name }}</td>
+                 <td>{{ b.title }}</td>
+                 <td>{{ b.booked_by }}</td>
+                <td>
+                  {% set status = approval_map.get(b.id) %}
+                  {% if status is true %}
+                  <span class="badge bg-success">Approved</span>
+                  {% elif status is none %}
+                  <span class="badge bg-secondary">Unreviewed</span>
+                  {% else %}
+                  <span class="badge bg-warning">Pending</span>
+                  {% endif %}
+                </td>
+               </tr>
+               {% endfor %}
+               {% if bookings|length == 0 %}
+               <tr>
+                 <td colspan="6" class="text-muted p-3">No upcoming bookings.</td>
+               </tr>
+               {% endif %}
+             </tbody>
+           </table>
+         </div>
+       </div>
+     </div>
+   </div>
+ </div>
+
+{% if session.get('role') == 'admin' %}
+<div class="card">
+  <div class="card-header">Pending Approvals</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th>Start</th>
+            <th>End</th>
+            <th>Resource</th>
+            <th>Title</th>
+            <th>Booked By</th>
+            <th style="min-width: 250px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in pending %}
+          <tr>
+            <td>{{ b.start_time }}</td>
+            <td>{{ b.end_time }}</td>
+            <td>{{ b.resource.name }}</td>
+            <td>{{ b.title }}</td>
+            <td>{{ b.booked_by }}</td>
+            <td class="text-nowrap">
+              <form method="post" action="{{ url_for('resources_approve', booking_id=b.id) }}" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-success btn-icon"><i class="fas fa-check"></i> Approve</button>
+              </form>
+              <form method="post" action="{{ url_for('resources_reject', booking_id=b.id) }}" class="d-inline ms-1">
+                <button type="submit" class="btn btn-sm btn-outline-danger btn-icon"><i class="fas fa-times"></i> Reject</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+          {% if pending|length == 0 %}
+          <tr><td colspan="6" class="text-muted p-3">No pending bookings.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

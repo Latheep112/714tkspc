@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block page_title %}<h2 class="mb-0">Course Plan: {{ course.name }}</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('courses') }}">Courses</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Plan</li>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <a class="btn btn-sm btn-secondary" href="{{ url_for('courses') }}">Back to Courses</a>
+  </div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-header">Summary</div>
+      <div class="card-body">
+        <ul class="list-unstyled mb-0">
+          <li><strong>Credits:</strong> {{ credits }}</li>
+          <li><strong>Hours per credit:</strong> {{ hours_per_credit }}</li>
+          <li><strong>Default session hours:</strong> {{ default_hours }}</li>
+          <li><strong>Required total hours:</strong> {{ required_hours }}</li>
+          <li><strong>Required sessions:</strong> {{ required_sessions }}</li>
+          <li><strong>Actual hours:</strong> {{ actual_hours }}</li>
+          <li><strong>Actual sessions:</strong> {{ actual_sessions }}</li>
+          <li><strong>Status:</strong>
+            {% if status == 'behind' %}
+              <span class="badge bg-danger">Behind plan</span>
+            {% elif status == 'ahead' %}
+              <span class="badge bg-warning">Ahead of plan</span>
+            {% else %}
+              <span class="badge bg-success">On track</span>
+            {% endif %}
+          </li>
+        </ul>
+        <div class="mt-3">
+          <a class="btn btn-sm btn-primary" href="{{ url_for('course_plan_suggest', course_id=course.id) }}">Suggest remaining sessions</a>
+        </div>
+      </div>
+      <div class="card-footer text-muted">Configure with env: HOURS_PER_CREDIT, SESSION_DEFAULT_DURATION_HOURS</div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-header">Scheduled Sessions</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Title</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in sessions %}
+              <tr>
+                <td>{{ s.session_date.isoformat() }}</td>
+                <td>{{ s.title or '' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if suggestions is not none %}
+<div class="card">
+  <div class="card-header">Suggested Sessions</div>
+  <div class="card-body p-0">
+    {% if suggestions %}
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in suggestions %}
+          <tr>
+            <td>{{ s.date.isoformat() }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="p-3 d-flex justify-content-end">
+      <form method="post" action="{{ url_for('course_plan_apply', course_id=course.id) }}" class="mb-0">
+        <button type="submit" class="btn btn-sm btn-success">Apply Suggested Sessions</button>
+      </form>
+    </div>
+    {% else %}
+    <div class="p-3 text-muted">No suggestions needed. Course meets plan.</div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

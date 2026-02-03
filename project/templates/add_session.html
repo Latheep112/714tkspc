@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">{{ title }} for {{ course.name }}</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('courses') }}">Courses</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('course_sessions', course_id=course.id) }}">Sessions</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Add</li>
+{% endblock %}
+{% block content %}
+    <form method="POST" action="">
+        <div class="form-group">
+            <label for="session_date">Date</label>
+            <input type="date" class="form-control" id="session_date" name="session_date" value="{{ session_obj.session_date if session_obj else '' }}" required>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="start_time">Start Time</label>
+                    <input type="time" class="form-control" id="start_time" name="start_time" value="{{ session_obj.start_time if session_obj else '' }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="end_time">End Time</label>
+                    <input type="time" class="form-control" id="end_time" name="end_time" value="{{ session_obj.end_time if session_obj else '' }}">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="location">Location</label>
+            <input type="text" class="form-control" id="location" name="location" value="{{ session_obj.location or '' }}" placeholder="e.g. Room 302, Online">
+        </div>
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ session_obj.title or '' }}" placeholder="e.g. Introduction to Algorithms">
+        </div>
+        <button type="submit" class="btn btn-primary">{{ 'Update' if session_obj else 'Create' }} Session</button>
+    </form>
+{% endblock %}

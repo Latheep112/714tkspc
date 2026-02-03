@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block page_title %}<h2 class="mb-0">Parent Links</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('admin_users') }}">Users</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Parent Links</li>
+{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-header">Add Link</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('admin_parent_links') }}">
+          <div class="form-group">
+            <label for="parent_username">Parent Username</label>
+            <input type="text" class="form-control" id="parent_username" name="parent_username" required>
+          </div>
+          <div class="form-group">
+            <label for="student_email">Student Email</label>
+            <input type="email" class="form-control" id="student_email" name="student_email" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Link Parent to Student</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">Existing Links</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-striped table-sm mb-0">
+            <thead>
+              <tr>
+                <th style="min-width: 200px;">Parent</th>
+                <th style="min-width: 200px;">Student</th>
+                <th style="min-width: 100px;" class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for l in links %}
+              <tr>
+                <td>
+                  {% if photos.get(l.parent_username) %}
+                  <img src="{{ photos[l.parent_username] }}" class="rounded-circle me-1" style="width: 24px; height: 24px;" alt="{{ l.parent_username }}">
+                  {% else %}
+                  <span class="badge bg-secondary rounded-circle me-1" style="width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px;">{{ l.parent_username[0]|upper }}</span>
+                  {% endif %}
+                  {{ l.parent_username }}
+                </td>
+                <td>
+                  {% if photos.get(l.student.email) %}
+                  <img src="{{ photos[l.student.email] }}" class="rounded-circle me-1" style="width: 24px; height: 24px;" alt="{{ l.student.name }}">
+                  {% else %}
+                  <span class="badge bg-secondary rounded-circle me-1" style="width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px;">{{ l.student.name[0]|upper }}</span>
+                  {% endif %}
+                  {{ l.student.name }}
+                </td>
+                <td class="text-end text-nowrap">
+                  <form method="post" action="{{ url_for('admin_parent_links_delete', link_id=l.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+              {% if not links %}
+              <tr>
+                <td colspan="3" class="text-center text-muted">No links.</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

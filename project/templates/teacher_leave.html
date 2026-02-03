@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center mb-3">
+  <h4 class="mb-0">{{ teacher.name }} — Leave</h4>
+  <a href="{{ url_for('teachers') }}" class="btn btn-link ml-auto">Back to Teachers</a>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="post" action="{{ url_for('teacher_leave', teacher_id=teacher.id) }}">
+      <div class="form-row">
+        <div class="form-group col-md-3">
+          <label for="start_date">Start date</label>
+          <input type="date" id="start_date" name="start_date" class="form-control" required>
+        </div>
+        <div class="form-group col-md-3">
+          <label for="end_date">End date</label>
+          <input type="date" id="end_date" name="end_date" class="form-control" required>
+        </div>
+        <div class="form-group col-md-4">
+          <label for="reason">Reason</label>
+          <input type="text" id="reason" name="reason" class="form-control" placeholder="Optional">
+        </div>
+        {% if session.get('role') == 'admin' %}
+        <div class="form-group col-md-2">
+          <div class="form-check mt-4">
+            <input type="checkbox" id="approved" name="approved" class="form-check-input">
+            <label for="approved" class="form-check-label">Approved</label>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      <button type="submit" class="btn btn-primary">Add Leave</button>
+    </form>
+  </div>
+  <div class="card-footer text-muted">Approved leave prevents session scheduling on those dates.</div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Leave history</h5>
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <thead>
+          <tr>
+            <th style="min-width: 120px;">Start</th>
+            <th style="min-width: 120px;">End</th>
+            <th style="min-width: 200px;">Reason</th>
+            <th style="min-width: 100px;">Approved</th>
+            <th style="min-width: 100px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for leave in leaves %}
+          <tr>
+            <td>{{ leave.start_date }}</td>
+            <td>{{ leave.end_date }}</td>
+            <td>{{ leave.reason or '-' }}</td>
+            <td>
+              {% if leave.approved %}
+                <span class="badge bg-success">Yes</span>
+              {% else %}
+                <span class="badge bg-secondary">No</span>
+              {% endif %}
+            </td>
+            <td class="text-nowrap">
+              {% if session.get('role') == 'admin' %}
+              <form method="post" action="{{ url_for('delete_teacher_leave', teacher_id=teacher.id, leave_id=leave.id) }}" class="d-inline">
+                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this leave entry?');">Delete</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          {% if not leaves %}
+          <tr>
+            <td colspan="5" class="text-center text-muted">No leave entries.</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  </div>
+{% endblock %}

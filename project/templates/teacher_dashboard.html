@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+    {% if photo_url %}
+    <img src="{{ photo_url }}" alt="{{ teacher.name }} avatar" class="rounded-circle me-3" style="width:64px;height:64px;object-fit:cover;border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    {% else %}
+    <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center me-3" style="width:64px;height:64px;font-size: 24px; font-weight: bold; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        {{ teacher.name[0]|upper }}
+    </div>
+    {% endif %}
+    <h2 class="mb-0">Welcome, {{ teacher.name }}</h2>
+    <span class="badge bg-info ms-3">Faculty</span>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm bg-light">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <small class="text-muted d-block">Department</small>
+                        <strong>{{ teacher.department or 'N/A' }}</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted d-block">Designation</small>
+                        <strong>{{ teacher.designation or 'N/A' }}</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted d-block">Qualification</small>
+                        <strong>{{ teacher.qualification or 'N/A' }}</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted d-block">Subject Expertise</small>
+                        <strong>{{ teacher.subject_expertise or 'N/A' }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card text-center mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Active Courses</h5>
+                <h2 class="display-4">{{ active_courses_count }}</h2>
+                <a href="{{ url_for('courses') }}" class="btn btn-outline-primary btn-sm mt-2">View Courses</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Weekly Hours</h5>
+                <h2 class="display-4">{{ weekly_hours }}</h2>
+                <small class="text-muted">Target: {{ max_weekly_hours }} hrs</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Pending Leaves</h5>
+                <h2 class="display-4">{{ pending_leaves_count }}</h2>
+                <a href="{{ url_for('teacher_leave', teacher_id=teacher.id) }}" class="btn btn-outline-primary btn-sm mt-2">Manage Leave</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-white font-weight-bold">
+                <i class="fas fa-calendar-alt me-2"></i>Upcoming Schedule
+            </div>
+            <div class="list-group list-group-flush">
+                {% for session in upcoming_sessions %}
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ session.course.name }}</h6>
+                        <small class="fw-bold">{{ session.session_date.strftime('%b %d') }}</small>
+                    </div>
+                    <p class="mb-1 text-muted small">{{ session.title or 'Regular Session' }}</p>
+                    <small class="text-muted">{{ session.course.code or '' }}</small>
+                </div>
+                {% else %}
+                <div class="list-group-item text-muted">No upcoming sessions scheduled.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-white font-weight-bold">
+                <i class="fas fa-users me-2"></i>My Tutees
+            </div>
+            <div class="list-group list-group-flush">
+                {% for tutee in teacher.tutees %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">{{ tutee.name }}</h6>
+                        <small class="text-muted">{{ tutee.email }} • {{ tutee.department or 'No Dept' }}</small>
+                    </div>
+                    <a href="{{ url_for('edit_student', student_id=tutee.id) }}" class="btn btn-sm btn-light">Details</a>
+                </div>
+                {% else %}
+                <div class="list-group-item text-muted">No tutees assigned.</div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header bg-white font-weight-bold">
+                <i class="fas fa-check-square me-2"></i>Recent Attendance Status
+            </div>
+            <div class="list-group list-group-flush">
+                {% for session in recent_sessions %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">{{ session.course.name }}</h6>
+                        <small class="text-muted">{{ session.session_date.strftime('%b %d') }} • {{ session.title }}</small>
+                    </div>
+                    {% if session.attendance_marked %}
+                        <div class="text-end">
+                            <span class="badge bg-success">Marked</span>
+                            <div class="small text-muted mt-1">{{ session.stats }}</div>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('mark_attendance', session_id=session.id) }}" class="btn btn-sm btn-warning">Mark Now</a>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="list-group-item text-muted">No recent sessions found.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

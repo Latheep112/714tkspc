@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+    <h2>{{ title }}</h2>
+    <form method="POST" action="">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ teacher.name }}" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ teacher.email }}" required>
+        </div>
+        <div class="form-group">
+            <label for="phone">Phone</label>
+            <input type="text" class="form-control" id="phone" name="phone" value="{{ teacher.phone }}" required>
+        </div>
+        <div class="form-group">
+            <label for="department">Department</label>
+            <input type="text" class="form-control" id="department" name="department" value="{{ teacher.department }}">
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="designation">Designation</label>
+                    <input type="text" class="form-control" id="designation" name="designation" value="{{ teacher.designation or '' }}" placeholder="e.g. Professor, Lecturer">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="specialization">Specialization</label>
+                    <input type="text" class="form-control" id="specialization" name="specialization" value="{{ teacher.specialization or '' }}" placeholder="e.g. Machine Learning, Quantum Physics">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="qualification">Qualification</label>
+                    <input type="text" class="form-control" id="qualification" name="qualification" value="{{ teacher.qualification or '' }}" placeholder="e.g. PhD, M.Tech">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="subject_expertise">Subject Expertise</label>
+                    <input type="text" class="form-control" id="subject_expertise" name="subject_expertise" value="{{ teacher.subject_expertise or '' }}" placeholder="e.g. Data Structures, Algorithms">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="address">Address</label>
+            <input type="text" class="form-control" id="address" name="address" value="{{ teacher.address or '' }}">
+        </div>
+        <div class="form-group">
+            <label for="gender">Gender</label>
+            <select class="form-control" id="gender" name="gender">
+                <option value="">Select Gender</option>
+                <option value="Male" {% if teacher.gender == 'Male' %}selected{% endif %}>Male</option>
+                <option value="Female" {% if teacher.gender == 'Female' %}selected{% endif %}>Female</option>
+                <option value="Other" {% if teacher.gender == 'Other' %}selected{% endif %}>Other</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="date_of_birth">Date of Birth</label>
+            <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="{{ teacher.date_of_birth }}">
+        </div>
+        <div class="form-group">
+            <label for="joining_date">Joining Date</label>
+            <input type="date" class="form-control" id="joining_date" name="joining_date" value="{{ teacher.joining_date }}">
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="pan_number">PAN Number</label>
+                    <input type="text" class="form-control" id="pan_number" name="pan_number" value="{{ teacher.pan_number or '' }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="aadhaar_number">Aadhaar Number</label>
+                    <input type="text" class="form-control" id="aadhaar_number" name="aadhaar_number" value="{{ teacher.aadhaar_number or '' }}">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="experience_years">Experience (Years)</label>
+            <input type="number" class="form-control" id="experience_years" name="experience_years" min="0" value="{{ teacher.experience_years or '' }}">
+        </div>
+        <div class="form-group">
+            <label for="office_hours">Office Hours</label>
+            <input type="text" class="form-control" id="office_hours" name="office_hours" value="{{ teacher.office_hours }}">
+        </div>
+        <div class="form-group">
+            <label for="employment_status">Employment Status</label>
+            <select class="form-control" id="employment_status" name="employment_status">
+                <option value="">Select</option>
+                <option value="full_time" {% if teacher.employment_status == 'full_time' %}selected{% endif %}>Full-time</option>
+                <option value="part_time" {% if teacher.employment_status == 'part_time' %}selected{% endif %}>Part-time</option>
+                <option value="contract" {% if teacher.employment_status == 'contract' %}selected{% endif %}>Contract</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="max_weekly_hours">Max Weekly Hours</label>
+            <input type="number" class="form-control" id="max_weekly_hours" name="max_weekly_hours" min="0" value="{{ teacher.max_weekly_hours }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Update Teacher</button>
+    </form>
+{% endblock %}

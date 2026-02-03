@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block content %}
+    <h2>{{ title }}</h2>
+    <form method="POST" action="">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ student.name }}" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ student.email }}" required>
+        </div>
+        <div class="form-group">
+            <label for="phone">Phone</label>
+            <input type="text" class="form-control" id="phone" name="phone" value="{{ student.phone }}" required>
+        </div>
+        <div class="form-group">
+            <label for="roll_number">Roll Number</label>
+            <input type="text" class="form-control" id="roll_number" name="roll_number" value="{{ student.roll_number }}">
+        </div>
+        <div class="form-group">
+            <label for="address">Address</label>
+            <input type="text" class="form-control" id="address" name="address" value="{{ student.address }}">
+        </div>
+        <div class="form-group">
+            <label for="date_of_birth">Date of Birth</label>
+            <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="{{ student.date_of_birth }}">
+        </div>
+        <div class="form-group">
+            <label for="gender">Gender</label>
+            <select class="form-control" id="gender" name="gender">
+                <option value="">Select Gender</option>
+                <option value="Male" {% if student.gender == 'Male' %}selected{% endif %}>Male</option>
+                <option value="Female" {% if student.gender == 'Female' %}selected{% endif %}>Female</option>
+                <option value="Other" {% if student.gender == 'Other' %}selected{% endif %}>Other</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="admission_date">Admission Date</label>
+            <input type="date" class="form-control" id="admission_date" name="admission_date" value="{{ student.admission_date }}">
+        </div>
+        <div class="form-group">
+            <label for="department">Department</label>
+            <input type="text" class="form-control" id="department" name="department" value="{{ student.department or '' }}">
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="current_year">Current Year</label>
+                    <input type="number" class="form-control" id="current_year" name="current_year" value="{{ student.current_year or '' }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="current_semester">Current Semester</label>
+                    <input type="number" class="form-control" id="current_semester" name="current_semester" value="{{ student.current_semester or '' }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="section">Section</label>
+                    <input type="text" class="form-control" id="section" name="section" value="{{ student.section or '' }}">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="father_name">Father's Name</label>
+                    <input type="text" class="form-control" id="father_name" name="father_name" value="{{ student.father_name or '' }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="mother_name">Mother's Name</label>
+                    <input type="text" class="form-control" id="mother_name" name="mother_name" value="{{ student.mother_name or '' }}">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="nationality">Nationality</label>
+                    <input type="text" class="form-control" id="nationality" name="nationality" value="{{ student.nationality or '' }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="blood_group">Blood Group</label>
+                    <select class="form-control" id="blood_group" name="blood_group">
+                        <option value="">Select Blood Group</option>
+                        {% for bg in ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'] %}
+                        <option value="{{ bg }}" {% if student.blood_group == bg %}selected{% endif %}>{{ bg }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="religion">Religion</label>
+                    <input type="text" class="form-control" id="religion" name="religion" value="{{ student.religion or '' }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="community">Community</label>
+                    <input type="text" class="form-control" id="community" name="community" value="{{ student.community or '' }}">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="sslc_marks">SSLC Marks</label>
+                    <input type="number" class="form-control" id="sslc_marks" name="sslc_marks" value="{{ student.sslc_marks or '' }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="hsc_marks">HSC Marks</label>
+                    <input type="number" class="form-control" id="hsc_marks" name="hsc_marks" value="{{ student.hsc_marks or '' }}">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="previous_school">Previous School</label>
+            <input type="text" class="form-control" id="previous_school" name="previous_school" value="{{ student.previous_school or '' }}">
+        </div>
+        <div class="form-group">
+            <label for="guardian_name">Guardian Name</label>
+            <input type="text" class="form-control" id="guardian_name" name="guardian_name" value="{{ student.guardian_name or '' }}">
+        </div>
+        <div class="form-group">
+            <label for="guardian_phone">Guardian Phone</label>
+            <input type="text" class="form-control" id="guardian_phone" name="guardian_phone" value="{{ student.guardian_phone or '' }}">
+        </div>
+        <div class="form-group">
+            <label for="guardian_email">Guardian Email</label>
+            <input type="email" class="form-control" id="guardian_email" name="guardian_email" value="{{ student.guardian_email or '' }}">
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="emergency_contact_name">Emergency Contact Name</label>
+                    <input type="text" class="form-control" id="emergency_contact_name" name="emergency_contact_name" value="{{ student.emergency_contact_name or '' }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="emergency_contact_phone">Emergency Contact Phone</label>
+                    <input type="text" class="form-control" id="emergency_contact_phone" name="emergency_contact_phone" value="{{ student.emergency_contact_phone or '' }}">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="status">Status</label>
+            <select class="form-control" id="status" name="status">
+                <option value="active" {% if student.status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if student.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                <option value="graduated" {% if student.status == 'graduated' %}selected{% endif %}>Graduated</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="tutor_id">Tutor</label>
+            <select class="form-control" id="tutor_id" name="tutor_id">
+                <option value="">None / Auto-assign (if blank on creation)</option>
+                {% for teacher in teachers %}
+                <option value="{{ teacher.id }}" {% if student.tutor_id == teacher.id %}selected{% endif %}>
+                    {{ teacher.name }} ({{ teacher.department or 'No Dept' }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Update Student</button>
+    </form>
+{% endblock %}

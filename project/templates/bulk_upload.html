@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">Bulk Upload</h2>{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const strategies = document.querySelectorAll('.js-password-strategy');
+    strategies.forEach(select => {
+        select.addEventListener('change', function() {
+            const form = this.closest('form');
+            const fixedGroup = form.querySelector('.js-fixed-password-group');
+            if (this.value === 'fixed') {
+                fixedGroup.classList.remove('d-none');
+                fixedGroup.querySelector('input').setAttribute('required', 'required');
+            } else {
+                fixedGroup.classList.add('d-none');
+                fixedGroup.querySelector('input').removeAttribute('required');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Bulk Upload</li>
+{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-lg-10 mx-auto">
+    <div class="card mb-4">
+      <div class="card-body">
+        <p class="text-muted">Upload CSV files to quickly create records. Use the sample formats provided below.</p>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h4>Students</h4>
+        <p class="mb-1">Columns: <code>name, email, phone, roll_number, address, date_of_birth, department, guardian_name, guardian_phone, nationality, blood_group, religion, community, sslc_marks, hsc_marks, password (optional)</code> (YYYY-MM-DD)</p>
+        <p class="mb-3"><a href="{{ url_for('sample_students_csv') }}" target="_blank">Download sample CSV</a></p>
+        <form method="POST" action="{{ url_for('import_students') }}" enctype="multipart/form-data" class="form-inline align-items-end">
+          <div class="form-group mb-2 mr-2">
+            <label class="d-block mb-1">CSV File</label>
+            <input type="file" name="file" class="form-control-file" accept=".csv" required>
+          </div>
+          <div class="form-group mb-2 mr-2">
+            <label class="d-block mb-1">Password Option</label>
+            <select name="password_strategy" class="form-control js-password-strategy">
+              <option value="none">No User Account</option>
+              <option value="fixed">Fixed Password</option>
+              <option value="email">Email as Password</option>
+              <option value="csv">From CSV 'password' column</option>
+            </select>
+          </div>
+          <div class="form-group mb-2 mr-2 d-none js-fixed-password-group">
+            <label class="d-block mb-1">Fixed Password</label>
+            <input type="text" name="fixed_password" class="form-control" placeholder="Enter password">
+          </div>
+          <button type="submit" class="btn btn-primary mb-2">Upload Students</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h4>Teachers</h4>
+        <p class="mb-1">Columns: <code>name, email, phone, department, designation, specialization, password (optional)</code></p>
+        <p class="mb-3"><a href="{{ url_for('sample_teachers_csv') }}" target="_blank">Download sample CSV</a></p>
+        <form method="POST" action="{{ url_for('import_teachers') }}" enctype="multipart/form-data" class="form-inline align-items-end">
+          <div class="form-group mb-2 mr-2">
+            <label class="d-block mb-1">CSV File</label>
+            <input type="file" name="file" class="form-control-file" accept=".csv" required>
+          </div>
+          <div class="form-group mb-2 mr-2">
+            <label class="d-block mb-1">Password Option</label>
+            <select name="password_strategy" class="form-control js-password-strategy">
+              <option value="none">No User Account</option>
+              <option value="fixed">Fixed Password</option>
+              <option value="email">Email as Password</option>
+              <option value="csv">From CSV 'password' column</option>
+            </select>
+          </div>
+          <div class="form-group mb-2 mr-2 d-none js-fixed-password-group">
+            <label class="d-block mb-1">Fixed Password</label>
+            <input type="text" name="fixed_password" class="form-control" placeholder="Enter password">
+          </div>
+          <button type="submit" class="btn btn-primary mb-2">Upload Teachers</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h4>Courses</h4>
+        <p class="mb-1">Columns: <code>name, description, code, credits, teacher_email, department, semester, room, capacity, level, syllabus_url</code></p>
+        <p class="mb-3"><a href="{{ url_for('sample_courses_csv') }}" target="_blank">Download sample CSV</a></p>
+        <form method="POST" action="{{ url_for('import_courses') }}" enctype="multipart/form-data" class="form-inline">
+          <div class="form-group mb-2 mr-2">
+            <input type="file" name="file" class="form-control-file" accept=".csv" required>
+          </div>
+          <button type="submit" class="btn btn-primary mb-2">Upload Courses</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h4>Enrollments</h4>
+        <p class="mb-1">Columns: <code>student_email, course_code</code> (uses student email and course code)</p>
+        <p class="mb-3"><a href="{{ url_for('sample_enrollments_csv') }}" target="_blank">Download sample CSV</a></p>
+        <form method="POST" action="{{ url_for('import_enrollments') }}" enctype="multipart/form-data" class="form-inline">
+          <div class="form-group mb-2 mr-2">
+            <input type="file" name="file" class="form-control-file" accept=".csv" required>
+          </div>
+          <button type="submit" class="btn btn-primary mb-2">Upload Enrollments</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+ </div>
+{% endblock %}
+

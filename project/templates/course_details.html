@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <h2 class="card-title">{{ course.name }} {% if course.code %}<span class="badge badge-secondary">{{ course.code }}</span>{% endif %}</h2>
+      <div class="row">
+        <div class="col-md-6">
+          {% if course.level %}<p class="mb-2"><strong>Level:</strong> {{ course.level }}</p>{% endif %}
+          {% if course.credits is not none %}<p class="mb-2"><strong>Credits:</strong> {{ course.credits }}</p>{% endif %}
+          <p class="mb-2"><strong>Teacher:</strong> {{ course.teacher.name }}</p>
+          <p class="mb-2"><strong>Department:</strong> {{ course.department or '-' }}</p>
+          <p class="mb-2"><strong>Semester:</strong> {{ course.semester or '-' }}</p>
+        </div>
+        <div class="col-md-6">
+          <p class="mb-2"><strong>Course Type:</strong> {{ course.course_type or '-' }}</p>
+          <p class="mb-2"><strong>Academic Year:</strong> {{ course.academic_year or '-' }}</p>
+          {% if course.start_date %}<p class="mb-2"><strong>Start Date:</strong> {{ course.start_date }}</p>{% endif %}
+          {% if course.end_date %}<p class="mb-2"><strong>End Date:</strong> {{ course.end_date }}</p>{% endif %}
+          {% if course.syllabus_url %}
+          <p class="mb-2"><strong>Syllabus:</strong> <a href="{{ course.syllabus_url }}" target="_blank">View Syllabus</a></p>
+          {% endif %}
+          {% if course.room %}<p class="mb-2"><strong>Room:</strong> {{ course.room }}</p>{% endif %}
+          {% if course.capacity %}<p class="mb-2"><strong>Capacity:</strong> {{ course.capacity }}</p>{% endif %}
+        </div>
+      </div>
+      <p><strong>Description:</strong> {{ course.description }}</p>
+      {% if course.prerequisites %}
+      <p><strong>Prerequisites:</strong> {{ course.prerequisites }}</p>
+      {% endif %}
+      {% if course.learning_outcomes %}
+      <p><strong>Learning Outcomes:</strong></p>
+      <div class="mb-3">{{ course.learning_outcomes|replace('\n', '<br>')|safe }}</div>
+      {% endif %}
+      <div class="btn-group" role="group" aria-label="Course actions">
+        <a href="{{ url_for('courses') }}" class="btn btn-secondary">Back to Courses</a>
+        <a href="{{ url_for('course_sessions', course_id=course.id) }}" class="btn btn-info">Sessions</a>
+        {% if session.get('role') in ['admin', 'faculty', 'teacher'] %}
+        <a href="{{ url_for('course_attendance_summary', course_id=course.id) }}" class="btn btn-warning">Attendance Summary</a>
+        <a href="{{ url_for('course_plan', course_id=course.id) }}" class="btn btn-primary">Plan</a>
+        <a href="{{ url_for('course_roster_csv', course_id=course.id) }}" class="btn btn-outline-success">Roster CSV</a>
+        <a href="{{ url_for('course_attendance_csv', course_id=course.id) }}" class="btn btn-outline-success">Attendance CSV</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if session.get('role') in ['admin', 'faculty', 'teacher'] %}
+  <h3>Enrolled Students</h3>
+  <div class="table-responsive">
+    <table class="table table-sm table-hover">
+      <thead>
+        <tr>
+          <th style="min-width: 250px;">Name</th>
+          <th style="min-width: 150px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if course.students %}
+        {% for student in course.students %}
+        <tr>
+          <td>
+            {% if photos.get(student.email) %}
+            <img src="{{ photos[student.email] }}" class="rounded-circle me-2" style="width: 30px; height: 30px;" alt="{{ student.name }}">
+            {% else %}
+            <span class="badge bg-secondary rounded-circle me-2" style="width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;">{{ student.name[0]|upper }}</span>
+            {% endif %}
+            {{ student.name }}
+          </td>
+          <td class="text-nowrap">
+            <form action="{{ url_for('unenroll_student', course_id=course.id, student_id=student.id) }}" method="POST" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Unenroll this student?');">Unenroll</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+          <td colspan="2" class="text-center text-muted">No students enrolled yet.</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+{% endblock %}
+

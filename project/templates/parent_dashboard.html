@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+    <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center me-3" style="width:64px;height:64px;font-size: 24px; font-weight: bold; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        P
+    </div>
+    <h2 class="mb-0">Parent Dashboard</h2>
+    <span class="badge bg-info ms-3">Parent</span>
+</div>
+
+{% if not children_data %}
+<div class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle me-2"></i> No students are currently linked to your account. Please contact the administrator if this is an error.
+</div>
+{% else %}
+<div class="row">
+    {% for data in children_data %}
+    {% set student = data.student %}
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-graduate me-2"></i>{{ student.name }} 
+                    <small class="text-muted ms-2">({{ student.student_id or 'No ID' }})</small>
+                </h5>
+                <a href="{{ url_for('student_transcript', student_id=student.id) }}" class="btn btn-sm btn-outline-primary">View Full Profile</a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- GPA Card -->
+                    <div class="col-md-4">
+                        <div class="card bg-light border-0 text-center p-3 mb-3">
+                            <h6 class="text-muted mb-2">GPA</h6>
+                            <h3 class="mb-0">{{ "%.2f"|format(data.gpa) if data.gpa else "-" }}</h3>
+                            <div class="mt-2">
+                                <a href="{{ url_for('student_transcript', student_id=student.id) }}" class="small text-decoration-none">Transcript</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Attendance Card -->
+                    <div class="col-md-4">
+                        <div class="card bg-light border-0 text-center p-3 mb-3">
+                            <h6 class="text-muted mb-2">Attendance</h6>
+                            <h3 class="mb-0 text-{{ 'success' if data.attendance_rate >= 80 else 'warning' if data.attendance_rate >= 60 else 'danger' }}">
+                                {{ "%.1f"|format(data.attendance_rate) }}%
+                            </h3>
+                            <div class="mt-2">
+                                <a href="{{ url_for('student_attendance_summary', student_id=student.id) }}" class="small text-decoration-none">Details</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Fees Card -->
+                    <div class="col-md-4">
+                        <div class="card bg-light border-0 text-center p-3 mb-3">
+                            <h6 class="text-muted mb-2">Fees Outstanding</h6>
+                            <h3 class="mb-0 text-{{ 'danger' if data.outstanding > 0 else 'success' }}">
+                                ${{ "%.2f"|format(data.outstanding) }}
+                            </h3>
+                            <div class="mt-2">
+                                <a href="{{ url_for('fee_statement', student_id=student.id) }}" class="small text-decoration-none">Fee Statement</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Courses List -->
+                <div class="mt-3">
+                    <h6 class="border-bottom pb-2 mb-3">Current Courses</h6>
+                    <div class="row">
+                        {% for course in student.courses %}
+                        <div class="col-md-6 mb-2">
+                            <div class="d-flex justify-content-between align-items-center p-2 border rounded">
+                                <div>
+                                    <strong>{{ course.name }}</strong>
+                                    <div class="small text-muted">{{ course.teacher.name }}</div>
+                                </div>
+                                <span class="badge bg-secondary">{{ course.code }}</span>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12 text-muted">No courses enrolled.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

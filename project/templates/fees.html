@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block page_title %}<h2 class="mb-0">Fees</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Fees</li>
+{% endblock %}
+{% block content %}
+{% if session.get('role') != 'parent' %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <a href="{{ url_for('create_invoice') }}" class="btn btn-sm btn-outline-primary mr-2">Create Invoice</a>
+    <a href="{{ url_for('list_invoices') }}" class="btn btn-sm btn-outline-secondary">Manage Invoices</a>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <h5 class="card-title">Record Payment</h5>
+    <form class="form-inline" method="post" action="{{ url_for('finance_fees') }}">
+    <label class="mr-2">Student</label>
+    <select name="student_id" class="form-control form-control-sm mr-2" required>
+      {% for s in students %}
+      <option value="{{ s.id }}">{{ s.name }}</option>
+      {% endfor %}
+    </select>
+    <label class="mr-2">Amount</label>
+    <input type="number" step="0.01" name="amount" class="form-control form-control-sm mr-2" required>
+    <label class="mr-2">Method</label>
+    <select name="method" class="form-control form-control-sm mr-2">
+      <option value="cash">cash</option>
+      <option value="card">card</option>
+      <option value="online">online</option>
+    </select>
+    <input type="text" name="reference" class="form-control form-control-sm mr-2" placeholder="reference">
+    <button type="submit" class="btn btn-sm btn-primary">Record Payment</button>
+  </form>
+  </div>
+</div>
+{% endif %}
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-header">Student Accounts</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Paid Total</th>
+                <th>Outstanding</th>
+                <th style="min-width: 150px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in students %}
+              {% set acc = accounts.get(s.id) %}
+              <tr>
+                <td>{{ s.name }}</td>
+                <td>{{ s.email }}</td>
+                <td>{{ acc.balance if acc else 0.0 }} {{ config.DEFAULT_CURRENCY }}</td>
+                <td>{{ outstanding.get(s.id, 0.0) }} {{ config.DEFAULT_CURRENCY }}</td>
+                <td class="text-nowrap">
+                  <a href="{{ url_for('fee_statement', student_id=s.id) }}" class="btn btn-sm btn-outline-secondary btn-icon"><i class="fas fa-file-invoice"></i> Statement</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card mb-3">
+      <div class="card-header">Recent Payments</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead>
+              <tr>
+                <th>When</th>
+                <th>Student</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Reference</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in recent_payments %}
+              <tr>
+                <td>{{ p.paid_at }}</td>
+                <td>{{ p.student.name }}</td>
+                <td>{{ p.amount }} {{ config.DEFAULT_CURRENCY }}</td>
+                <td>{{ p.method }}</td>
+                <td class="text-monospace">{{ p.reference }}</td>
+              </tr>
+              {% endfor %}
+              {% if recent_payments|length == 0 %}
+              <tr>
+                <td colspan="5" class="text-muted p-3">No payments yet.</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

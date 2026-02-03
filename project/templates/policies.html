@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block page_title %}<h2 class="mb-0">Policy & Compliance</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Policies</li>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <span class="text-muted">Administration</span>
+  </div>
+
+<form method="post" action="">
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">Scheduling & Timetabling</h5>
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <label>Teacher max sessions/day</label>
+          <input type="number" class="form-control" name="TEACHER_MAX_SESSIONS_PER_DAY" value="{{ current.TEACHER_MAX_SESSIONS_PER_DAY }}">
+        </div>
+        <div class="form-group col-md-4">
+          <label>Teacher max sessions/week</label>
+          <input type="number" class="form-control" name="TEACHER_MAX_SESSIONS_PER_WEEK" value="{{ current.TEACHER_MAX_SESSIONS_PER_WEEK }}">
+        </div>
+        <div class="form-group col-md-4">
+          <label>Course max sessions/week</label>
+          <input type="number" class="form-control" name="COURSE_MAX_SESSIONS_PER_WEEK" value="{{ current.COURSE_MAX_SESSIONS_PER_WEEK }}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <div class="form-check mt-4">
+            <input class="form-check-input" type="checkbox" name="ALLOW_WEEKEND_SESSIONS" value="true" {% if current.ALLOW_WEEKEND_SESSIONS %}checked{% endif %}>
+            <label class="form-check-label">Allow weekend sessions</label>
+          </div>
+        </div>
+        <div class="form-group col-md-4">
+          <label>Default session hours</label>
+          <input type="number" class="form-control" name="SESSION_DEFAULT_DURATION_HOURS" value="{{ current.SESSION_DEFAULT_DURATION_HOURS }}" disabled>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">Attendance</h5>
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <label>Marking cutoff (days)</label>
+          <input type="number" class="form-control" name="ATTENDANCE_MARKING_CUTOFF_DAYS" value="{{ current.ATTENDANCE_MARKING_CUTOFF_DAYS }}">
+        </div>
+        <div class="form-group col-md-4">
+          <div class="form-check mt-4">
+            <input class="form-check-input" type="checkbox" name="ATTENDANCE_ALLOW_EDIT" value="true" {% if current.ATTENDANCE_ALLOW_EDIT %}checked{% endif %}>
+            <label class="form-check-label">Allow editing attendance</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">Workload & Performance</h5>
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <label>Target weekly hours</label>
+          <input type="number" class="form-control" name="WORKLOAD_TARGET_WEEKLY_HOURS" value="{{ current.WORKLOAD_TARGET_WEEKLY_HOURS }}">
+        </div>
+        <div class="form-group col-md-4">
+          <label>Tolerance (hours)</label>
+          <input type="number" class="form-control" name="WORKLOAD_TOLERANCE_HOURS" value="{{ current.WORKLOAD_TOLERANCE_HOURS }}">
+        </div>
+        <div class="form-group col-md-4">
+          <div class="form-check mt-4">
+            <input class="form-check-input" type="checkbox" name="WORKLOAD_FAIRNESS_ENABLED" value="true" {% if current.WORKLOAD_FAIRNESS_ENABLED %}checked{% endif %}>
+            <label class="form-check-label">Enable workload fairness</label>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <div class="form-check mt-4">
+            <input class="form-check-input" type="checkbox" name="PERFORMANCE_ENABLED" value="true" {% if current.PERFORMANCE_ENABLED %}checked{% endif %}>
+            <label class="form-check-label">Enable performance reports</label>
+          </div>
+        </div>
+        <div class="form-group col-md-4">
+          <label>Min sessions for report</label>
+          <input type="number" class="form-control" name="PERFORMANCE_MIN_SESSIONS_FOR_REPORT" value="{{ current.PERFORMANCE_MIN_SESSIONS_FOR_REPORT }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">Leave & Credits</h5>
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <div class="form-check mt-4">
+            <input class="form-check-input" type="checkbox" name="LEAVE_APPROVAL_REQUIRED" value="true" {% if current.LEAVE_APPROVAL_REQUIRED %}checked{% endif %}>
+            <label class="form-check-label">Require leave approval</label>
+          </div>
+        </div>
+        <div class="form-group col-md-4">
+          <label>Hours per credit</label>
+          <input type="number" class="form-control" name="HOURS_PER_CREDIT" value="{{ current.HOURS_PER_CREDIT }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">Finance</h5>
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <label>Default currency</label>
+          <input type="text" class="form-control" name="DEFAULT_CURRENCY" value="{{ current.DEFAULT_CURRENCY }}">
+        </div>
+        <div class="form-group col-md-4">
+          <label>Tax rate (%)</label>
+          <input type="number" step="0.01" class="form-control" name="TAX_RATE_PERCENT" value="{{ current.TAX_RATE_PERCENT }}">
+        </div>
+        <div class="form-group col-md-4">
+          <label>Max discount (%)</label>
+          <input type="number" step="0.01" class="form-control" name="DISCOUNT_MAX_PERCENT" value="{{ current.DISCOUNT_MAX_PERCENT }}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <div class="form-check mt-4">
+            <input class="form-check-input" type="checkbox" name="FINANCE_ALLOW_PARTIAL_PAYMENTS" value="true" {% if current.FINANCE_ALLOW_PARTIAL_PAYMENTS %}checked{% endif %}>
+            <label class="form-check-label">Allow partial payments</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5 class="card-title">Resources</h5>
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <label>Max booking duration (minutes)</label>
+          <input type="number" class="form-control" name="MAX_BOOKING_DURATION_MINUTES" value="{{ current.MAX_BOOKING_DURATION_MINUTES }}">
+        </div>
+        <div class="form-group col-md-8">
+          <label>Auto-approve roles (comma-separated)</label>
+          <input type="text" class="form-control" name="RESOURCE_AUTO_APPROVE_ROLES" value="{{ current.RESOURCE_AUTO_APPROVE_ROLES }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-right">
+    <button type="submit" class="btn btn-primary">Save Policies</button>
+  </div>
+</form>
+{% endblock %}

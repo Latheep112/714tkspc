@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block page_title %}<h2 class="mb-0">Users</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Users</li>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <span class="text-muted">Administration</span>
+  <a href="{{ url_for('add_user') }}" class="btn btn-primary btn-sm"><i class="fas fa-user-plus me-1"></i> Add User</a>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-striped table-sm mb-0">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Role</th>
+            <th class="text-end" style="min-width: 500px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>
+              {% if photos.get(u.username) %}
+              <img src="{{ photos[u.username] }}" class="rounded-circle me-2" style="width: 30px; height: 30px;" alt="{{ u.username }}">
+              {% else %}
+              <span class="badge bg-secondary rounded-circle me-2" style="width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;">{{ u.username[0]|upper }}</span>
+              {% endif %}
+              {{ u.username }}
+            </td>
+            <td><span class="badge bg-secondary">{{ u.role }}</span></td>
+            <td class="text-end text-nowrap">
+              <form action="{{ url_for('admin_update_user_role', user_id=u.id) }}" method="post" class="d-inline">
+                <input type="hidden" name="role" value="admin">
+                <button type="submit" class="btn btn-sm btn-outline-primary" {% if u.role == 'admin' %}disabled{% endif %}>Make Admin</button>
+              </form>
+              <form action="{{ url_for('admin_update_user_role', user_id=u.id) }}" method="post" class="d-inline ms-1">
+                <input type="hidden" name="role" value="staff">
+                <button type="submit" class="btn btn-sm btn-outline-secondary" {% if u.role == 'staff' %}disabled{% endif %}>Make Staff</button>
+              </form>
+              <form action="{{ url_for('admin_update_user_role', user_id=u.id) }}" method="post" class="d-inline ms-1">
+                <input type="hidden" name="role" value="faculty">
+                <button type="submit" class="btn btn-sm btn-outline-info" {% if u.role == 'faculty' %}disabled{% endif %}>Make Faculty</button>
+              </form>
+              <form action="{{ url_for('admin_update_user_role', user_id=u.id) }}" method="post" class="d-inline ms-1">
+                <input type="hidden" name="role" value="student">
+                <button type="submit" class="btn btn-sm btn-outline-success" {% if u.role == 'student' %}disabled{% endif %}>Make Student</button>
+              </form>
+              <form action="{{ url_for('admin_update_user_role', user_id=u.id) }}" method="post" class="d-inline ms-1">
+                <input type="hidden" name="role" value="parent">
+                <button type="submit" class="btn btn-sm btn-outline-warning" {% if u.role == 'parent' %}disabled{% endif %}>Make Parent</button>
+              </form>
+              <form action="{{ url_for('admin_delete_user', user_id=u.id) }}" method="post" class="d-inline ms-1" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer text-muted">
+    Manage user roles to control access.
+    <a href="{{ url_for('admin_parent_links') }}" class="btn btn-sm btn-outline-secondary ms-2">Manage Parent Links</a>
+  </div>
+  </div>
+{% endblock %}
+

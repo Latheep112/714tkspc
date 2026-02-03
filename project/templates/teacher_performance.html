@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center mb-3">
+  <h4 class="mb-0">{{ teacher.name }} — Performance</h4>
+  <a href="{{ url_for('teachers') }}" class="btn btn-link ml-auto">Back to Teachers</a>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-3">
+        <div class="h6 text-muted">Total sessions</div>
+        <div class="h4">{{ total_sessions }}</div>
+      </div>
+      <div class="col-md-3">
+        <div class="h6 text-muted">Attendance rate</div>
+        <div class="h4">{% if attendance_rate is not none %}{{ '%.1f'|format(attendance_rate) }}%{% else %}-{% endif %}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="alert alert-info mb-0">Minimum sessions for full report: {{ min_sessions }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="card-footer text-muted">Basic metrics aggregate across teacher's courses.</div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Courses</h5>
+    <ul class="list-group list-group-flush">
+      {% for c in courses %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <span>{{ c.name }} ({{ c.code }})</span>
+        <a href="{{ url_for('course_plan', course_id=c.id) }}" class="btn btn-sm btn-outline-primary">Plan</a>
+      </li>
+      {% endfor %}
+      {% if not courses %}
+      <li class="list-group-item text-muted">No assigned courses.</li>
+      {% endif %}
+    </ul>
+  </div>
+  </div>
+{% endblock %}

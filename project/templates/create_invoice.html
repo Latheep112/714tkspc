@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">{{ title }}</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('finance_fees') }}">Fees</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Create Invoice</li>
+{% endblock %}
+{% block content %}
+<form method="POST" action="">
+    <div class="form-group">
+        <label for="student_id">Student</label>
+        <select name="student_id" id="student_id" class="form-control" required>
+            <option value="">Select Student</option>
+            {% for s in students %}
+            <option value="{{ s.id }}">{{ s.name }} ({{ s.email }})</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="amount_due">Base Amount</label>
+                <input type="number" step="0.01" class="form-control" id="amount_due" name="amount_due" required oninput="calculateTotal()">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="tax_percent">Tax (%)</label>
+                <input type="number" step="0.01" class="form-control" id="tax_percent" name="tax_percent" value="{{ config.TAX_RATE_PERCENT or 0 }}" oninput="calculateTotal()">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="discount_percent">Discount (%)</label>
+                <input type="number" step="0.01" class="form-control" id="discount_percent" name="discount_percent" value="0" max="{{ config.DISCOUNT_MAX_PERCENT or 100 }}" oninput="calculateTotal()">
+                <small class="text-muted">Max: {{ config.DISCOUNT_MAX_PERCENT }}%</small>
+            </div>
+        </div>
+    </div>
+    <div class="alert alert-info py-2">
+        <strong>Total to Invoice: </strong> <span id="total_display">0.00</span> {{ config.DEFAULT_CURRENCY }}
+    </div>
+    <div class="form-group">
+        <label for="currency">Currency</label>
+        <select id="currency" name="currency" class="form-control">
+            <option value="USD" {% if config.DEFAULT_CURRENCY == 'USD' %}selected{% endif %}>USD</option>
+            <option value="EUR" {% if config.DEFAULT_CURRENCY == 'EUR' %}selected{% endif %}>EUR</option>
+            <option value="INR" {% if config.DEFAULT_CURRENCY == 'INR' %}selected{% endif %}>INR</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="description">Description</label>
+        <input type="text" class="form-control" id="description" name="description" placeholder="e.g. Tuition Fee - Fall 2025" required>
+    </div>
+    <div class="form-group">
+        <label for="due_date">Due Date</label>
+        <input type="date" class="form-control" id="due_date" name="due_date" required>
+    </div>
+    <div class="form-group">
+        <label for="reference">Reference</label>
+        <input type="text" class="form-control" id="reference" name="reference" placeholder="Internal reference (optional)">
+    </div>
+    <button type="submit" class="btn btn-primary">Create Invoice</button>
+    <a href="{{ url_for('finance_fees') }}" class="btn btn-secondary">Cancel</a>
+</form>
+
+<script>
+function calculateTotal() {
+    const base = parseFloat(document.getElementById('amount_due').value) || 0;
+    const tax = parseFloat(document.getElementById('tax_percent').value) || 0;
+    const discount = parseFloat(document.getElementById('discount_percent').value) || 0;
+    
+    let total = base;
+    if (discount > 0) {
+        total -= (base * (discount / 100));
+    }
+    if (tax > 0) {
+        total += (total * (tax / 100));
+    }
+    
+    document.getElementById('total_display').innerText = total.toFixed(2);
+}
+</script>
+{% endblock %}

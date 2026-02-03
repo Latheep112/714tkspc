@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block page_title %}<h2 class="mb-0">Audit Logs</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('admin_audit') }}">Audit</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Logs</li>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <form class="form-inline" method="get" action="{{ url_for('admin_audit') }}">
+    <label class="mr-2">Action</label>
+    <input type="text" name="action" class="form-control form-control-sm mr-2" value="{{ action }}" placeholder="e.g., role_update">
+    <label class="mr-2">Actor</label>
+    <input type="text" name="actor" class="form-control form-control-sm mr-2" value="{{ actor }}" placeholder="username">
+    <label class="mr-2">Target</label>
+    <input type="text" name="target" class="form-control form-control-sm mr-2" value="{{ target }}" placeholder="entity">
+    <label class="mr-2">Start</label>
+    <input type="date" name="start_date" class="form-control form-control-sm mr-2" value="{{ start_date }}">
+    <label class="mr-2">End</label>
+    <input type="date" name="end_date" class="form-control form-control-sm mr-2" value="{{ end_date }}">
+    <button type="submit" class="btn btn-sm btn-primary mr-2">Apply</button>
+    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin_audit_export', action=action, actor=actor, target=target, start_date=start_date, end_date=end_date) }}">Export CSV</a>
+  </form>
+  </div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th style="min-width: 160px;">Time</th>
+            <th style="min-width: 120px;">Action</th>
+            <th style="min-width: 180px;">Actor</th>
+            <th style="min-width: 100px;">Role</th>
+            <th style="min-width: 180px;">Target</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+            <td>{{ log.created_at }}</td>
+            <td><span class="badge bg-secondary">{{ log.action }}</span></td>
+            <td>{{ log.actor_username or '' }}</td>
+            <td>{{ log.actor_role or '' }}</td>
+            <td>{{ log.target or '' }}</td>
+            <td class="text-monospace">{{ log.details or '' }}</td>
+          </tr>
+          {% endfor %}
+          {% if logs|length == 0 %}
+          <tr>
+            <td colspan="6" class="text-muted p-3">No logs found.</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer d-flex justify-content-between align-items-center">
+    <div>
+      {% if action %}
+        <span class="badge bg-info">Action: {{ action }}</span>
+      {% endif %}
+      {% if actor %}
+        <span class="badge bg-info">Actor: {{ actor }}</span>
+      {% endif %}
+      {% if target %}
+        <span class="badge bg-info">Target: {{ target }}</span>
+      {% endif %}
+      {% if start_date %}
+        <span class="badge bg-info">Start: {{ start_date }}</span>
+      {% endif %}
+      {% if end_date %}
+        <span class="badge bg-info">End: {{ end_date }}</span>
+      {% endif %}
+    </div>
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('admin_audit', page=pagination.prev_num, action=action) }}">Prev</a>
+        </li>
+        <li class="page-item disabled"><span class="page-link">Page {{ pagination.page }}</span></li>
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('admin_audit', page=pagination.next_num, action=action) }}">Next</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+{% endblock %}

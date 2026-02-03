@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block page_title %}<h2 class="mb-0">Fee Statement — {{ student.name }}</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('finance_fees') }}">Fees</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Statement</li>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <form class="form-inline" method="get" action="{{ url_for('fee_statement', student_id=student.id) }}">
+    <label class="mr-2">Start</label>
+    <input type="date" name="start_date" class="form-control form-control-sm mr-2" value="{{ start_date }}">
+    <label class="mr-2">End</label>
+    <input type="date" name="end_date" class="form-control form-control-sm mr-2" value="{{ end_date }}">
+    <label class="mr-2">Method</label>
+    <select name="method" class="form-control form-control-sm mr-2">
+      <option value="" {% if not method %}selected{% endif %}>All</option>
+      <option value="cash" {% if method=='cash' %}selected{% endif %}>cash</option>
+      <option value="card" {% if method=='card' %}selected{% endif %}>card</option>
+      <option value="online" {% if method=='online' %}selected{% endif %}>online</option>
+    </select>
+    <button type="submit" class="btn btn-sm btn-primary mr-2">Apply</button>
+    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('fee_statement_csv', student_id=student.id, start_date=start_date, end_date=end_date, method=method) }}">Export CSV</a>
+  </form>
+</div>
+
+<div class="row">
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-body">
+        <div><strong>Total Due:</strong> {{ total_due }} {{ config.DEFAULT_CURRENCY }}</div>
+        <div><strong>Total Paid (filtered):</strong> {{ total_paid }} {{ config.DEFAULT_CURRENCY }}</div>
+        <div><strong>Outstanding:</strong> {{ outstanding }} {{ config.DEFAULT_CURRENCY }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card mb-3">
+      <div class="card-header">Payments</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead>
+              <tr>
+                <th style="min-width: 150px;">When</th>
+                <th style="min-width: 120px;">Amount</th>
+                <th style="min-width: 100px;">Method</th>
+                <th style="min-width: 150px;">Reference</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in payments %}
+              <tr>
+                <td>{{ p.paid_at }}</td>
+                <td>{{ p.amount }} {{ p.currency }}</td>
+                <td>{{ p.method }}</td>
+                <td class="text-monospace">{{ p.reference }}</td>
+              </tr>
+              {% endfor %}
+              {% if payments|length == 0 %}
+              <tr>
+                <td colspan="4" class="text-muted p-3">No payments in this range.</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
