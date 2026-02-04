@@ -23,6 +23,14 @@ if env == "development":
 
 db = SQLAlchemy(app)
 
+# Ensure database tables are created before anything else
+try:
+    from project import models
+    with app.app_context():
+        db.create_all()
+except Exception as e:
+    print(f"Error creating database tables: {e}")
+
 # Configure session lifetime
 timeout_minutes = app.config.get('SESSION_TIMEOUT_MINUTES', 120)
 try:
@@ -55,7 +63,7 @@ except Exception:
 try:
     from project.models import User
     with app.app_context():
-        db.create_all()
+        # db.create_all()  # Already called above
         admin_user = os.environ.get("ADMIN_USERNAME")
         admin_pw_hash = os.environ.get("ADMIN_PASSWORD_HASH")
         admin_pw_plain = os.environ.get("ADMIN_PASSWORD")
@@ -84,3 +92,4 @@ except Exception:
     pass
 
 from project import routes
+
