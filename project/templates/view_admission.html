@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">Application Details</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('admissions') }}">Admissions</a></li>
+  <li class="breadcrumb-item active" aria-current="page">View Details</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Personal Information</h5>
+        <span class="badge {% if application.status == 'approved' %}bg-success{% elif application.status == 'rejected' %}bg-danger{% else %}bg-warning{% endif %}">
+          {{ application.status|upper }}
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">Full Name:</div>
+          <div class="col-sm-8">{{ application.name }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">Email:</div>
+          <div class="col-sm-8">{{ application.email }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">Phone:</div>
+          <div class="col-sm-8">{{ application.phone or '-' }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">Date of Birth:</div>
+          <div class="col-sm-8">{{ application.date_of_birth or '-' }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">Gender:</div>
+          <div class="col-sm-8">{{ application.gender or '-' }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">Address:</div>
+          <div class="col-sm-8">{{ application.address or '-' }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">Requested Course:</div>
+          <div class="col-sm-8">{{ application.requested_course.name if application.requested_course else (application.program or 'N/A') }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header bg-info text-white">
+        <h5 class="mb-0">Identification & Documentation</h5>
+      </div>
+      <div class="card-body">
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">Aadhar Number:</div>
+          <div class="col-sm-8">{{ application.aadhar_no or '-' }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">Community Cert No:</div>
+          <div class="col-sm-8">{{ application.community_cert_no or '-' }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">Annual Income:</div>
+          <div class="col-sm-8">{{ application.annual_income or '-' }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">Income Cert No:</div>
+          <div class="col-sm-8">{{ application.income_cert_no or '-' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0">Academic & Family Background</h5>
+      </div>
+      <div class="card-body">
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">Father's Name:</div>
+          <div class="col-sm-8">{{ application.father_name or '-' }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">Mother's Name:</div>
+          <div class="col-sm-8">{{ application.mother_name or '-' }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">Previous School:</div>
+          <div class="col-sm-8">{{ application.previous_school or '-' }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">SSLC Marks:</div>
+          <div class="col-sm-8">{{ application.sslc_marks or '-' }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">HSC Marks:</div>
+          <div class="col-sm-8">{{ application.hsc_marks or '-' }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card mb-4">
+      <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">Actions</h5>
+      </div>
+      <div class="card-body">
+        {% if application.status == 'pending' %}
+        <div class="d-grid gap-2">
+          <form method="post" action="{{ url_for('approve_admission', app_id=application.id) }}">
+            <button type="submit" class="btn btn-success w-100 mb-2">Approve Application</button>
+          </form>
+          <form method="post" action="{{ url_for('reject_admission', app_id=application.id) }}">
+            <div class="mb-2">
+              <label for="reason" class="small text-muted">Rejection Reason (optional)</label>
+              <textarea name="reason" id="reason" class="form-control form-control-sm" rows="2"></textarea>
+            </div>
+            <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Are you sure you want to reject this application?');">Reject Application</button>
+          </form>
+        </div>
+        {% else %}
+        <p class="text-muted text-center mb-0">No actions available for this status.</p>
+        {% endif %}
+        <hr>
+        <a href="{{ url_for('admissions') }}" class="btn btn-outline-secondary w-100">Back to List</a>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">System Info</h5>
+      </div>
+      <div class="card-body">
+        <p><strong>Applied At:</strong> {{ application.applied_at.strftime('%Y-%m-%d %H:%M') }}</p>
+        <p><strong>Temp Password:</strong> <code>{{ application.temp_password }}</code></p>
+        {% if application.processed_by %}
+        <p><strong>Processed By:</strong> {{ application.processed_by }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

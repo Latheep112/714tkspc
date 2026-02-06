@@ -23,7 +23,6 @@
                 <li class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
                     <a class="nav-link" href="{{ url_for('dashboard') }}" aria-label="Dashboard" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Dashboard"><i class="fas fa-home me-1"></i><span class="nav-label">Dashboard</span></a>
                 </li>
-                {% endif %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navAcademics" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-book me-1"></i><span class="nav-label">Academics</span></a>
                     <ul class="dropdown-menu" aria-labelledby="navAcademics">
@@ -32,7 +31,6 @@
                         <li><a class="dropdown-item {% if request.endpoint == 'teachers' %}active{% endif %}" href="{{ url_for('teachers') }}">Teachers</a></li>
                         {% endif %}
                         <li><a class="dropdown-item {% if request.endpoint == 'courses' %}active{% endif %}" href="{{ url_for('courses') }}">Courses</a></li>
-                        {% if session.get('logged_in') %}
                         <li><a class="dropdown-item {% if request.endpoint == 'calendar' %}active{% endif %}" href="{{ url_for('calendar') }}">Calendar</a></li>
                         <li><a class="dropdown-item {% if request.endpoint == 'timetable' %}active{% endif %}" href="{{ url_for('timetable') }}">Timetable</a></li>
                         {% if session.get('role') != 'parent' %}
@@ -42,10 +40,8 @@
                         {% if session.get('role') != 'parent' %}
                         <li><a class="dropdown-item {% if request.endpoint == 'admissions' %}active{% endif %}" href="{{ url_for('admissions') }}">Admissions</a></li>
                         {% endif %}
-                        {% endif %}
                     </ul>
                 </li>
-                {% if session.get('logged_in') %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navFinance" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-wallet me-1"></i><span class="nav-label">Finance</span></a>
                     <ul class="dropdown-menu" aria-labelledby="navFinance">
@@ -55,8 +51,7 @@
                         {% endif %}
                     </ul>
                 </li>
-                {% endif %}
-                {% if session.get('logged_in') and session.get('role') != 'parent' %}
+                {% if session.get('role') != 'parent' %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navAdmin" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-tools me-1"></i><span class="nav-label">Admin</span></a>
                     <ul class="dropdown-menu" aria-labelledby="navAdmin">
@@ -70,6 +65,14 @@
                         {% endif %}
                     </ul>
                 </li>
+                {% endif %}
+                {% else %}
+                <li class="nav-item">
+                     <a class="nav-link" href="{{ url_for('add_admission') }}"><i class="fas fa-file-signature me-1"></i>Admission Form</a>
+                 </li>
+                 <li class="nav-item">
+                     <a class="nav-link" href="{{ url_for('admission_status') }}"><i class="fas fa-search me-1"></i>Check Status</a>
+                 </li>
                 {% endif %}
             </ul>
             <ul class="navbar-nav ms-auto">

@@ -1072,7 +1072,6 @@ def admissions():
     return render_template('admissions.html', title='Admissions', applications=apps, q=q)
 
 @app.route('/add_admission', methods=['GET', 'POST'])
-@crud_required('admission', 'create')
 def add_admission():
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
@@ -1090,10 +1089,25 @@ def add_admission():
         mother_name = request.form.get('mother_name', '').strip()
         previous_school = request.form.get('previous_school', '').strip()
         requested_course = request.form.get('requested_course', '').strip()
+        aadhar_no = request.form.get('aadhar_no', '').strip()
+        community_cert_no = request.form.get('community_cert_no', '').strip()
+        annual_income_str = request.form.get('annual_income', '').strip()
+        income_cert_no = request.form.get('income_cert_no', '').strip()
+
         if not name or not email:
             flash('Name and email are required.', 'danger')
             courses = Course.query.order_by(Course.name.asc()).all()
             return render_template('add_admission.html', title='New Application', courses=courses)
+
+        annual_income = None
+        if annual_income_str:
+            try:
+                annual_income = float(annual_income_str)
+            except ValueError:
+                flash('Invalid annual income.', 'danger')
+                courses = Course.query.order_by(Course.name.asc()).all()
+                return render_template('add_admission.html', title='New Application', courses=courses)
+
         dob = None
         if dob_str:
             try:
@@ -1170,14 +1184,25 @@ def add_admission():
             guardian_phone=guardian_phone or None,
             guardian_email=guardian_email or None,
             requested_course_id=rc.id if rc else None,
-            photo_path=photo_path
+            photo_path=photo_path,
+            aadhar_no=aadhar_no,
+            community_cert_no=community_cert_no,
+            annual_income=annual_income,
+            income_cert_no=income_cert_no,
+            temp_password=uuid.uuid4().hex[:8]  # Generate temporary password
         )
         db.session.add(app_obj)
         db.session.commit()
-        flash('Application submitted.', 'success')
-        return redirect(url_for('admissions'))
+        flash('Application submitted. You can check your status using your email.', 'success')
+        return redirect(url_for('admission_status'))
     courses = Course.query.order_by(Course.name.asc()).all()
     return render_template('add_admission.html', title='New Application', courses=courses)
+
+@app.route('/admissions/<int:app_id>')
+@crud_required('admission', 'read')
+def view_admission(app_id):
+    app_obj = AdmissionApplication.query.get_or_404(app_id)
+    return render_template('view_admission.html', title='View Application', application=app_obj)
 
 @app.route('/admissions/<int:app_id>/approve', methods=['POST'])
 @crud_required('admission', 'update')
@@ -1213,6 +1238,11 @@ def approve_admission(app_id):
             guardian_name=app_obj.guardian_name,
             guardian_phone=app_obj.guardian_phone,
             guardian_email=app_obj.guardian_email,
+            aadhar_no=app_obj.aadhar_no,
+            community_cert_no=app_obj.community_cert_no,
+            annual_income=app_obj.annual_income,
+            income_cert_no=app_obj.income_cert_no,
+            temp_password=app_obj.temp_password,
             admission_date=datetime.utcnow().date(),
             status='active'
         )
@@ -1232,11 +1262,24 @@ def reject_admission(app_id):
     if app_obj.status == 'rejected':
         flash('Already rejected.', 'info')
     else:
+        reason = request.form.get('reason', '').strip()
         app_obj.status = 'rejected'
+        if reason:
+            app_obj.notes = reason
         app_obj.processed_by = session.get('user')
         db.session.commit()
         flash('Application rejected.', 'success')
     return redirect(url_for('admissions'))
+
+@app.route('/admission_status', methods=['GET', 'POST'])
+def admission_status():
+    app_obj = None
+    email = request.form.get('email', '').strip() if request.method == 'POST' else request.args.get('email', '').strip()
+    if email:
+        app_obj = AdmissionApplication.query.filter_by(email=email).order_by(AdmissionApplication.applied_at.desc()).first()
+        if not app_obj:
+            flash('No application found for this email.', 'warning')
+    return render_template('admission_status.html', title='Admission Status', app_obj=app_obj, email=email)
 
 # --- Grades and Transcript ---
 def grade_points(letter: str) -> float:
@@ -1488,6 +1531,16 @@ def login():
             flash('Logged in successfully.', 'success')
             next_url = request.args.get('next')
             return redirect(next_url or url_for('students'))
+        
+        # Check for Student with temporary password
+        student = Student.query.filter_by(email=username, temp_password=password).first()
+        if student:
+            session['logged_in'] = True
+            session['user'] = username
+            session['role'] = 'student'
+            session.permanent = True
+            flash('Logged in with temporary password. Please change your password.', 'warning')
+            return redirect(url_for('change_password'))
         admin_user = os.environ.get('ADMIN_USERNAME')
         admin_pw_hash = os.environ.get('ADMIN_PASSWORD_HASH')
         admin_pw_plain = os.environ.get('ADMIN_PASSWORD')
@@ -1623,49 +1676,75 @@ def reset_password(token):
 def logout():
     session.clear()
     flash('Logged out.', 'info')
-    return redirect(url_for('students'))
+    return redirect(url_for('login'))
 
 @app.route('/change-password', methods=['GET', 'POST'])
-@crud_required('user', 'update')
+@login_required
 def change_password():
     username = session.get('user')
     user = User.query.filter_by(username=username).first()
+    student = None
+    
     if not user:
-        flash('Account not found.', 'danger')
-        return redirect(url_for('login'))
+        # Check if it's a student with a temporary password
+        student = Student.query.filter_by(email=username).first()
+        if not student:
+            flash('Account not found.', 'danger')
+            return redirect(url_for('login'))
+
     if request.method == 'POST':
         current = request.form.get('current_password', '')
         password = request.form.get('password', '')
         confirm = request.form.get('confirm_password', '')
+        
         if not current:
             flash('Current password is required.', 'danger')
             return render_template('reset_password.html', title='Change Password', show_current=True)
-        if not check_password_hash(user.password_hash, current):
-            flash('Current password is incorrect.', 'danger')
-            return render_template('reset_password.html', title='Change Password', show_current=True)
+            
+        if user:
+            if not check_password_hash(user.password_hash, current):
+                flash('Current password is incorrect.', 'danger')
+                return render_template('reset_password.html', title='Change Password', show_current=True)
+        elif student:
+            if student.temp_password != current:
+                flash('Current temporary password is incorrect.', 'danger')
+                return render_template('reset_password.html', title='Change Password', show_current=True)
+        
         if not password:
             flash('New password is required.', 'danger')
             return render_template('reset_password.html', title='Change Password', show_current=True)
+            
         min_len = int(app.config.get('PASSWORD_MIN_LENGTH', 8))
         if len(password) < min_len:
             flash(f'Password must be at least {min_len} characters.', 'danger')
             return render_template('reset_password.html', title='Change Password', show_current=True)
+            
         if app.config.get('REQUIRE_STRONG_PASSWORD', True):
             if not re.search(r"[A-Z]", password) or not re.search(r"[a-z]", password) or not re.search(r"[0-9]", password):
                 flash('Password must include uppercase, lowercase, and a number.', 'danger')
                 return render_template('reset_password.html', title='Change Password', show_current=True)
+                
         if password != confirm:
             flash('Passwords do not match.', 'danger')
             return render_template('reset_password.html', title='Change Password', show_current=True)
+            
         try:
-            user.password_hash = generate_password_hash(password)
+            if user:
+                user.password_hash = generate_password_hash(password)
+            elif student:
+                # Create a User entry for the student and clear temporary password
+                new_user = User(username=student.email, password_hash=generate_password_hash(password), role='student')
+                db.session.add(new_user)
+                student.temp_password = None
+            
             db.session.commit()
             flash('Password updated successfully.', 'success')
             return redirect(url_for('profile'))
-        except Exception:
+        except Exception as e:
             db.session.rollback()
             logger.exception('Error changing password')
-            flash('Unexpected error. Please try again.', 'danger')
+            flash(f'Unexpected error: {str(e)}', 'danger')
+            
     return render_template('reset_password.html', title='Change Password', show_current=True)
 
 @app.route('/profile')
@@ -2514,6 +2593,17 @@ def add_student():
         emergency_contact_name = request.form.get('emergency_contact_name', '').strip()
         emergency_contact_phone = request.form.get('emergency_contact_phone', '').strip()
         previous_school = request.form.get('previous_school', '').strip()
+        aadhar_no = request.form.get('aadhar_no', '').strip()
+        community_cert_no = request.form.get('community_cert_no', '').strip()
+        income_cert_no = request.form.get('income_cert_no', '').strip()
+        annual_income_str = request.form.get('annual_income', '').strip()
+        
+        annual_income = None
+        if annual_income_str:
+            try:
+                annual_income = float(annual_income_str)
+            except ValueError:
+                pass
         
         sslc_marks = None
         if sslc_marks_str:
@@ -2603,7 +2693,11 @@ def add_student():
                 father_name=father_name or None,
                 mother_name=mother_name or None,
                 emergency_contact_name=emergency_contact_name or None,
-                emergency_contact_phone=emergency_contact_phone or None
+                emergency_contact_phone=emergency_contact_phone or None,
+                aadhar_no=aadhar_no or None,
+                community_cert_no=community_cert_no or None,
+                annual_income=annual_income,
+                income_cert_no=income_cert_no or None
             )
             db.session.add(student)
             db.session.commit()
@@ -2658,6 +2752,18 @@ def edit_student(student_id):
         emergency_contact_phone = request.form.get('emergency_contact_phone', '').strip()
         student.emergency_contact_phone = emergency_contact_phone or None
         student.previous_school = request.form.get('previous_school', '').strip() or None
+        student.aadhar_no = request.form.get('aadhar_no', '').strip() or None
+        student.community_cert_no = request.form.get('community_cert_no', '').strip() or None
+        student.income_cert_no = request.form.get('income_cert_no', '').strip() or None
+        
+        annual_income_str = request.form.get('annual_income', '').strip()
+        if annual_income_str:
+            try:
+                student.annual_income = float(annual_income_str)
+            except ValueError:
+                pass
+        else:
+            student.annual_income = None
         
         sslc_marks_str = request.form.get('sslc_marks', '').strip()
         if sslc_marks_str:

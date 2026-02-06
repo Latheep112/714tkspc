@@ -36,6 +36,11 @@ class Student(db.Model):
     emergency_contact_name = db.Column(db.String(100))
     emergency_contact_phone = db.Column(db.String(20))
     previous_school = db.Column(db.String(255))
+    aadhar_no = db.Column(db.String(20))
+    community_cert_no = db.Column(db.String(50))
+    annual_income = db.Column(db.Float)
+    income_cert_no = db.Column(db.String(50))
+    temp_password = db.Column(db.String(100))
 
     # Relationships
     courses = db.relationship('Course', secondary=enrollments, backref='students', lazy=True)
@@ -210,6 +215,11 @@ class AdmissionApplication(db.Model):
     guardian_name = db.Column(db.String(100))
     guardian_phone = db.Column(db.String(20))
     guardian_email = db.Column(db.String(100))
+    aadhar_no = db.Column(db.String(20))
+    community_cert_no = db.Column(db.String(50))
+    annual_income = db.Column(db.Float)
+    income_cert_no = db.Column(db.String(50))
+    temp_password = db.Column(db.String(100))
 
     requested_course = db.relationship('Course', backref='applications', lazy=True)
 
