@@ -1589,7 +1589,7 @@ def register():
             return render_template('register.html', title='Register')
         try:
             pw_hash = generate_password_hash(password)
-            user = User(username=username, password_hash=pw_hash, role='staff')
+            user = User(username=username, password_hash=pw_hash, role='student')
             db.session.add(user)
             db.session.commit()
             flash('Registration successful. You can log in now.', 'success')
