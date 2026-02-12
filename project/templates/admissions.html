@@ -11,6 +11,9 @@
     <button type="submit" class="btn btn-outline-secondary">Search</button>
   </form>
   <a href="{{ url_for('add_admission') }}" class="btn btn-primary ms-auto">New Application</a>
+  <form method="post" action="{{ url_for('calculate_merit') }}" class="ms-2">
+    <button type="submit" class="btn btn-warning">Calculate Merit</button>
+  </form>
 </div>
 
 <div class="card">
@@ -20,11 +23,9 @@
         <thead>
           <tr>
             <th>Name</th>
-            <th>Gender</th>
-            <th>Father's Name</th>
-            <th>Email</th>
             <th>Program</th>
-            <th>Prev School</th>
+            <th>Merit Score</th>
+            <th>Seat Allotted</th>
             <th>Status</th>
             <th>Applied</th>
             <th style="min-width: 200px;">Actions</th>
@@ -34,11 +35,15 @@
           {% for a in applications %}
           <tr>
             <td>{{ a.name }}</td>
-            <td>{{ a.gender or '-' }}</td>
-            <td>{{ a.father_name or '-' }}</td>
-            <td>{{ a.email }}</td>
             <td>{{ a.program or 'N/A' }}</td>
-            <td>{{ a.previous_school or '-' }}</td>
+            <td>{{ a.merit_score|round(2) if a.merit_score else '-' }}</td>
+            <td>
+                {% if a.seat_allotted %}
+                <span class="badge bg-success">Yes</span>
+                {% else %}
+                <span class="badge bg-secondary">No</span>
+                {% endif %}
+            </td>
             <td>
               {% if a.status == 'approved' %}
                 <span class="badge bg-success">Approved</span>
@@ -53,7 +58,7 @@
               <a href="{{ url_for('view_admission', app_id=a.id) }}" class="btn btn-sm btn-outline-info">View</a>
               {% if a.status == 'pending' %}
               <form method="post" action="{{ url_for('approve_admission', app_id=a.id) }}" class="d-inline">
-                <button type="submit" class="btn btn-sm btn-outline-success">Approve</button>
+                <button type="submit" class="btn btn-sm btn-outline-success">Approve & Allot Seat</button>
               </form>
               <form method="post" action="{{ url_for('reject_admission', app_id=a.id) }}" class="d-inline ms-1">
                 <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Reject this application?');">Reject</button>

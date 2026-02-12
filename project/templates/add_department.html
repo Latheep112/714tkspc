@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">Add Department</h2>{% endblock %}
+{% block content %}
+    <form method="POST">
+        <div class="form-group">
+            <label for="name">Department Name</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+            <label for="code">Department Code</label>
+            <input type="text" class="form-control" id="code" name="code">
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea class="form-control" id="description" name="description"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="hod_id">Head of Department</label>
+            <select class="form-control" id="hod_id" name="hod_id">
+                <option value="">Select HOD</option>
+                {% for teacher in teachers %}
+                <option value="{{ teacher.id }}">{{ teacher.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Department</button>
+    </form>
+{% endblock %}

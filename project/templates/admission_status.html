@@ -50,8 +50,12 @@
           <div class="col-sm-8">{{ app_obj.applied_at.strftime('%Y-%m-%d %H:%M') }}</div>
         </div>
         <div class="row mb-3">
-          <div class="col-sm-4 font-weight-bold">Requested Course:</div>
-          <div class="col-sm-8">{{ app_obj.requested_course.name if app_obj.requested_course else (app_obj.program or 'N/A') }}</div>
+          <div class="col-sm-4 font-weight-bold">Requested Department:</div>
+          <div class="col-sm-8">{{ app_obj.department.name if app_obj.department else 'N/A' }}</div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-sm-4 font-weight-bold">Registration Number:</div>
+          <div class="col-sm-8">{{ app_obj.registration_number or '-' }}</div>
         </div>
         <hr>
         <div class="row mb-3">

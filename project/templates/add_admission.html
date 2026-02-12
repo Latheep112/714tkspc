@@ -119,11 +119,11 @@
       </div>
       <div class="form-row">
         <div class="form-group col-md-6">
-          <label for="requested_course">Requested Course</label>
-          <select id="requested_course" name="requested_course" class="form-control" required>
-            <option value="">Select a course</option>
-            {% for c in courses %}
-            <option value="{{ c.id }}">{{ c.name }}</option>
+          <label for="requested_department">Requested Department</label>
+          <select id="requested_department" name="requested_department" class="form-control" required>
+            <option value="">Select a department</option>
+            {% for d in departments %}
+            <option value="{{ d.id }}">{{ d.name }}</option>
             {% endfor %}
           </select>
         </div>

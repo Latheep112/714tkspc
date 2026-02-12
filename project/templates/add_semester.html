@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">Add Semester</h2>{% endblock %}
+{% block content %}
+    <form method="POST">
+        <div class="form-group">
+            <label for="number">Semester Number</label>
+            <input type="number" class="form-control" id="number" name="number" min="1" required>
+        </div>
+        <div class="form-group">
+            <label for="academic_year">Academic Year</label>
+            <input type="text" class="form-control" id="academic_year" name="academic_year" placeholder="e.g. 2023-2024" required>
+        </div>
+        <div class="form-group">
+            <label for="start_date">Start Date</label>
+            <input type="date" class="form-control" id="start_date" name="start_date">
+        </div>
+        <div class="form-group">
+            <label for="end_date">End Date</label>
+            <input type="date" class="form-control" id="end_date" name="end_date">
+        </div>
+        <button type="submit" class="btn btn-primary">Save Semester</button>
+    </form>
+{% endblock %}

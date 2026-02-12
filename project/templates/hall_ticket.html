@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">{{ title }}</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Hall Ticket</li>
+{% endblock %}
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="card shadow-sm border-0 hall-ticket-print">
+        <div class="card-header bg-primary text-white text-center py-4">
+            <h3 class="mb-0">EXAMINATION HALL TICKET</h3>
+            <p class="mb-0">Academic ERP Institution</p>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-sm-8">
+                    <table class="table table-borderless table-sm">
+                        <tr>
+                            <th width="150">Student Name:</th>
+                            <td>{{ student.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Roll Number:</th>
+                            <td>{{ student.roll_number or '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Department:</th>
+                            <td>{{ student.department or '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Semester:</th>
+                            <td>{{ student.current_semester or '-' }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-sm-4 text-center">
+                    <div class="border rounded p-2 d-inline-block bg-light" style="width: 120px; height: 150px;">
+                        <span class="text-muted d-block mt-5">PHOTO</span>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="border-bottom pb-2 mb-3">Examination Schedule</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Course Code</th>
+                            <th>Course Name</th>
+                            <th>Exam Date & Time</th>
+                            <th>Location</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for exam in exams %}
+                        <tr>
+                            <td>{{ exam.course.code or '-' }}</td>
+                            <td>{{ exam.course.name }}</td>
+                            <td>{{ exam.exam_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ exam.location or '-' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">No upcoming exams scheduled.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="row mt-5">
+                <div class="col-6 text-center">
+                    <div class="border-top pt-2 d-inline-block" style="width: 200px;">
+                        <small>Controller of Examinations</small>
+                    </div>
+                </div>
+                <div class="col-6 text-center">
+                    <div class="border-top pt-2 d-inline-block" style="width: 200px;">
+                        <small>Student Signature</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4 no-print">
+        <button onclick="window.print();" class="btn btn-success">
+            <i class="fas fa-print"></i> Print Hall Ticket
+        </button>
+    </div>
+</div>
+
+<style>
+@media print {
+    .no-print { display: none !important; }
+    .hall-ticket-print { border: 1px solid #ddd !important; box-shadow: none !important; }
+    body { background-color: white !important; }
+    .main-sidebar, .main-header, .breadcrumb { display: none !important; }
+    .content-wrapper { margin-left: 0 !important; }
+}
+</style>
+{% endblock %}

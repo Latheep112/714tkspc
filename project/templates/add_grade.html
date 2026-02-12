@@ -18,6 +18,17 @@
             {% endfor %}
           </select>
         </div>
+        <div class="form-group col-md-4">
+          <label for="exam_id">Exam (Optional)</label>
+          <select id="exam_id" name="exam_id" class="form-control">
+            <option value="">General / Final Grade</option>
+            {% for e in exams %}
+            <option value="{{ e.id }}">{{ e.name }} - {{ e.course.name }} ({{ e.exam_date.strftime('%Y-%m-%d') }})</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
         <div class="form-group col-md-2">
           <label for="letter">Letter Grade</label>
           <input type="text" id="letter" name="letter" class="form-control" placeholder="e.g., A, B+" required>

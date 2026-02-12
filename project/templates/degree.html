@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">{{ title }}</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Degree</li>
+{% endblock %}
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 degree-print text-center p-5" style="border: 10px double #333 !important;">
+        <div class="card-body">
+            <h1 class="display-3 mb-4" style="font-family: 'Times New Roman', Times, serif;">COURSE COMPLETION CERTIFICATE</h1>
+            <p class="lead mb-5">This is to certify that</p>
+            
+            <h2 class="display-4 mb-4" style="text-decoration: underline;">{{ student.name }}</h2>
+            
+            <p class="lead mb-4">has successfully completed the prescribed course of study in</p>
+            <h3 class="mb-5">{{ student.program or 'the Academic Program' }}</h3>
+            
+            <p class="lead mb-5">with a Cumulative Grade Point Average of <strong>{{ cgpa }}</strong></p>
+            
+            <div class="row mt-5 pt-5">
+                <div class="col-6">
+                    <div class="border-top pt-2 d-inline-block" style="width: 200px;">
+                        <strong>HoD</strong>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="border-top pt-2 d-inline-block" style="width: 200px;">
+                        <strong>Principal</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="mt-5 text-muted small">Issued on: {{ today.strftime('%B %d, %Y') }}</p>
+        </div>
+    </div>
+
+    <div class="text-center mt-4 no-print">
+        <button onclick="window.print();" class="btn btn-primary">
+            <i class="fas fa-print"></i> Download Digital Degree
+        </button>
+        <a href="{{ url_for('marksheet', student_id=student.id) }}" class="btn btn-outline-secondary ms-2">Back to Marksheet</a>
+    </div>
+</div>
+
+<style>
+@media print {
+    .no-print { display: none !important; }
+    .degree-print { border: 10px double #333 !important; box-shadow: none !important; margin: 0 !important; }
+    body { background-color: white !important; }
+    .main-sidebar, .main-header, .breadcrumb, .navbar { display: none !important; }
+    .content-wrapper { margin: 0 !important; padding: 0 !important; }
+}
+.degree-print {
+    background: #fff;
+    min-height: 800px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+</style>
+{% endblock %}

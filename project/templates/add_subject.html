@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">Add Subject</h2>{% endblock %}
+{% block content %}
+    <form method="POST">
+        <div class="form-group">
+            <label for="name">Subject Name</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+            <label for="code">Subject Code</label>
+            <input type="text" class="form-control" id="code" name="code" required>
+        </div>
+        <div class="form-group">
+            <label for="department_id">Department</label>
+            <select class="form-control" id="department_id" name="department_id">
+                <option value="">Select Department</option>
+                {% for dept in departments %}
+                <option value="{{ dept.id }}">{{ dept.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="credits">Credits</label>
+            <input type="number" class="form-control" id="credits" name="credits" value="3" min="1">
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea class="form-control" id="description" name="description"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Save Subject</button>
+    </form>
+{% endblock %}

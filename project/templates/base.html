@@ -31,8 +31,12 @@
                         <li><a class="dropdown-item {% if request.endpoint == 'teachers' %}active{% endif %}" href="{{ url_for('teachers') }}">Teachers</a></li>
                         {% endif %}
                         <li><a class="dropdown-item {% if request.endpoint == 'courses' %}active{% endif %}" href="{{ url_for('courses') }}">Courses</a></li>
+                        <li><a class="dropdown-item {% if request.endpoint == 'list_departments' %}active{% endif %}" href="{{ url_for('list_departments') }}">Departments</a></li>
+                        <li><a class="dropdown-item {% if request.endpoint == 'list_semesters' %}active{% endif %}" href="{{ url_for('list_semesters') }}">Semesters</a></li>
+                        <li><a class="dropdown-item {% if request.endpoint == 'list_subjects' %}active{% endif %}" href="{{ url_for('list_subjects') }}">Subjects</a></li>
                         <li><a class="dropdown-item {% if request.endpoint == 'calendar' %}active{% endif %}" href="{{ url_for('calendar') }}">Calendar</a></li>
                         <li><a class="dropdown-item {% if request.endpoint == 'timetable' %}active{% endif %}" href="{{ url_for('timetable') }}">Timetable</a></li>
+                        <li><a class="dropdown-item {% if request.endpoint == 'exams' %}active{% endif %}" href="{{ url_for('exams') }}">Exams</a></li>
                         {% if session.get('role') != 'parent' %}
                         <li><a class="dropdown-item {% if request.endpoint == 'workload' %}active{% endif %}" href="{{ url_for('workload') }}">Workload</a></li>
                         {% endif %}
@@ -40,6 +44,14 @@
                         {% if session.get('role') != 'parent' %}
                         <li><a class="dropdown-item {% if request.endpoint == 'admissions' %}active{% endif %}" href="{{ url_for('admissions') }}">Admissions</a></li>
                         {% endif %}
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navAttendance" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-calendar-check me-1"></i><span class="nav-label">Attendance</span></a>
+                    <ul class="dropdown-menu" aria-labelledby="navAttendance">
+                        <li><a class="dropdown-item {% if request.endpoint == 'daily_attendance' %}active{% endif %}" href="{{ url_for('daily_attendance') }}">Daily Attendance</a></li>
+                        <li><a class="dropdown-item {% if request.endpoint == 'low_attendance_alerts' %}active{% endif %}" href="{{ url_for('low_attendance_alerts') }}">Low Attendance Alerts</a></li>
+                        <li><a class="dropdown-item {% if request.endpoint == 'monthly_attendance_report' %}active{% endif %}" href="{{ url_for('monthly_attendance_report') }}">Monthly Reports</a></li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown">

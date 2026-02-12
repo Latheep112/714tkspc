@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">{{ title }}{% if course %} for {{ course.name }}{% endif %}</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('courses') }}">Courses</a></li>
+  {% if course %}
+  <li class="breadcrumb-item"><a href="{{ url_for('course_details', course_id=course.id) }}">{{ course.name }}</a></li>
+  {% endif %}
+  <li class="breadcrumb-item active" aria-current="page">Low Attendance Alerts</li>
+{% endblock %}
+{% block content %}
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-center">
+            <div class="col-auto">
+                <label class="form-label" for="course_id">Select Course:</label>
+                <select name="course_id" id="course_id" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- Choose Course --</option>
+                    {% for c in courses %}
+                    <option value="{{ c.id }}" {% if course and course.id == c.id %}selected{% endif %}>{{ c.name }} ({{ c.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label" for="threshold">Attendance Threshold (%):</label>
+                <input type="number" name="threshold" id="threshold" class="form-control" value="{{ threshold }}" step="0.1" min="0" max="100">
+            </div>
+            <div class="col-auto pt-4">
+                <button type="submit" class="btn btn-primary">Filter</button>
+            </div>
+        </form>
+        
+        {% if course %}
+        <hr>
+        <form method="POST" action="{{ url_for('notify_low_attendance') }}" class="d-inline-block">
+            <input type="hidden" name="course_id" value="{{ course.id }}">
+            <input type="hidden" name="threshold" value="{{ threshold }}">
+            <button type="submit" class="btn btn-warning" onclick="return confirm('Send notifications to all students/parents listed below?');">
+                <i class="fas fa-bullhorn me-1"></i> Notify All Parents/Students
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if not course %}
+<div class="alert alert-info">
+    Please select a course to view attendance alerts.
+</div>
+{% else %}
+<div class="alert alert-info">
+    Showing students with attendance below <strong>{{ threshold }}%</strong> in <strong>{{ course.name }}</strong>.
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>Student Name</th>
+                <th>Roll Number</th>
+                <th>Attended</th>
+                <th>Total Sessions</th>
+                <th>Attendance Rate</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alert in alerts %}
+            <tr>
+                <td>{{ alert.student.name }}</td>
+                <td>{{ alert.student.roll_number or '-' }}</td>
+                <td>{{ alert.attended }}</td>
+                <td>{{ alert.total }}</td>
+                <td>
+                    <span class="badge bg-danger">{{ alert.rate|round(1) }}%</span>
+                </td>
+                <td>
+                    <a href="mailto:{{ alert.student.guardian_email }}?subject=Low Attendance Alert: {{ alert.student.name }}&body=Dear Parent, this is to inform you that your ward's attendance in {{ course.name }} is {{ alert.rate|round(1) }}%, which is below the required threshold." class="btn btn-sm btn-outline-warning">
+                        <i class="fas fa-envelope"></i> Alert Parent
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center text-muted">No students found below the threshold.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

@@ -21,8 +21,33 @@
           {% endif %}
           {% if course.room %}<p class="mb-2"><strong>Room:</strong> {{ course.room }}</p>{% endif %}
           {% if course.capacity %}<p class="mb-2"><strong>Capacity:</strong> {{ course.capacity }}</p>{% endif %}
+          {% if course.section_name %}<p class="mb-2"><strong>Section/Batch:</strong> {{ course.section_name }}</p>{% endif %}
         </div>
       </div>
+      
+      <div class="row mt-3 mb-3">
+        <div class="col-md-12">
+          <strong>Syllabus Progress:</strong>
+          <div class="progress mt-1" style="height: 25px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                 style="width: {{ course.syllabus_progress or 0 }}%"
+                 aria-valuenow="{{ course.syllabus_progress }}" aria-valuemin="0" aria-valuemax="100">
+              {{ course.syllabus_progress }}%
+            </div>
+          </div>
+          {% if session.get('role') in ['admin', 'faculty', 'teacher'] %}
+          <form action="{{ url_for('update_course_progress', course_id=course.id) }}" method="POST" class="form-inline mt-2">
+            <div class="input-group input-group-sm">
+              <input type="number" name="progress" class="form-control" value="{{ course.syllabus_progress }}" min="0" max="100">
+              <div class="input-group-append">
+                <button type="submit" class="btn btn-outline-primary">Update Progress</button>
+              </div>
+            </div>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+
       <p><strong>Description:</strong> {{ course.description }}</p>
       {% if course.prerequisites %}
       <p><strong>Prerequisites:</strong> {{ course.prerequisites }}</p>
@@ -83,4 +108,4 @@
   </div>
   {% endif %}
 {% endblock %}
-
+

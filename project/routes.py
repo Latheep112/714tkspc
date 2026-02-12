@@ -3,9 +3,9 @@ from project import app, db
 import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
-from project.models import Student, Teacher, Course, User, CourseSession, Attendance, Grade, AdmissionApplication, AuditLog, FeeAccount, FeePayment, BudgetCategory, BudgetTransaction, Resource, ResourceBooking, ResourceBookingApproval, Invoice, ParentStudentLink, UserPhoto
+from project.models import Student, Teacher, Course, User, CourseSession, Attendance, Grade, AdmissionApplication, AuditLog, FeeAccount, FeePayment, BudgetCategory, BudgetTransaction, Resource, ResourceBooking, ResourceBookingApproval, Invoice, ParentStudentLink, UserPhoto, Department, Semester, Subject, Exam
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import or_
+from sqlalchemy import or_, and_, func, extract
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
@@ -86,6 +86,24 @@ CRUD_PERMISSIONS = {
     'admission': {
         'create': ['admin', 'staff'],
         'read':   ['admin', 'staff'],
+        'update': ['admin', 'staff'],
+        'delete': ['admin'],
+    },
+    'department': {
+        'create': ['admin'],
+        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student'],
+        'update': ['admin'],
+        'delete': ['admin'],
+    },
+    'semester': {
+        'create': ['admin'],
+        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student'],
+        'update': ['admin'],
+        'delete': ['admin'],
+    },
+    'subject': {
+        'create': ['admin', 'staff'],
+        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student'],
         'update': ['admin', 'staff'],
         'delete': ['admin'],
     },
@@ -1072,8 +1090,10 @@ def admissions():
     return render_template('admissions.html', title='Admissions', applications=apps, q=q)
 
 @app.route('/add_admission', methods=['GET', 'POST'])
+@app.route('/admissions/add', methods=['GET', 'POST'])
 def add_admission():
     if request.method == 'POST':
+        # Removed registration_number from form - it's auto-generated as temp
         name = request.form.get('name', '').strip()
         email = request.form.get('email', '').strip()
         phone = request.form.get('phone', '').strip()
@@ -1088,7 +1108,7 @@ def add_admission():
         father_name = request.form.get('father_name', '').strip()
         mother_name = request.form.get('mother_name', '').strip()
         previous_school = request.form.get('previous_school', '').strip()
-        requested_course = request.form.get('requested_course', '').strip()
+        requested_department_id = request.form.get('requested_department', '').strip()
         aadhar_no = request.form.get('aadhar_no', '').strip()
         community_cert_no = request.form.get('community_cert_no', '').strip()
         annual_income_str = request.form.get('annual_income', '').strip()
@@ -1096,8 +1116,16 @@ def add_admission():
 
         if not name or not email:
             flash('Name and email are required.', 'danger')
-            courses = Course.query.order_by(Course.name.asc()).all()
-            return render_template('add_admission.html', title='New Application', courses=courses)
+            departments = Department.query.order_by(Department.name.asc()).all()
+            return render_template('add_admission.html', title='New Application', departments=departments)
+
+        # Generate temporary registration number: TEMP + Year + 4-digit random/sequence
+        year = datetime.utcnow().year
+        import random
+        temp_reg = f"TEMP{year}{random.randint(1000, 9999)}"
+        # Ensure uniqueness
+        while AdmissionApplication.query.filter_by(registration_number=temp_reg).first():
+            temp_reg = f"TEMP{year}{random.randint(1000, 9999)}"
 
         annual_income = None
         if annual_income_str:
@@ -1105,8 +1133,8 @@ def add_admission():
                 annual_income = float(annual_income_str)
             except ValueError:
                 flash('Invalid annual income.', 'danger')
-                courses = Course.query.order_by(Course.name.asc()).all()
-                return render_template('add_admission.html', title='New Application', courses=courses)
+                departments = Department.query.order_by(Department.name.asc()).all()
+                return render_template('add_admission.html', title='New Application', departments=departments)
 
         dob = None
         if dob_str:
@@ -1114,8 +1142,8 @@ def add_admission():
                 dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
             except ValueError:
                 flash('Invalid date of birth.', 'danger')
-                courses = Course.query.order_by(Course.name.asc()).all()
-                return render_template('add_admission.html', title='New Application', courses=courses)
+                departments = Department.query.order_by(Department.name.asc()).all()
+                return render_template('add_admission.html', title='New Application', departments=departments)
         sslc = None
         hsc = None
         if sslc_str:
@@ -1123,22 +1151,24 @@ def add_admission():
                 sslc = int(sslc_str)
             except ValueError:
                 flash('Invalid SSLC marks.', 'danger')
-                courses = Course.query.order_by(Course.name.asc()).all()
-                return render_template('add_admission.html', title='New Application', courses=courses)
+                departments = Department.query.order_by(Department.name.asc()).all()
+                return render_template('add_admission.html', title='New Application', departments=departments)
         if hsc_str:
             try:
                 hsc = int(hsc_str)
             except ValueError:
                 flash('Invalid HSC marks.', 'danger')
-                courses = Course.query.order_by(Course.name.asc()).all()
-                return render_template('add_admission.html', title='New Application', courses=courses)
-        requested_course_id = None
-        if requested_course:
+                departments = Department.query.order_by(Department.name.asc()).all()
+                return render_template('add_admission.html', title='New Application', departments=departments)
+        
+        dept_id = None
+        if requested_department_id:
             try:
-                requested_course_id = int(requested_course)
+                dept_id = int(requested_department_id)
             except ValueError:
-                requested_course_id = None
-        rc = Course.query.get(requested_course_id) if requested_course_id else None
+                dept_id = None
+        rd = Department.query.get(dept_id) if dept_id else None
+        
         photo_file = request.files.get('photo')
         photo_path = None
         if photo_file and photo_file.filename:
@@ -1160,6 +1190,7 @@ def add_admission():
         guardian_phone = request.form.get('guardian_phone')
         guardian_email = request.form.get('guardian_email')
         app_obj = AdmissionApplication(
+            registration_number=temp_reg,
             name=name,
             email=email,
             phone=phone or None,
@@ -1183,7 +1214,8 @@ def add_admission():
             guardian_name=guardian_name or None,
             guardian_phone=guardian_phone or None,
             guardian_email=guardian_email or None,
-            requested_course_id=rc.id if rc else None,
+            requested_course_id=None, # Clear old course id
+            department_id=rd.id if rd else None, # Use department_id instead
             photo_path=photo_path,
             aadhar_no=aadhar_no,
             community_cert_no=community_cert_no,
@@ -1193,10 +1225,10 @@ def add_admission():
         )
         db.session.add(app_obj)
         db.session.commit()
-        flash('Application submitted. You can check your status using your email.', 'success')
+        flash(f'Application submitted. Your temporary registration number is {temp_reg}. Use your email to check status.', 'success')
         return redirect(url_for('admission_status'))
-    courses = Course.query.order_by(Course.name.asc()).all()
-    return render_template('add_admission.html', title='New Application', courses=courses)
+    departments = Department.query.order_by(Department.name.asc()).all()
+    return render_template('add_admission.html', title='New Application', departments=departments)
 
 @app.route('/admissions/<int:app_id>')
 @crud_required('admission', 'read')
@@ -1204,26 +1236,81 @@ def view_admission(app_id):
     app_obj = AdmissionApplication.query.get_or_404(app_id)
     return render_template('view_admission.html', title='View Application', application=app_obj)
 
+@app.route('/admissions/calculate_merit', methods=['POST'])
+@crud_required('admission', 'update')
+def calculate_merit():
+    apps = AdmissionApplication.query.filter_by(status='pending').all()
+    for app_obj in apps:
+        # Calculate merit score: (SSLC + HSC) / 2
+        sslc = app_obj.sslc_marks or 0
+        hsc = app_obj.hsc_marks or 0
+        app_obj.merit_score = (sslc + hsc) / 2.0
+    db.session.commit()
+    flash('Merit scores calculated for all pending applications.', 'success')
+    return redirect(url_for('admissions'))
+
+@app.route('/admissions/<int:app_id>/verify', methods=['POST'])
+@login_required
+@crud_required('admission', 'update')
+def verify_documents(app_id):
+    app_obj = AdmissionApplication.query.get_or_404(app_id)
+    app_obj.documents_verified = True
+    db.session.commit()
+    flash('Documents verified successfully.', 'success')
+    return redirect(url_for('view_admission', app_id=app_id))
+
+@app.route('/admissions/<int:app_id>/allot', methods=['POST'])
+@login_required
+@crud_required('admission', 'update')
+def allot_seat(app_id):
+    app_obj = AdmissionApplication.query.get_or_404(app_id)
+    if not app_obj.documents_verified:
+        flash('Verify documents first.', 'warning')
+        return redirect(url_for('view_admission', app_id=app_id))
+    
+    app_obj.seat_allotted = True
+    db.session.commit()
+    flash('Seat allotted successfully.', 'success')
+    return redirect(url_for('view_admission', app_id=app_id))
+
 @app.route('/admissions/<int:app_id>/approve', methods=['POST'])
+@login_required
 @crud_required('admission', 'update')
 def approve_admission(app_id):
     app_obj = AdmissionApplication.query.get_or_404(app_id)
+    if not app_obj.documents_verified:
+        flash('Cannot approve application. Documents must be verified first.', 'warning')
+        return redirect(url_for('view_admission', app_id=app_id))
     if app_obj.status == 'approved':
         flash('Already approved.', 'info')
         return redirect(url_for('admissions'))
+    
+    final_registration_number = request.form.get('final_registration_number', '').strip()
+    if not final_registration_number:
+        flash('Final registration number is required for approval.', 'danger')
+        return redirect(url_for('view_admission', app_id=app_id))
+
+    # Check if final registration number is already taken
+    existing_reg = Student.query.filter_by(registration_number=final_registration_number).first()
+    if existing_reg:
+        flash(f'Registration number {final_registration_number} is already assigned to another student.', 'danger')
+        return redirect(url_for('view_admission', app_id=app_id))
+
     existing = Student.query.filter_by(email=app_obj.email).first()
     if existing:
         student = existing
+        student.registration_number = final_registration_number
     else:
         student = Student(
+            registration_number=final_registration_number,
             name=app_obj.name, 
             email=app_obj.email, 
             phone=app_obj.phone or '', 
-            roll_number=None, 
+            roll_number=f"STU{app_obj.id:04d}", 
             address=app_obj.address, 
             date_of_birth=app_obj.date_of_birth,
             gender=app_obj.gender,
-            department=app_obj.program,
+            department_id=getattr(app_obj, 'department_id', None),
             nationality=app_obj.nationality,
             blood_group=app_obj.blood_group,
             religion=app_obj.religion,
@@ -1246,13 +1333,32 @@ def approve_admission(app_id):
             admission_date=datetime.utcnow().date(),
             status='active'
         )
+        # Seat Allotment
+        if app_obj.requested_course_id:
+            course = Course.query.get(app_obj.requested_course_id)
+            if course:
+                student.courses.append(course)
+                app_obj.seat_allotted = True
+
         db.session.add(student)
         db.session.flush()  # get id
+
+        # Fee Payment: Create initial invoice
+        invoice = Invoice(
+            student_id=student.id,
+            amount_due=1000.0,
+            description="Admission Fee",
+            due_date=datetime.utcnow().date(),
+            status='unpaid'
+        )
+        db.session.add(invoice)
+
     app_obj.status = 'approved'
     app_obj.student_id = student.id
+    app_obj.registration_number = final_registration_number # Update app record with final reg no
     app_obj.processed_by = session.get('user')
     db.session.commit()
-    flash('Application approved and student created/linked.', 'success')
+    flash(f'Application approved. Student created with Registration No: {final_registration_number}', 'success')
     return redirect(url_for('admissions'))
 
 @app.route('/admissions/<int:app_id>/reject', methods=['POST'])
@@ -1311,34 +1417,57 @@ def student_transcript(student_id):
             return redirect(url_for('dashboard'))
     
     grades = Grade.query.filter_by(student_id=student_id).all()
-    # Build per-course records
     records = []
     total_points = 0.0
     total_credits = 0
-    for course in student.courses:
-        gr = next((g for g in grades if g.course_id == course.id), None)
-        letter = gr.letter if gr else None
-        pts = gr.points if (gr and gr.points is not None) else (grade_points(letter) if letter else None)
-        credits = course.credits or 0
-        if pts is not None:
+    
+    # We'll use a dictionary to keep track of the "final" grade for GPA calculation
+    # For GPA, we might want to only include grades that are NOT linked to an internal exam,
+    # or handle it differently. For now, let's include all grades that have points.
+    
+    for gr in grades:
+        letter = gr.letter
+        pts = gr.points if gr.points is not None else (grade_points(letter) if letter else None)
+        credits = gr.course.credits or 0
+        
+        # Only add to GPA if it's a final/general grade (no exam_id)
+        if gr.exam_id is None and pts is not None:
             total_points += pts * (credits if credits else 1)
             total_credits += (credits if credits else 1)
-        sem = gr.semester if gr else course.semester
-        ay = gr.academic_year if gr else course.academic_year
-        comments = gr.comments if gr else ''
-        remarks = gr.remarks if gr else ''
-        score = gr.score if gr else None
+            
         records.append({
-            'course': course, 
+            'id': gr.id,
+            'course': gr.course, 
+            'exam': gr.exam,
             'letter': letter, 
             'points': pts, 
             'credits': credits, 
-            'semester': sem, 
-            'academic_year': ay,
-            'comments': comments,
-            'remarks': remarks,
-            'score': score
+            'semester': gr.semester, 
+            'academic_year': gr.academic_year,
+            'comments': gr.comments,
+            'remarks': gr.remarks,
+            'score': gr.score
         })
+    
+    # If a course has no grade record, we still might want to show it as "Enrolled"
+    enrolled_course_ids = [c.id for c in student.courses]
+    graded_course_ids = [g.course_id for g in grades]
+    for course in student.courses:
+        if course.id not in graded_course_ids:
+            records.append({
+                'id': None,
+                'course': course,
+                'exam': None,
+                'letter': None,
+                'points': None,
+                'credits': course.credits or 0,
+                'semester': course.semester,
+                'academic_year': course.academic_year,
+                'comments': '',
+                'remarks': '',
+                'score': None
+            })
+
     gpa = (total_points / total_credits) if total_credits > 0 else None
     return render_template('student_transcript.html', title='Transcript', student=student, records=records, gpa=gpa)
 
@@ -1347,8 +1476,10 @@ def student_transcript(student_id):
 def add_grade(student_id):
     student = Student.query.get_or_404(student_id)
     enrolled_courses = list(student.courses)
+    exams = Exam.query.all()
     if request.method == 'POST':
         course_id = request.form.get('course_id')
+        exam_id = request.form.get('exam_id')
         letter = request.form.get('letter', '').strip()
         points_str = request.form.get('points', '').strip()
         score_str = request.form.get('score', '').strip()
@@ -1361,18 +1492,26 @@ def add_grade(student_id):
             cid = int(course_id)
         except Exception:
             flash('Please select a course.', 'danger')
-            return render_template('add_grade.html', title='Add Grade', student=student, courses=enrolled_courses)
+            return render_template('add_grade.html', title='Add Grade', student=student, courses=enrolled_courses, exams=exams)
         course = Course.query.get(cid)
         if not course or course not in enrolled_courses:
             flash('Course not found or not enrolled.', 'danger')
-            return render_template('add_grade.html', title='Add Grade', student=student, courses=enrolled_courses)
+            return render_template('add_grade.html', title='Add Grade', student=student, courses=enrolled_courses, exams=exams)
+        
+        ex_id = None
+        if exam_id:
+            try:
+                ex_id = int(exam_id)
+            except ValueError:
+                ex_id = None
+
         pts = None
         if points_str:
             try:
                 pts = float(points_str)
             except ValueError:
                 flash('Invalid points value.', 'danger')
-                return render_template('add_grade.html', title='Add Grade', student=student, courses=enrolled_courses)
+                return render_template('add_grade.html', title='Add Grade', student=student, courses=enrolled_courses, exams=exams)
         
         score = None
         if score_str:
@@ -1380,15 +1519,16 @@ def add_grade(student_id):
                 score = float(score_str)
             except ValueError:
                 flash('Invalid score value.', 'danger')
-                return render_template('add_grade.html', title='Add Grade', student=student, courses=enrolled_courses)
+                return render_template('add_grade.html', title='Add Grade', student=student, courses=enrolled_courses, exams=exams)
 
         if not letter:
             flash('Letter grade is required.', 'danger')
-            return render_template('add_grade.html', title='Add Grade', student=student, courses=enrolled_courses)
+            return render_template('add_grade.html', title='Add Grade', student=student, courses=enrolled_courses, exams=exams)
         try:
             g = Grade(
                 student_id=student.id, 
                 course_id=course.id, 
+                exam_id=ex_id,
                 letter=letter.upper(), 
                 points=pts, 
                 score=score,
@@ -1405,17 +1545,18 @@ def add_grade(student_id):
             return redirect(url_for('student_transcript', student_id=student.id))
         except IntegrityError:
             db.session.rollback()
-            flash('Grade for this course already exists. Edit instead.', 'warning')
+            flash('Grade for this course/exam already exists. Edit instead.', 'warning')
             return redirect(url_for('student_transcript', student_id=student.id))
-    return render_template('add_grade.html', title='Add Grade', student=student, courses=enrolled_courses)
+    return render_template('add_grade.html', title='Add Grade', student=student, courses=enrolled_courses, exams=exams)
 
-@app.route('/students/<int:student_id>/grades/<int:course_id>/edit', methods=['GET', 'POST'])
+@app.route('/students/<int:student_id>/grades/<int:grade_id>/edit', methods=['GET', 'POST'])
 @crud_required('grade', 'update')
-def edit_grade(student_id, course_id):
+def edit_grade(student_id, grade_id):
     student = Student.query.get_or_404(student_id)
-    grade = Grade.query.filter_by(student_id=student_id, course_id=course_id).first_or_404()
-    course = Course.query.get_or_404(course_id)
+    grade = Grade.query.get_or_404(grade_id)
+    exams = Exam.query.all()
     if request.method == 'POST':
+        exam_id = request.form.get('exam_id')
         letter = request.form.get('letter', '').strip()
         points_str = request.form.get('points', '').strip()
         score_str = request.form.get('score', '').strip()
@@ -1425,13 +1566,20 @@ def edit_grade(student_id, course_id):
         academic_year = request.form.get('academic_year', '').strip()
         remarks = request.form.get('remarks', '').strip()
         
+        ex_id = None
+        if exam_id:
+            try:
+                ex_id = int(exam_id)
+            except ValueError:
+                ex_id = None
+
         pts = None
         if points_str:
             try:
                 pts = float(points_str)
             except ValueError:
                 flash('Invalid points value.', 'danger')
-                return render_template('edit_grade.html', title='Edit Grade', student=student, course=course, grade=grade)
+                return render_template('edit_grade.html', title='Edit Grade', student=student, grade=grade, exams=exams)
         
         score = None
         if score_str:
@@ -1439,12 +1587,13 @@ def edit_grade(student_id, course_id):
                 score = float(score_str)
             except ValueError:
                 flash('Invalid score value.', 'danger')
-                return render_template('edit_grade.html', title='Edit Grade', student=student, course=course, grade=grade)
+                return render_template('edit_grade.html', title='Edit Grade', student=student, grade=grade, exams=exams)
 
         if not letter:
             flash('Letter grade is required.', 'danger')
-            return render_template('edit_grade.html', title='Edit Grade', student=student, course=course, grade=grade)
+            return render_template('edit_grade.html', title='Edit Grade', student=student, grade=grade, exams=exams)
         
+        grade.exam_id = ex_id
         grade.letter = letter.upper()
         grade.points = pts
         grade.score = score
@@ -1456,7 +1605,7 @@ def edit_grade(student_id, course_id):
         db.session.commit()
         flash('Grade updated.', 'success')
         return redirect(url_for('student_transcript', student_id=student.id))
-    return render_template('edit_grade.html', title='Edit Grade', student=student, course=course, grade=grade)
+    return render_template('edit_grade.html', title='Edit Grade', student=student, grade=grade, exams=exams)
 
 # --- Analytics ---
 @app.route('/analytics')
@@ -2566,6 +2715,7 @@ def sample_enrollments_csv():
 @crud_required('student', 'create')
 def add_student():
     if request.method == 'POST':
+        registration_number = request.form.get('registration_number', '').strip()
         name = request.form['name']
         email = request.form['email']
         phone = request.form['phone']
@@ -2667,6 +2817,7 @@ def add_student():
 
         try:
             student = Student(
+                registration_number=registration_number or None,
                 name=name, 
                 email=email, 
                 phone=phone, 
@@ -2727,6 +2878,7 @@ def edit_student(student_id):
     student = Student.query.get_or_404(student_id)
     teachers = Teacher.query.all()
     if request.method == 'POST':
+        student.registration_number = request.form.get('registration_number', '').strip() or None
         student.name = request.form['name']
         student.email = request.form['email']
         student.phone = request.form['phone']
@@ -3112,6 +3264,7 @@ def add_course():
         end_date_str = request.form.get('end_date', '').strip()
         prerequisites = request.form.get('prerequisites', '').strip()
         learning_outcomes = request.form.get('learning_outcomes', '').strip()
+        section_name = request.form.get('section_name', '').strip()
         capacity = None
         if capacity_str:
             try:
@@ -3177,13 +3330,29 @@ def add_course():
             start_date=start_date,
             end_date=end_date,
             prerequisites=prerequisites or None,
-            learning_outcomes=learning_outcomes or None
+            learning_outcomes=learning_outcomes or None,
+            section_name=section_name or None,
+            syllabus_progress=0
         )
         db.session.add(course)
         db.session.commit()
         flash('Course has been added!', 'success')
         return redirect(url_for('courses'))
     return render_template('add_course.html', title='Add Course', teachers=teachers)
+
+@app.route('/courses/<int:course_id>/update_progress', methods=['POST'])
+@login_required
+@crud_required('course', 'update')
+def update_course_progress(course_id):
+    course = Course.query.get_or_404(course_id)
+    progress = request.form.get('progress', type=int)
+    if progress is not None and 0 <= progress <= 100:
+        course.syllabus_progress = progress
+        db.session.commit()
+        flash(f'Syllabus progress updated to {progress}%', 'success')
+    else:
+        flash('Invalid progress value.', 'danger')
+    return redirect(url_for('course_details', course_id=course_id))
 
 @app.route("/courses/<int:course_id>/enroll", methods=['GET', 'POST'])
 @crud_required('course', 'update')
@@ -3286,6 +3455,7 @@ def edit_course(course_id):
         course.academic_year = request.form.get('academic_year', '').strip() or None
         course.prerequisites = request.form.get('prerequisites', '').strip() or None
         course.learning_outcomes = request.form.get('learning_outcomes', '').strip() or None
+        course.section_name = request.form.get('section_name', '').strip() or None
         capacity_str = request.form.get('capacity', '').strip()
         start_date_str = request.form.get('start_date', '').strip()
         end_date_str = request.form.get('end_date', '').strip()
@@ -3624,6 +3794,63 @@ def delete_session(session_id):
     flash('Session deleted.', 'success')
     return redirect(url_for('course_sessions', course_id=course_id))
 
+@app.route("/attendance/daily")
+@login_required
+@crud_required('attendance', 'read')
+def daily_attendance():
+    today = datetime.utcnow().date()
+    # Filter sessions for today. If teacher/faculty, only show their courses.
+    role = session.get('role')
+    if role in ('faculty', 'teacher'):
+        teacher = Teacher.query.filter_by(email=session.get('user')).first()
+        if teacher:
+            sessions_today = CourseSession.query.join(Course).filter(
+                CourseSession.session_date == today,
+                Course.teacher_id == teacher.id
+            ).all()
+            courses = Course.query.filter_by(teacher_id=teacher.id).all()
+        else:
+            sessions_today = []
+            courses = []
+    else:
+        sessions_today = CourseSession.query.filter_by(session_date=today).all()
+        courses = Course.query.all()
+        
+    return render_template('daily_attendance.html', sessions=sessions_today, courses=courses, today=today, title='Daily Attendance')
+
+@app.route("/attendance/quick_session", methods=['POST'])
+@login_required
+@crud_required('attendance', 'create')
+def add_session_today():
+    course_id = request.form.get('course_id')
+    title = request.form.get('title')
+    start_time_str = request.form.get('start_time')
+    end_time_str = request.form.get('end_time')
+    
+    today = datetime.utcnow().date()
+    
+    # Check if session already exists for this course today
+    existing = CourseSession.query.filter_by(course_id=course_id, session_date=today).first()
+    if existing:
+        flash('A session already exists for this course today.', 'info')
+        return redirect(url_for('mark_attendance', session_id=existing.id))
+    
+    from datetime import datetime as dt
+    start_time = dt.strptime(start_time_str, '%H:%M').time() if start_time_str else None
+    end_time = dt.strptime(end_time_str, '%H:%M').time() if end_time_str else None
+    
+    new_session = CourseSession(
+        course_id=course_id,
+        session_date=today,
+        title=title,
+        start_time=start_time,
+        end_time=end_time
+    )
+    db.session.add(new_session)
+    db.session.commit()
+    
+    return redirect(url_for('mark_attendance', session_id=new_session.id))
+
 @app.route("/sessions/<int:session_id>/attendance", methods=['GET', 'POST'])
 @crud_required('attendance', 'create')
 def mark_attendance(session_id):
@@ -3737,6 +3964,323 @@ def attendance_report(session_id):
                            total=total,
                            attendance_rate=attendance_rate,
                            title='Attendance Report')
+
+@app.route("/attendance/low_alerts")
+@login_required
+@crud_required('attendance', 'read')
+def low_attendance_alerts():
+    course_id = request.args.get('course_id', type=int)
+    threshold = request.args.get('threshold', 75.0, type=float)
+    
+    courses = Course.query.all()
+    
+    alerts = []
+    course = None
+    if course_id:
+        course = Course.query.get_or_404(course_id)
+        for student in course.students:
+            total_sessions = CourseSession.query.filter_by(course_id=course_id).count()
+            if total_sessions == 0:
+                continue
+                
+            attendance_count = Attendance.query.filter(
+                Attendance.student_id == student.id,
+                Attendance.session_id.in_([s.id for s in course.sessions]),
+                Attendance.status.in_(['present', 'late'])
+            ).count()
+            
+            rate = (attendance_count / total_sessions) * 100
+            if rate < threshold:
+                alerts.append({
+                    'student': student,
+                    'rate': rate,
+                    'total': total_sessions,
+                    'attended': attendance_count
+                })
+            
+    return render_template('low_attendance_alerts.html', courses=courses, course=course, alerts=alerts, threshold=threshold, title='Low Attendance Alerts')
+
+@app.route("/courses/notify_low_attendance", methods=['POST'])
+@login_required
+@crud_required('attendance', 'update')
+def notify_low_attendance():
+    course_id = request.form.get('course_id', type=int)
+    if not course_id:
+        flash('Course ID is required.', 'danger')
+        return redirect(url_for('low_attendance_alerts'))
+        
+    course = Course.query.get_or_404(course_id)
+    threshold = request.form.get('threshold', 75.0, type=float)
+    
+    notified_count = 0
+    for student in course.students:
+        total_sessions = CourseSession.query.filter_by(course_id=course_id).count()
+        if total_sessions == 0:
+            continue
+            
+        attendance_count = Attendance.query.filter(
+            Attendance.student_id == student.id,
+            Attendance.session_id.in_([s.id for s in course.sessions]),
+            Attendance.status.in_(['present', 'late'])
+        ).count()
+        
+        rate = (attendance_count / total_sessions) * 100
+        if rate < threshold:
+            # We assume a Notification model exists or use flash for demo
+            try:
+                from project.models import Notification
+                if student.guardian_email:
+                    notif = Notification(
+                        recipient_type='parent',
+                        recipient_id=student.guardian_email,
+                        title=f"Low Attendance Alert: {student.name}",
+                        message=f"Dear Parent, your ward {student.name}'s attendance in {course.name} is {rate:.1f}%, which is below the required threshold of {threshold}%."
+                    )
+                    db.session.add(notif)
+                    notified_count += 1
+                
+                notif_stu = Notification(
+                    recipient_type='student',
+                    recipient_id=student.email,
+                    title=f"Low Attendance Alert: {course.name}",
+                    message=f"Your attendance in {course.name} is {rate:.1f}%, which is below the required threshold of {threshold}%."
+                )
+                db.session.add(notif_stu)
+            except ImportError:
+                # If Notification model doesn't exist yet, we just flash a message for now
+                pass
+
+    db.session.commit()
+    flash(f'Sent {notified_count} alerts to parents/students.', 'success')
+    return redirect(url_for('low_attendance_alerts', course_id=course_id, threshold=threshold))
+
+@app.route("/attendance/monthly_report")
+@login_required
+@crud_required('attendance', 'read')
+def monthly_attendance_report():
+    course_id = request.args.get('course_id', type=int)
+    month = request.args.get('month', datetime.utcnow().month, type=int)
+    year = request.args.get('year', datetime.utcnow().year, type=int)
+    
+    courses = Course.query.all()
+    course = None
+    report_data = []
+    sessions = []
+    
+    if course_id:
+        course = Course.query.get_or_404(course_id)
+        from sqlalchemy import extract
+        sessions = CourseSession.query.filter(
+            CourseSession.course_id == course_id,
+            extract('month', CourseSession.session_date) == month,
+            extract('year', CourseSession.session_date) == year
+        ).all()
+        
+        for student in course.students:
+            row = {'student': student, 'attendance': []}
+            present_count = 0
+            for session_obj in sessions:
+                att = Attendance.query.filter_by(session_id=session_obj.id, student_id=student.id).first()
+                status = att.status if att else '-'
+                row['attendance'].append(status)
+                if status in ('present', 'late'):
+                    present_count += 1
+            row['rate'] = (present_count / len(sessions) * 100) if sessions else 0
+            report_data.append(row)
+            
+    return render_template('monthly_attendance_report.html', courses=courses, course=course, report_data=report_data, sessions=sessions, month=month, year=year, title='Monthly Attendance Report')
+
+@app.route('/exams')
+@login_required
+@crud_required('exam', 'read')
+def exams():
+    q = request.args.get('q', '').strip()
+    if q:
+        exams_list = Exam.query.join(Course).filter(
+            (Exam.name.ilike(f'%{q}%')) | (Course.name.ilike(f'%{q}%'))
+        ).all()
+    else:
+        exams_list = Exam.query.order_by(Exam.exam_date.desc()).all()
+    return render_template('exams.html', exams=exams_list, q=q, title='Exams')
+
+@app.route('/exams/add', methods=['GET', 'POST'])
+@login_required
+@crud_required('exam', 'create')
+def add_exam():
+    courses = Course.query.all()
+    if request.method == 'POST':
+        name = request.form['name']
+        course_id = request.form['course_id']
+        exam_date_str = request.form['exam_date']
+        location = request.form['location']
+        max_marks = request.form.get('max_marks', 100)
+        
+        exam_date = datetime.strptime(exam_date_str, '%Y-%m-%dT%H:%M')
+        
+        new_exam = Exam(
+            name=name, 
+            course_id=course_id, 
+            exam_date=exam_date, 
+            location=location, 
+            max_marks=max_marks
+        )
+        db.session.add(new_exam)
+        db.session.commit()
+        flash('Exam scheduled successfully.', 'success')
+        return redirect(url_for('exams'))
+        
+    return render_template('add_exam.html', courses=courses, title='Schedule Exam')
+
+@app.route('/exams/<int:exam_id>/edit', methods=['GET', 'POST'])
+@login_required
+@crud_required('exam', 'update')
+def edit_exam(exam_id):
+    exam = Exam.query.get_or_404(exam_id)
+    courses = Course.query.all()
+    if request.method == 'POST':
+        exam.name = request.form['name']
+        exam.course_id = request.form['course_id']
+        exam_date_str = request.form['exam_date']
+        exam.location = request.form['location']
+        exam.max_marks = request.form.get('max_marks', 100)
+        
+        exam.exam_date = datetime.strptime(exam_date_str, '%Y-%m-%dT%H:%M')
+        
+        db.session.commit()
+        flash('Exam updated successfully.', 'success')
+        return redirect(url_for('exams'))
+        
+    return render_template('edit_exam.html', exam=exam, courses=courses, title='Edit Exam')
+
+@app.route('/exams/<int:exam_id>/delete', methods=['POST'])
+@login_required
+@crud_required('exam', 'delete')
+def delete_exam(exam_id):
+    exam = Exam.query.get_or_404(exam_id)
+    db.session.delete(exam)
+    db.session.commit()
+    flash('Exam deleted successfully.', 'success')
+    return redirect(url_for('exams'))
+
+@app.route('/exams/<int:exam_id>/marks', methods=['GET', 'POST'])
+@login_required
+@crud_required('grade', 'update')
+def exam_marks(exam_id):
+    exam = Exam.query.get_or_404(exam_id)
+    course = exam.course
+    students = course.students
+    
+    if request.method == 'POST':
+        for student in students:
+            score = request.form.get(f'score_{student.id}')
+            if score:
+                # Find existing grade or create new
+                grade = Grade.query.filter_by(student_id=student.id, exam_id=exam_id).first()
+                if not grade:
+                    grade = Grade(student_id=student.id, course_id=course.id, exam_id=exam_id)
+                    db.session.add(grade)
+                
+                grade.score = float(score)
+                # Simple point calculation (can be improved)
+                grade.points = (grade.score / exam.max_marks) * 10
+                if grade.points >= 9: grade.grade_letter = 'A+'
+                elif grade.points >= 8: grade.grade_letter = 'A'
+                elif grade.points >= 7: grade.grade_letter = 'B'
+                elif grade.points >= 6: grade.grade_letter = 'C'
+                elif grade.points >= 5: grade.grade_letter = 'D'
+                else: grade.grade_letter = 'F'
+                
+        db.session.commit()
+        flash('Marks updated successfully.', 'success')
+        return redirect(url_for('exams'))
+        
+    # Get existing grades for display
+    existing_grades = {g.student_id: g.score for g in Grade.query.filter_by(exam_id=exam_id).all()}
+    return render_template('exam_marks.html', exam=exam, students=students, grades=existing_grades, title='Enter Marks')
+
+@app.route("/students/<int:student_id>/hall_ticket")
+@login_required
+def hall_ticket(student_id):
+    student = Student.query.get_or_404(student_id)
+    # Access check: admin, staff, or the student themselves
+    role = session.get('role')
+    user_email = session.get('user')
+    if role == 'student' and student.email != user_email:
+        flash('Unauthorized.', 'danger')
+        return redirect(url_for('dashboard'))
+        
+    exams = Exam.query.join(Course).filter(Course.students.contains(student)).all()
+    return render_template('hall_ticket.html', student=student, exams=exams, title='Hall Ticket')
+
+@app.route("/students/<int:student_id>/calculate_gpa")
+@login_required
+@crud_required('grade', 'read')
+def calculate_gpa(student_id):
+    student = Student.query.get_or_404(student_id)
+    grades = Grade.query.filter_by(student_id=student_id).all()
+    
+    total_points = 0
+    total_credits = 0
+    
+    for g in grades:
+        course = Course.query.get(g.course_id)
+        if course and course.credits:
+            total_points += (g.points or 0) * course.credits
+            total_credits += course.credits
+            
+    gpa = total_points / total_credits if total_credits > 0 else 0
+    return jsonify({'student_id': student_id, 'gpa': round(gpa, 2)})
+
+@app.route("/students/<int:student_id>/marksheet")
+@login_required
+def marksheet(student_id):
+    student = Student.query.get_or_404(student_id)
+    # Access check
+    role = session.get('role')
+    user_email = session.get('user')
+    if role == 'student' and student.email != user_email:
+        flash('Unauthorized.', 'danger')
+        return redirect(url_for('dashboard'))
+        
+    grades = Grade.query.filter_by(student_id=student_id).filter(Grade.exam_id == None).all()
+    
+    # Group by semester
+    semesters = {}
+    for g in grades:
+        sem = g.semester or 1
+        if sem not in semesters:
+            semesters[sem] = []
+        semesters[sem].append(g)
+        
+    return render_template('marksheet.html', student=student, semesters=semesters, today=datetime.utcnow(), title='Digital Marksheet')
+
+@app.route("/students/<int:student_id>/degree")
+@login_required
+def degree_certificate(student_id):
+    student = Student.query.get_or_404(student_id)
+    # Access check
+    role = session.get('role')
+    user_email = session.get('user')
+    if role == 'student' and student.email != user_email:
+        flash('Unauthorized.', 'danger')
+        return redirect(url_for('dashboard'))
+        
+    # Calculate CGPA
+    grades = Grade.query.filter_by(student_id=student_id).all()
+    total_points = 0
+    total_credits = 0
+    for g in grades:
+        # Only count final grades (no exam_id) for CGPA
+        if g.exam_id is None and g.course and g.course.credits:
+            total_points += (g.points or 0) * g.course.credits
+            total_credits += g.course.credits
+    
+    cgpa = total_points / total_credits if total_credits > 0 else 0
+    
+    # Requirements check (example: 120 credits and CGPA > 2.0)
+    # Since it's an ERP, we'll just show it if requested for now
+    
+    return render_template('degree.html', student=student, cgpa=round(cgpa, 2), today=datetime.utcnow(), title='Digital Degree')
 
 @app.route("/sessions/<int:session_id>/attendance.csv")
 @login_required
@@ -4229,6 +4773,35 @@ def list_invoices():
     invoices = query.order_by(Invoice.issued_at.desc()).all()
     return render_template('invoices.html', title='Invoices', invoices=invoices)
 
+@app.route('/finance/invoices/<int:invoice_id>/pay', methods=['POST'])
+@login_required
+def pay_invoice(invoice_id):
+    invoice = Invoice.query.get_or_404(invoice_id)
+    # Access check: admin, staff, or the student/parent themselves
+    role = session.get('role')
+    user_email = session.get('user')
+    can_pay = False
+    if role in ('admin', 'staff'):
+        can_pay = True
+    elif role == 'student':
+        student = Student.query.filter_by(email=user_email).first()
+        if student and student.id == invoice.student_id:
+            can_pay = True
+    elif role == 'parent':
+        link = ParentStudentLink.query.filter_by(parent_username=user_email, student_id=invoice.student_id).first()
+        if link:
+            can_pay = True
+            
+    if not can_pay:
+        flash('Unauthorized to pay this invoice.', 'danger')
+        return redirect(url_for('list_invoices'))
+        
+    invoice.status = 'paid'
+    invoice.paid_amount = invoice.amount_due
+    db.session.commit()
+    flash('Invoice marked as paid.', 'success')
+    return redirect(url_for('list_invoices'))
+
 @app.route('/finance/invoices/<int:invoice_id>/delete', methods=['POST'])
 @crud_required('fee', 'delete')
 def delete_invoice(invoice_id):
@@ -4520,6 +5093,78 @@ def fee_statement_csv(student_id):
         writer.writerow([p.paid_at, p.amount, p.method or '', p.reference or ''])
     data = buf.getvalue(); buf.close()
     return Response(data, mimetype='text/csv', headers={'Content-Disposition': f'attachment; filename="fee_statement_{student.id}.csv"'})
+@app.route('/departments')
+@crud_required('department', 'read')
+def list_departments():
+    departments = Department.query.all()
+    return render_template('departments.html', departments=departments)
+
+@app.route('/departments/add', methods=['GET', 'POST'])
+@crud_required('department', 'create')
+def add_department():
+    teachers = Teacher.query.all()
+    if request.method == 'POST':
+        name = request.form.get('name')
+        code = request.form.get('code')
+        description = request.form.get('description')
+        hod_id = request.form.get('hod_id')
+        
+        dept = Department(name=name, code=code, description=description, head_of_department_id=hod_id or None)
+        db.session.add(dept)
+        db.session.commit()
+        flash('Department added successfully!', 'success')
+        return redirect(url_for('list_departments'))
+    return render_template('add_department.html', teachers=teachers)
+
+@app.route('/semesters')
+@crud_required('semester', 'read')
+def list_semesters():
+    semesters = Semester.query.all()
+    return render_template('semesters.html', semesters=semesters)
+
+@app.route('/semesters/add', methods=['GET', 'POST'])
+@crud_required('semester', 'create')
+def add_semester():
+    if request.method == 'POST':
+        number = request.form.get('number')
+        year = request.form.get('academic_year')
+        start = request.form.get('start_date')
+        end = request.form.get('end_date')
+        
+        sem = Semester(number=number, academic_year=year)
+        if start: sem.start_date = datetime.strptime(start, '%Y-%m-%d').date()
+        if end: sem.end_date = datetime.strptime(end, '%Y-%m-%d').date()
+        
+        db.session.add(sem)
+        db.session.commit()
+        flash('Semester added successfully!', 'success')
+        return redirect(url_for('list_semesters'))
+    return render_template('add_semester.html')
+
+@app.route('/subjects')
+@crud_required('subject', 'read')
+def list_subjects():
+    subjects = Subject.query.all()
+    return render_template('subjects.html', subjects=subjects)
+
+@app.route('/subjects/add', methods=['GET', 'POST'])
+@crud_required('subject', 'create')
+def add_subject():
+    depts = Department.query.all()
+    if request.method == 'POST':
+        name = request.form.get('name')
+        code = request.form.get('code')
+        description = request.form.get('description')
+        dept_id = request.form.get('department_id')
+        credits = request.form.get('credits')
+        
+        sub = Subject(name=name, code=code, description=description, department_id=dept_id, credits=credits)
+        db.session.add(sub)
+        db.session.commit()
+        flash('Subject added successfully!', 'success')
+        return redirect(url_for('list_subjects'))
+    return render_template('add_subject.html', departments=depts)
+
 @app.route('/resources/approve/<int:booking_id>', methods=['POST'])
 @crud_required('resource', 'update')
 def resources_approve(booking_id):

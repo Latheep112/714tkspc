@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">{{ title }} - {{ today.strftime('%Y-%m-%d') }}</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Daily Attendance</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Today's Sessions</h5>
+                <span class="badge bg-light text-primary">{{ sessions|length }} Session(s)</span>
+            </div>
+            <div class="card-body">
+                {% if sessions %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Course</th>
+                                <th>Time</th>
+                                <th>Location</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in sessions %}
+                            <tr>
+                                <td>
+                                    <strong>{{ session.course.name }}</strong><br>
+                                    <small class="text-muted">{{ session.course.code }}</small>
+                                </td>
+                                <td>
+                                    {{ session.start_time.strftime('%H:%M') if session.start_time else '--:--' }} - 
+                                    {{ session.end_time.strftime('%H:%M') if session.end_time else '--:--' }}
+                                </td>
+                                <td>{{ session.location or '-' }}</td>
+                                <td class="text-center">
+                                    {% set attendance_count = session.attendances|length %}
+                                    {% if attendance_count > 0 %}
+                                    <span class="badge bg-success">Marked ({{ attendance_count }})</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('mark_attendance', session_id=session.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-check-square me-1"></i> Mark
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No sessions scheduled for today.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Quick Start Session</h5>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-3">Don't see your course above? Create a session for today to start marking attendance.</p>
+                <form action="{{ url_for('add_session_today') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="course_id" class="form-label">Course</label>
+                        <select name="course_id" id="course_id" class="form-select" required>
+                            <option value="">-- Select Course --</option>
+                            {% for course in courses %}
+                            <option value="{{ course.id }}">{{ course.name }} ({{ course.code }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Session Title (Optional)</label>
+                        <input type="text" name="title" id="title" class="form-control" placeholder="e.g. Regular Class, Lab">
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col">
+                            <label for="start_time" class="form-label">Start</label>
+                            <input type="time" name="start_time" id="start_time" class="form-control" value="09:00">
+                        </div>
+                        <div class="col">
+                            <label for="end_time" class="form-label">End</label>
+                            <input type="time" name="end_time" id="end_time" class="form-control" value="10:00">
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus-circle me-1"></i> Create & Mark
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

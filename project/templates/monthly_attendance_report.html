@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">{{ title }}{% if course %} for {{ course.name }}{% endif %}</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('courses') }}">Courses</a></li>
+  {% if course %}
+  <li class="breadcrumb-item"><a href="{{ url_for('course_details', course_id=course.id) }}">{{ course.name }}</a></li>
+  {% endif %}
+  <li class="breadcrumb-item active" aria-current="page">Monthly Report</li>
+{% endblock %}
+{% block content %}
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-center">
+            <div class="col-auto">
+                <label class="form-label" for="course_id">Select Course:</label>
+                <select name="course_id" id="course_id" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- Choose Course --</option>
+                    {% for c in courses %}
+                    <option value="{{ c.id }}" {% if course and course.id == c.id %}selected{% endif %}>{{ c.name }} ({{ c.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label" for="month">Month:</label>
+                <select name="month" id="month" class="form-select">
+                    {% set months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] %}
+                    {% for m in range(1, 13) %}
+                    <option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ months[m-1] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label" for="year">Year:</label>
+                <input type="number" name="year" id="year" class="form-control" value="{{ year }}" min="2000" max="2100">
+            </div>
+            <div class="col-auto pt-4">
+                <button type="submit" class="btn btn-primary">View Report</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if not course %}
+<div class="alert alert-info">
+    Please select a course to view the monthly attendance report.
+</div>
+{% else %}
+<div class="table-responsive">
+    <table class="table table-bordered table-sm table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>Student</th>
+                {% for session in sessions %}
+                <th class="text-center" title="{{ session.session_date }}">{{ session.session_date.day }}</th>
+                {% endfor %}
+                <th class="text-center">Rate</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in report_data %}
+            <tr>
+                <td class="text-nowrap">{{ row.student.name }}</td>
+                {% for status in row.attendance %}
+                <td class="text-center">
+                    {% if status == 'present' %}
+                    <span class="text-success" title="Present">P</span>
+                    {% elif status == 'absent' %}
+                    <span class="text-danger" title="Absent">A</span>
+                    {% elif status == 'late' %}
+                    <span class="text-warning" title="Late">L</span>
+                    {% elif status == 'excused' %}
+                    <span class="text-info" title="Excused">E</span>
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                {% endfor %}
+                <td class="text-center fw-bold">
+                    {{ row.rate|round(1) }}%
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="{{ sessions|length + 2 }}" class="text-center text-muted p-4">No sessions found for this month in <strong>{{ course.name }}</strong>.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-3">
+    <small class="text-muted">
+        <strong>P:</strong> Present | <strong>A:</strong> Absent | <strong>L:</strong> Late | <strong>E:</strong> Excused
+    </small>
+</div>
+{% endif %}
+{% endblock %}

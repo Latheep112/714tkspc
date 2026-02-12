@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">{{ title }}</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Marksheet</li>
+{% endblock %}
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="card shadow-sm border-0 marksheet-print">
+        <div class="card-header bg-dark text-white text-center py-4">
+            <h3 class="mb-0">OFFICIAL ACADEMIC TRANSCRIPT</h3>
+            <p class="mb-0">Academic ERP Institution</p>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-sm-12">
+                    <table class="table table-borderless table-sm">
+                        <tr>
+                            <th width="150">Student Name:</th>
+                            <td>{{ student.name }}</td>
+                            <th width="150">Roll Number:</th>
+                            <td>{{ student.roll_number or '-' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Department:</th>
+                            <td>{{ student.department or '-' }}</td>
+                            <th>Program:</th>
+                            <td>{{ student.program or '-' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            {% for semester, grades in semesters.items() %}
+            <h5 class="bg-light p-2 mb-3">Semester {{ semester }}</h5>
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th>Course Code</th>
+                            <th>Course Title</th>
+                            <th class="text-center">Credits</th>
+                            <th class="text-center">Grade</th>
+                            <th class="text-center">Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set ns = namespace(total_points=0, total_credits=0) %}
+                        {% for g in grades %}
+                        {% set course = g.course %}
+                        <tr>
+                            <td>{{ course.code or '-' }}</td>
+                            <td>{{ course.name }}</td>
+                            <td class="text-center">{{ course.credits or 0 }}</td>
+                            <td class="text-center">{{ g.grade or '-' }}</td>
+                            <td class="text-center">{{ g.points or 0 }}</td>
+                        </tr>
+                        {% set ns.total_points = ns.total_points + ((g.points or 0) * (course.credits or 0)) %}
+                        {% set ns.total_credits = ns.total_credits + (course.credits or 0) %}
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="bg-light">
+                        <tr>
+                            <th colspan="2" class="text-right">Semester Totals:</th>
+                            <th class="text-center">{{ ns.total_credits }}</th>
+                            <th></th>
+                            <th class="text-center">GPA: {{ (ns.total_points / ns.total_credits)|round(2) if ns.total_credits > 0 else 0 }}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-warning">No grade records found for this student.</div>
+            {% endfor %}
+
+            <div class="row mt-5">
+                <div class="col-12 text-right">
+                    <p class="mb-5">Date of Issue: {{ today.strftime('%Y-%m-%d') if today else '' }}</p>
+                    <div class="border-top pt-2 d-inline-block" style="width: 250px;">
+                        <strong>Registrar (Academic)</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4 no-print">
+        <button onclick="window.print();" class="btn btn-primary">
+            <i class="fas fa-print"></i> Download Digital Marksheet
+        </button>
+    </div>
+</div>
+
+<style>
+@media print {
+    .no-print { display: none !important; }
+    .marksheet-print { border: 2px solid #333 !important; box-shadow: none !important; }
+    body { background-color: white !important; }
+    .main-sidebar, .main-header, .breadcrumb { display: none !important; }
+    .content-wrapper { margin-left: 0 !important; }
+}
+</style>
+{% endblock %}

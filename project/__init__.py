@@ -26,8 +26,35 @@ db = SQLAlchemy(app)
 # Ensure database tables are created before anything else
 try:
     from project import models
+    import sqlite3
     with app.app_context():
         db.create_all()
+        
+        # Manual migration for missing columns
+        db_path = app.config.get('SQLALCHEMY_DATABASE_URI').replace('sqlite:///', '')
+        if os.name == 'nt' and db_path.startswith('/'):
+            db_path = db_path[1:] # Handle Windows paths
+        
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            
+            # Add department_id to admission_application
+            cursor.execute("PRAGMA table_info(admission_application)")
+            columns = [column[1] for column in cursor.fetchall()]
+            if 'department_id' not in columns:
+                cursor.execute("ALTER TABLE admission_application ADD COLUMN department_id INTEGER REFERENCES department(id)")
+            
+            # Add department_id to student
+            cursor.execute("PRAGMA table_info(student)")
+            columns = [column[1] for column in cursor.fetchall()]
+            if 'department_id' not in columns:
+                cursor.execute("ALTER TABLE student ADD COLUMN department_id INTEGER REFERENCES department(id)")
+                
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"Migration error: {e}")
 except Exception as e:
     print(f"Error creating database tables: {e}")
 

@@ -6,17 +6,63 @@ enrollments = db.Table('enrollments',
     db.Column('course_id', db.Integer, db.ForeignKey('course.id'), primary_key=True)
 )
 
+class Department(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    code = db.Column(db.String(20), unique=True)
+    description = db.Column(db.Text)
+    head_of_department_id = db.Column(db.Integer, db.ForeignKey('teacher.id'), nullable=True)
+    
+    # Relationships
+    students = db.relationship('Student', backref='dept', lazy=True, foreign_keys='Student.department_id')
+    teachers = db.relationship('Teacher', backref='dept', lazy=True, foreign_keys='Teacher.department_id')
+    courses = db.relationship('Course', backref='dept', lazy=True, foreign_keys='Course.department_id')
+    subjects = db.relationship('Subject', backref='dept', lazy=True, foreign_keys='Subject.department_id')
+
+    def __repr__(self):
+        return f"Department('{self.name}', code='{self.code}')"
+
+class Semester(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    number = db.Column(db.Integer, nullable=False) # 1, 2, 3, etc.
+    academic_year = db.Column(db.String(20), nullable=False) # e.g. 2023-2024
+    start_date = db.Column(db.Date)
+    end_date = db.Column(db.Date)
+    is_active = db.Column(db.Boolean, default=True)
+
+    # Relationships
+    courses = db.relationship('Course', backref='sem', lazy=True)
+    students = db.relationship('Student', backref='sem', lazy=True)
+
+    def __repr__(self):
+        return f"Semester({self.number}, year='{self.academic_year}')"
+
+class Subject(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    code = db.Column(db.String(20), unique=True, nullable=False)
+    description = db.Column(db.Text)
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id'))
+    credits = db.Column(db.Integer, default=3)
+    
+    # Relationships
+    courses = db.relationship('Course', backref='subject', lazy=True)
+
+    def __repr__(self):
+        return f"Subject('{self.name}', code='{self.code}')"
+
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     phone = db.Column(db.String(20), nullable=False)
+    registration_number = db.Column(db.String(50), unique=True)
     roll_number = db.Column(db.String(50), unique=True)
     address = db.Column(db.Text)
     date_of_birth = db.Column(db.Date)
     gender = db.Column(db.String(20))
     admission_date = db.Column(db.Date)
-    department = db.Column(db.String(100))
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id'))
     guardian_name = db.Column(db.String(100))
     guardian_phone = db.Column(db.String(20))
     guardian_email = db.Column(db.String(100))
@@ -29,7 +75,7 @@ class Student(db.Model):
     sslc_marks = db.Column(db.Integer)
     hsc_marks = db.Column(db.Integer)
     current_year = db.Column(db.Integer)
-    current_semester = db.Column(db.Integer)
+    semester_id = db.Column(db.Integer, db.ForeignKey('semester.id'))
     section = db.Column(db.String(10))
     father_name = db.Column(db.String(100))
     mother_name = db.Column(db.String(100))
@@ -56,7 +102,7 @@ class Teacher(db.Model):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     phone = db.Column(db.String(20), nullable=False)
-    department = db.Column(db.String(100))
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id'))
     address = db.Column(db.Text)
     gender = db.Column(db.String(20))
     office_hours = db.Column(db.String(100))
@@ -75,6 +121,7 @@ class Teacher(db.Model):
     courses = db.relationship('Course', backref='teacher', lazy=True)
     tutored_students = db.relationship('Student', backref='tutor', lazy=True)
     leaves = db.relationship('TeacherLeave', backref='teacher', lazy=True, cascade="all, delete-orphan")
+    managed_departments = db.relationship('Department', backref='head_of_department', lazy=True, foreign_keys='Department.head_of_department_id')
 
 class Course(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -82,8 +129,9 @@ class Course(db.Model):
     code = db.Column(db.String(20), unique=True)
     description = db.Column(db.Text)
     teacher_id = db.Column(db.Integer, db.ForeignKey('teacher.id'))
-    department = db.Column(db.String(100))
-    semester = db.Column(db.String(20))
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id'))
+    semester_id = db.Column(db.Integer, db.ForeignKey('semester.id'))
+    subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'))
     room = db.Column(db.String(50))
     capacity = db.Column(db.Integer)
     credits = db.Column(db.Integer)
@@ -96,6 +144,9 @@ class Course(db.Model):
     end_date = db.Column(db.Date)
     prerequisites = db.Column(db.Text)
     learning_outcomes = db.Column(db.Text)
+
+    syllabus_progress = db.Column(db.Integer, default=0) # 0 to 100
+    section_name = db.Column(db.String(50)) # e.g. Batch 2024-A
 
     sessions = db.relationship('CourseSession', backref='course', lazy=True, cascade="all, delete-orphan")
     grades = db.relationship('Grade', backref='course', lazy=True, cascade="all, delete-orphan")
@@ -175,6 +226,7 @@ class Grade(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
+    exam_id = db.Column(db.Integer, db.ForeignKey('exam.id'), nullable=True)
     score = db.Column(db.Float)
     letter = db.Column(db.String(5))
     points = db.Column(db.Float)
@@ -184,12 +236,15 @@ class Grade(db.Model):
     academic_year = db.Column(db.String(20))
     remarks = db.Column(db.Text)
     recorded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    exam = db.relationship('Exam', backref=db.backref('grades', lazy=True))
 
 class AdmissionApplication(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(20))
+    registration_number = db.Column(db.String(50), unique=True)
     date_of_birth = db.Column(db.Date)
     gender = db.Column(db.String(20))
     address = db.Column(db.Text)
@@ -206,6 +261,7 @@ class AdmissionApplication(db.Model):
     nationality = db.Column(db.String(50))
     blood_group = db.Column(db.String(10))
     requested_course_id = db.Column(db.Integer, db.ForeignKey('course.id'))
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id'))
     photo_path = db.Column(db.String(255))
     father_name = db.Column(db.String(100))
     mother_name = db.Column(db.String(100))
@@ -220,8 +276,12 @@ class AdmissionApplication(db.Model):
     annual_income = db.Column(db.Float)
     income_cert_no = db.Column(db.String(50))
     temp_password = db.Column(db.String(100))
+    merit_score = db.Column(db.Float)
+    seat_allotted = db.Column(db.Boolean, default=False)
+    documents_verified = db.Column(db.Boolean, default=False)
 
     requested_course = db.relationship('Course', backref='applications', lazy=True)
+    department = db.relationship('Department', backref='applications', lazy=True)
 
     def __repr__(self):
         return f"AdmissionApplication('{self.name}', status='{self.status}')"
@@ -234,6 +294,19 @@ class SystemSetting(db.Model):
 
     def __repr__(self):
         return f"SystemSetting('{self.key}')"
+
+class Exam(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False) # e.g. Mid-term 1, Final Exam
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
+    exam_date = db.Column(db.DateTime, nullable=False)
+    location = db.Column(db.String(100))
+    max_marks = db.Column(db.Integer, default=100)
+    
+    course = db.relationship('Course', backref=db.backref('exams', lazy=True))
+
+    def __repr__(self):
+        return f"Exam('{self.name}', course_id={self.course_id})"
 
 class AuditLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -374,6 +447,18 @@ class Invoice(db.Model):
 
     def __repr__(self):
         return f"Invoice(student_id={self.student_id}, amount_due={self.amount_due}, status='{self.status}')"
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    recipient_type = db.Column(db.String(20), nullable=False) # 'parent', 'student', 'teacher'
+    recipient_id = db.Column(db.String(100), nullable=False) # email or username
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"Notification(recipient='{self.recipient_id}', title='{self.title}')"
 
 # Convenience display helpers
 def student_display_name(student: Student) -> str:

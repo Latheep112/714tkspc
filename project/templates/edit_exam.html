@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">Edit Exam</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('exams') }}">Exams</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Edit</li>
+{% endblock %}
+{% block content %}
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label for="name" class="form-label">Exam Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ exam.name }}" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label for="course_id" class="form-label">Course</label>
+                        <select class="form-control" id="course_id" name="course_id" required>
+                            {% for c in courses %}
+                            <option value="{{ c.id }}" {% if c.id == exam.course_id %}selected{% endif %}>{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label for="exam_date" class="form-label">Date & Time</label>
+                        <input type="datetime-local" class="form-control" id="exam_date" name="exam_date" value="{{ exam.exam_date.strftime('%Y-%m-%dT%H:%M') }}" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" name="location" value="{{ exam.location or '' }}">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label for="max_marks" class="form-label">Max Marks</label>
+                        <input type="number" class="form-control" id="max_marks" name="max_marks" value="{{ exam.max_marks }}" min="1">
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Update Exam</button>
+                <a href="{{ url_for('exams') }}" class="btn btn-outline-secondary ms-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
