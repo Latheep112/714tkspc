@@ -75,11 +75,20 @@
                 <p class="small text-muted mb-3">Don't see your course above? Create a session for today to start marking attendance.</p>
                 <form action="{{ url_for('add_session_today') }}" method="POST">
                     <div class="mb-3">
+                        <label for="dept_id" class="form-label">Department</label>
+                        <select id="dept_id" class="form-select">
+                            <option value="">-- All Departments --</option>
+                            {% for d in departments %}
+                            <option value="{{ d.id }}">{{ d.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label for="course_id" class="form-label">Course</label>
                         <select name="course_id" id="course_id" class="form-select" required>
                             <option value="">-- Select Course --</option>
                             {% for course in courses %}
-                            <option value="{{ course.id }}">{{ course.name }} ({{ course.code }})</option>
+                            <option value="{{ course.id }}" data-department="{{ course.department_id }}">{{ course.name }} ({{ course.code }})</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -107,4 +116,27 @@
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('dept_id').addEventListener('change', function() {
+    const deptId = this.value;
+    const courseSelect = document.getElementById('course_id');
+    const options = courseSelect.querySelectorAll('option');
+    
+    options.forEach(opt => {
+        if (opt.value === "") return;
+        const optDept = opt.getAttribute('data-department');
+        if (deptId === "" || optDept === deptId) {
+            opt.style.display = "";
+        } else {
+            opt.style.display = "none";
+        }
+    });
+    
+    // Reset course selection if current choice is now hidden
+    if (courseSelect.selectedOptions[0] && courseSelect.selectedOptions[0].style.display === "none") {
+        courseSelect.value = "";
+    }
+});
+</script>
 {% endblock %}

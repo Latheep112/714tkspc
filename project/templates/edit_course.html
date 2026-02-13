@@ -22,8 +22,13 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
-                    <label for="department">Department</label>
-                    <input type="text" class="form-control" id="department" name="department" value="{{ course.department or '' }}">
+                    <label for="department_id">Department</label>
+                    <select class="form-control" id="department_id" name="department_id">
+                        <option value="">Select Department</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.id }}" {% if course.department_id == dept.id %}selected{% endif %}>{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
             <div class="col-md-6">

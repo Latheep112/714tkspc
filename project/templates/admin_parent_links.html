@@ -12,15 +12,25 @@
       <div class="card-header">Add Link</div>
       <div class="card-body">
         <form method="post" action="{{ url_for('admin_parent_links') }}">
-          <div class="form-group">
-            <label for="parent_username">Parent Username</label>
-            <input type="text" class="form-control" id="parent_username" name="parent_username" required>
+          <div class="mb-3">
+            <label for="parent_username" class="form-label">Parent User</label>
+            <select class="form-select" id="parent_username" name="parent_username" required>
+              <option value="">Select Parent...</option>
+              {% for p in parents %}
+              <option value="{{ p.username }}">{{ p.username }} ({{ p.email or 'No email' }})</option>
+              {% endfor %}
+            </select>
           </div>
-          <div class="form-group">
-            <label for="student_email">Student Email</label>
-            <input type="email" class="form-control" id="student_email" name="student_email" required>
+          <div class="mb-3">
+            <label for="student_email" class="form-label">Student</label>
+            <select class="form-select" id="student_email" name="student_email" required>
+              <option value="">Select Student...</option>
+              {% for s in students %}
+              <option value="{{ s.email }}">{{ s.name }} ({{ s.email }})</option>
+              {% endfor %}
+            </select>
           </div>
-          <button type="submit" class="btn btn-primary">Link Parent to Student</button>
+          <button type="submit" class="btn btn-primary w-100">Link Parent to Student</button>
         </form>
       </div>
     </div>

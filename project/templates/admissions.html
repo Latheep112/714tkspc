@@ -23,7 +23,7 @@
         <thead>
           <tr>
             <th>Name</th>
-            <th>Program</th>
+            <th>Department</th>
             <th>Merit Score</th>
             <th>Seat Allotted</th>
             <th>Status</th>
@@ -35,7 +35,7 @@
           {% for a in applications %}
           <tr>
             <td>{{ a.name }}</td>
-            <td>{{ a.program or 'N/A' }}</td>
+            <td>{{ a.department.name if a.department else (a.program or 'N/A') }}</td>
             <td>{{ a.merit_score|round(2) if a.merit_score else '-' }}</td>
             <td>
                 {% if a.seat_allotted %}

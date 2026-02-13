@@ -5,12 +5,24 @@
   <li class="breadcrumb-item active" aria-current="page">Exams</li>
 {% endblock %}
 {% block content %}
-<div class="d-flex align-items-center mb-3">
-  <form method="get" action="{{ url_for('exams') }}" class="form-inline ml-0">
-    <input type="text" name="q" class="form-control mr-2" placeholder="Search exam/course" value="{{ q }}">
+<div class="d-flex align-items-center mb-3 flex-wrap gap-2">
+  <form method="get" action="{{ url_for('exams') }}" class="d-flex align-items-center flex-grow-1">
+    <input type="text" name="q" class="form-control me-2" placeholder="Search exam/course" value="{{ q }}" style="max-width: 250px;">
+    
+    {% if session.get('role') not in ['student', 'parent'] %}
+    <select name="department_id" class="form-select me-2" style="max-width: 200px;" onchange="this.form.submit()">
+      <option value="">All Departments</option>
+      {% for d in departments %}
+      <option value="{{ d.id }}" {% if d.id|string == selected_dept_id %}selected{% endif %}>{{ d.name }}</option>
+      {% endfor %}
+    </select>
+    {% endif %}
+    
     <button type="submit" class="btn btn-outline-secondary">Search</button>
   </form>
+  {% if session.get('role') in ['admin', 'staff'] %}
   <a href="{{ url_for('add_exam') }}" class="btn btn-primary ms-auto">Schedule Exam</a>
+  {% endif %}
 </div>
 
 <div class="card">

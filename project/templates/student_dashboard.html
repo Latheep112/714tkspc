@@ -82,7 +82,7 @@
                     </div>
                     <div>
                         <h6 class="mb-0">{{ student.tutor.name }}</h6>
-                        <p class="mb-0 text-muted small">{{ student.tutor.department or 'No Department' }}</p>
+                        <p class="mb-0 text-muted small">{{ student.tutor.department.name if student.tutor.department else 'No Department' }}</p>
                         <p class="mb-0 text-muted small"><i class="fas fa-envelope me-1"></i> {{ student.tutor.email }}</p>
                         {% if student.tutor.phone %}
                         <p class="mb-0 text-muted small"><i class="fas fa-phone me-1"></i> {{ student.tutor.phone }}</p>
@@ -109,6 +109,25 @@
                 </div>
                 {% else %}
                 <div class="list-group-item text-muted">No upcoming sessions scheduled.</div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header bg-white font-weight-bold d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-bullhorn me-2"></i>Recent Notices</span>
+                <a href="{{ url_for('notices') }}" class="btn btn-sm btn-link p-0">View All</a>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for notice in recent_notices %}
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1 text-primary small fw-bold">{{ notice.title }}</h6>
+                        <small class="text-muted">{{ notice.created_at.strftime('%b %d') }}</small>
+                    </div>
+                    <p class="mb-0 text-truncate small text-secondary">{{ notice.content }}</p>
+                </div>
+                {% else %}
+                <div class="list-group-item text-muted small">No recent notices.</div>
                 {% endfor %}
             </div>
         </div>

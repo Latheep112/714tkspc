@@ -87,5 +87,29 @@
     </div>
     {% endfor %}
 </div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-bullhorn text-primary me-2"></i>Recent Notices</h5>
+                <a href="{{ url_for('notices') }}" class="btn btn-sm btn-link">View All</a>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for notice in recent_notices %}
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1 text-primary">{{ notice.title }}</h6>
+                        <small class="text-muted">{{ notice.created_at.strftime('%b %d') }}</small>
+                    </div>
+                    <p class="mb-1 text-truncate small">{{ notice.content }}</p>
+                </div>
+                {% else %}
+                <div class="p-4 text-center text-muted">No recent notices.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endif %}
 {% endblock %}

@@ -14,10 +14,10 @@ class Department(db.Model):
     head_of_department_id = db.Column(db.Integer, db.ForeignKey('teacher.id'), nullable=True)
     
     # Relationships
-    students = db.relationship('Student', backref='dept', lazy=True, foreign_keys='Student.department_id')
-    teachers = db.relationship('Teacher', backref='dept', lazy=True, foreign_keys='Teacher.department_id')
-    courses = db.relationship('Course', backref='dept', lazy=True, foreign_keys='Course.department_id')
-    subjects = db.relationship('Subject', backref='dept', lazy=True, foreign_keys='Subject.department_id')
+    students = db.relationship('Student', backref='department', lazy=True, foreign_keys='Student.department_id')
+    teachers = db.relationship('Teacher', backref='department', lazy=True, foreign_keys='Teacher.department_id')
+    courses = db.relationship('Course', backref='department', lazy=True, foreign_keys='Course.department_id')
+    subjects = db.relationship('Subject', backref='department', lazy=True, foreign_keys='Subject.department_id')
 
     def __repr__(self):
         return f"Department('{self.name}', code='{self.code}')"
@@ -459,6 +459,21 @@ class Notification(db.Model):
 
     def __repr__(self):
         return f"Notification(recipient='{self.recipient_id}', title='{self.title}')"
+
+class Notice(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    target_role = db.Column(db.String(20), default='all') # 'all', 'student', 'teacher', 'parent'
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=True)
+    created_by = db.Column(db.String(100))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=True)
+
+    department = db.relationship('Department', backref='notices')
+
+    def __repr__(self):
+        return f"Notice(title='{self.title}', target='{self.target_role}')"
 
 # Convenience display helpers
 def student_display_name(student: Student) -> str:

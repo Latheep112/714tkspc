@@ -20,8 +20,13 @@
             <input type="text" class="form-control" id="phone" name="phone" required>
         </div>
         <div class="form-group">
-            <label for="department">Department</label>
-            <input type="text" class="form-control" id="department" name="department">
+            <label for="department_id">Department</label>
+            <select class="form-control" id="department_id" name="department_id">
+                <option value="">Select Department</option>
+                {% for dept in departments %}
+                <option value="{{ dept.id }}">{{ dept.name }}</option>
+                {% endfor %}
+            </select>
         </div>
         <div class="row">
             <div class="col-md-6">

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block page_title %}<h2 class="mb-0">Add Notice</h2>{% endblock %}
+{% block breadcrumbs %}
+  <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('notices') }}">Notices</a></li>
+  <li class="breadcrumb-item active" aria-current="page">Add</li>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" class="form-control" id="title" name="title" placeholder="Notice Title" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="content" class="form-label">Content</label>
+                <textarea class="form-control" id="content" name="content" rows="5" placeholder="Write your announcement here..." required></textarea>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="target_role" class="form-label">Target Audience</label>
+                        <select class="form-select" id="target_role" name="target_role">
+                            <option value="all">All</option>
+                            <option value="student">Students Only</option>
+                            <option value="teacher">Teachers Only</option>
+                            <option value="parent">Parents Only</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="department_id" class="form-label">Department (Optional)</label>
+                        <select class="form-select" id="department_id" name="department_id">
+                            <option value="">All Departments</option>
+                            {% for d in departments %}
+                            <option value="{{ d.id }}">{{ d.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Filter notice to a specific department.</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="expires_at" class="form-label">Expiry Date (Optional)</label>
+                        <input type="datetime-local" class="form-control" id="expires_at" name="expires_at">
+                        <div class="form-text">Notice will be hidden after this time.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Publish Notice</button>
+                <a href="{{ url_for('notices') }}" class="btn btn-outline-secondary ms-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

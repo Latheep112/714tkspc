@@ -6,10 +6,25 @@
 {% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <form class="form-inline" method="get" action="{{ url_for('timetable') }}">
-    <label class="mr-2">Week start</label>
-    <input type="date" name="week_start" class="form-control form-control-sm mr-2" value="{{ week_start.isoformat() }}">
-    <button type="submit" class="btn btn-sm btn-primary">Go</button>
+  <form class="form-inline d-flex align-items-center flex-wrap" method="get" action="{{ url_for('timetable') }}">
+    <div class="form-group mr-3 mb-2">
+      <label class="mr-2">Week start</label>
+      <input type="date" name="week_start" class="form-control form-control-sm" value="{{ week_start.isoformat() }}">
+    </div>
+    
+    {% if session.get('role') not in ['student', 'parent'] %}
+    <div class="form-group mr-3 mb-2">
+      <label class="mr-2">Department</label>
+      <select name="department_id" class="form-control form-control-sm">
+        <option value="">All Departments</option>
+        {% for d in departments %}
+        <option value="{{ d.id }}" {% if selected_dept_id == d.id|string %}selected{% endif %}>{{ d.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+    
+    <button type="submit" class="btn btn-sm btn-primary mb-2">Filter</button>
   </form>
 </div>
 

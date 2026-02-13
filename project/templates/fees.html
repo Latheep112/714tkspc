@@ -17,10 +17,18 @@
   <div class="card-body">
     <h5 class="card-title">Record Payment</h5>
     <form class="form-inline" method="post" action="{{ url_for('finance_fees') }}">
+    <label class="mr-2">Dept</label>
+    <select id="dept_filter" class="form-control form-control-sm mr-2">
+      <option value="">All</option>
+      {% for d in departments %}
+      <option value="{{ d.id }}">{{ d.name }}</option>
+      {% endfor %}
+    </select>
     <label class="mr-2">Student</label>
-    <select name="student_id" class="form-control form-control-sm mr-2" required>
+    <select name="student_id" id="student_id" class="form-control form-control-sm mr-2" required>
+      <option value="">Select Student</option>
       {% for s in students %}
-      <option value="{{ s.id }}">{{ s.name }}</option>
+      <option value="{{ s.id }}" data-department="{{ s.department_id }}">{{ s.name }}</option>
       {% endfor %}
     </select>
     <label class="mr-2">Amount</label>
@@ -37,6 +45,29 @@
   </div>
 </div>
 {% endif %}
+
+<script>
+document.getElementById('dept_filter').addEventListener('change', function() {
+    const deptId = this.value;
+    const studentSelect = document.getElementById('student_id');
+    const options = studentSelect.querySelectorAll('option');
+    
+    options.forEach(opt => {
+        if (opt.value === "") return;
+        const optDept = opt.getAttribute('data-department');
+        if (deptId === "" || optDept === deptId) {
+            opt.style.display = "";
+        } else {
+            opt.style.display = "none";
+        }
+    });
+    
+    // Reset student selection if current choice is now hidden
+    if (studentSelect.selectedOptions[0] && studentSelect.selectedOptions[0].style.display === "none") {
+        studentSelect.value = "";
+    }
+});
+</script>
 
 <div class="row">
   <div class="col-md-6">

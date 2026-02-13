@@ -3,7 +3,7 @@ from project import app, db
 import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
-from project.models import Student, Teacher, Course, User, CourseSession, Attendance, Grade, AdmissionApplication, AuditLog, FeeAccount, FeePayment, BudgetCategory, BudgetTransaction, Resource, ResourceBooking, ResourceBookingApproval, Invoice, ParentStudentLink, UserPhoto, Department, Semester, Subject, Exam
+from project.models import Student, Teacher, Course, User, CourseSession, Attendance, Grade, AdmissionApplication, AuditLog, FeeAccount, FeePayment, BudgetCategory, BudgetTransaction, Resource, ResourceBooking, ResourceBookingApproval, Invoice, ParentStudentLink, UserPhoto, Department, Semester, Subject, Exam, Notice
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_, and_, func, extract
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -173,6 +173,18 @@ CRUD_PERMISSIONS = {
         'update': ['admin'],
         'delete': ['admin'],
     },
+    'exam': {
+        'create': ['admin', 'staff', 'faculty', 'teacher'],
+        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student', 'parent'],
+        'update': ['admin', 'staff', 'faculty', 'teacher'],
+        'delete': ['admin', 'staff'],
+    },
+    'notice': {
+        'create': ['admin', 'staff'],
+        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student', 'parent'],
+        'update': ['admin', 'staff'],
+        'delete': ['admin', 'staff'],
+    },
 }
 
 def crud_required(resource: str, action: str):
@@ -218,6 +230,36 @@ def assign_tutor(student):
         db.session.commit()
         return teacher
     return None
+
+def get_recent_notices(role, user_email, limit=3):
+    today = datetime.utcnow()
+    query = Notice.query.filter((Notice.expires_at == None) | (Notice.expires_at > today))
+    
+    if role == 'student':
+        student = Student.query.filter_by(email=user_email).first()
+        dept_id = student.department_id if student else None
+        query = query.filter(
+            (Notice.target_role.in_(['all', 'student'])) & 
+            ((Notice.department_id == None) | (Notice.department_id == dept_id))
+        )
+    elif role in ['teacher', 'faculty']:
+        teacher = Teacher.query.filter_by(email=user_email).first()
+        dept_id = teacher.department_id if teacher else None
+        query = query.filter(
+            (Notice.target_role.in_(['all', 'teacher'])) & 
+            ((Notice.department_id == None) | (Notice.department_id == dept_id))
+        )
+    elif role == 'parent':
+        links = ParentStudentLink.query.filter_by(parent_username=user_email).all()
+        student_ids = [l.student_id for l in links]
+        students = Student.query.filter(Student.id.in_(student_ids)).all()
+        dept_ids = [s.department_id for s in students if s.department_id]
+        query = query.filter(
+            (Notice.target_role.in_(['all', 'parent'])) & 
+            ((Notice.department_id == None) | (Notice.department_id.in_(dept_ids)))
+        )
+    
+    return query.order_by(Notice.created_at.desc()).limit(limit).all()
 
 # --- Dashboard ---
 @app.route('/dashboard')
@@ -277,6 +319,8 @@ def dashboard():
             upcoming_sessions.sort(key=lambda x: x.session_date)
             upcoming_sessions = upcoming_sessions[:5]
 
+            recent_notices = get_recent_notices('student', session.get('user'))
+
             return render_template('student_dashboard.html', 
                                    title='Student Dashboard',
                                    student=student,
@@ -285,7 +329,8 @@ def dashboard():
                                    attendance_counts=attendance_counts,
                                    outstanding=outstanding,
                                    upcoming_sessions=upcoming_sessions,
-                                   photo_url=photo_url)
+                                   photo_url=photo_url,
+                                   recent_notices=recent_notices)
 
     # Faculty View
     if session.get('role') in ['faculty', 'teacher']:
@@ -348,6 +393,8 @@ def dashboard():
                     'stats': f"{present}P, {late}L / {total}" if marked else ""
                 })
 
+            recent_notices = get_recent_notices(session.get('role'), session.get('user'))
+
             return render_template('teacher_dashboard.html',
                                    title='Faculty Dashboard',
                                    teacher=teacher,
@@ -357,7 +404,8 @@ def dashboard():
                                    pending_leaves_count=pending_leaves_count,
                                    upcoming_sessions=upcoming_sessions,
                                    recent_sessions=recent_sessions,
-                                   photo_url=photo_url)
+                                   photo_url=photo_url,
+                                   recent_notices=recent_notices)
 
     # Parent View
     if session.get('role') == 'parent':
@@ -405,9 +453,12 @@ def dashboard():
                     'outstanding': outstanding
                 })
         
+        recent_notices = get_recent_notices('parent', session.get('user'))
+        
         return render_template('parent_dashboard.html', 
                                title='Parent Dashboard',
-                               children_data=children_data)
+                               children_data=children_data,
+                               recent_notices=recent_notices)
 
     student_count = Student.query.count()
     teacher_count = Teacher.query.count()
@@ -449,6 +500,9 @@ def dashboard():
     today = datetime.today().date()
     upcoming = CourseSession.query.filter(CourseSession.session_date >= today).order_by(CourseSession.session_date.asc()).limit(10).all()
     recent = CourseSession.query.order_by(CourseSession.session_date.desc()).limit(10).all()
+    
+    recent_notices = get_recent_notices('admin', session.get('user'))
+
     return render_template('dashboard.html',
                            title='Dashboard',
                            student_count=student_count,
@@ -462,7 +516,8 @@ def dashboard():
                            violations_day_count=violations_day_count,
                            violations_week_count=violations_week_count,
                            upcoming=upcoming,
-                           recent=recent)
+                           recent=recent,
+                           recent_notices=recent_notices)
 
 # --- Calendar ---
 @app.route('/calendar')
@@ -491,6 +546,13 @@ def calendar():
         student_ids = [l.student_id for l in links]
         # Filter sessions for courses where any of the parent's children are enrolled
         q = q.filter(CourseSession.course.has(Course.students.any(Student.id.in_(student_ids))))
+    elif role == 'student':
+        student = Student.query.filter_by(email=user_email).first()
+        if student:
+            # Filter sessions for courses where the student is enrolled
+            q = q.filter(CourseSession.course.has(Course.students.any(Student.id == student.id)))
+        else:
+            q = q.filter(False)
     
     if start:
         q = q.filter(CourseSession.session_date >= start)
@@ -521,6 +583,106 @@ def calendar():
     dates = sorted(set(list(grouped.keys()) + list(grouped_rb.keys())))
     return render_template('calendar.html', title='Calendar', dates=dates, grouped=grouped, grouped_rb=grouped_rb, start=start_str, end=end_str)
 
+# --- Notices / Notice Board ---
+@app.route('/notices')
+@crud_required('notice', 'read')
+def notices():
+    role = session.get('role')
+    user_email = session.get('user')
+    today = datetime.utcnow()
+    
+    query = Notice.query.filter((Notice.expires_at == None) | (Notice.expires_at > today))
+    
+    if role == 'student':
+        student = Student.query.filter_by(email=user_email).first()
+        dept_id = student.department_id if student else None
+        query = query.filter(
+            (Notice.target_role.in_(['all', 'student'])) & 
+            ((Notice.department_id == None) | (Notice.department_id == dept_id))
+        )
+    elif role == 'teacher' or role == 'faculty':
+        teacher = Teacher.query.filter_by(email=user_email).first()
+        dept_id = teacher.department_id if teacher else None
+        query = query.filter(
+            (Notice.target_role.in_(['all', 'teacher'])) & 
+            ((Notice.department_id == None) | (Notice.department_id == dept_id))
+        )
+    elif role == 'parent':
+        links = ParentStudentLink.query.filter_by(parent_username=user_email).all()
+        student_ids = [l.student_id for l in links]
+        students = Student.query.filter(Student.id.in_(student_ids)).all()
+        dept_ids = [s.department_id for s in students if s.department_id]
+        query = query.filter(
+            (Notice.target_role.in_(['all', 'parent'])) & 
+            ((Notice.department_id == None) | (Notice.department_id.in_(dept_ids)))
+        )
+    
+    notices_list = query.order_by(Notice.created_at.desc()).all()
+    return render_template('notices.html', notices=notices_list, title='Notice Board')
+
+@app.route('/notices/add', methods=['GET', 'POST'])
+@crud_required('notice', 'create')
+def add_notice():
+    departments = Department.query.all()
+    if request.method == 'POST':
+        title = request.form.get('title')
+        content = request.form.get('content')
+        target_role = request.form.get('target_role', 'all')
+        dept_id = request.form.get('department_id')
+        expires_str = request.form.get('expires_at')
+        
+        expires_at = None
+        if expires_str:
+            expires_at = datetime.strptime(expires_str, '%Y-%m-%dT%H:%M')
+            
+        new_notice = Notice(
+            title=title,
+            content=content,
+            target_role=target_role,
+            department_id=int(dept_id) if dept_id else None,
+            created_by=session.get('user'),
+            expires_at=expires_at
+        )
+        db.session.add(new_notice)
+        db.session.commit()
+        flash('Notice published successfully.', 'success')
+        return redirect(url_for('notices'))
+        
+    return render_template('add_notice.html', departments=departments, title='Add Notice')
+
+@app.route('/notices/<int:notice_id>/edit', methods=['GET', 'POST'])
+@crud_required('notice', 'update')
+def edit_notice(notice_id):
+    notice = Notice.query.get_or_404(notice_id)
+    departments = Department.query.all()
+    if request.method == 'POST':
+        notice.title = request.form.get('title')
+        notice.content = request.form.get('content')
+        notice.target_role = request.form.get('target_role', 'all')
+        dept_id = request.form.get('department_id')
+        expires_str = request.form.get('expires_at')
+        
+        notice.department_id = int(dept_id) if dept_id else None
+        if expires_str:
+            notice.expires_at = datetime.strptime(expires_str, '%Y-%m-%dT%H:%M')
+        else:
+            notice.expires_at = None
+            
+        db.session.commit()
+        flash('Notice updated successfully.', 'success')
+        return redirect(url_for('notices'))
+        
+    return render_template('edit_notice.html', notice=notice, departments=departments, title='Edit Notice')
+
+@app.route('/notices/<int:notice_id>/delete', methods=['POST'])
+@crud_required('notice', 'delete')
+def delete_notice(notice_id):
+    notice = Notice.query.get_or_404(notice_id)
+    db.session.delete(notice)
+    db.session.commit()
+    flash('Notice deleted.', 'success')
+    return redirect(url_for('notices'))
+
 # --- Timetable (weekly summary) ---
 @app.route('/timetable')
 @crud_required('timetable', 'read')
@@ -528,6 +690,7 @@ def timetable():
     # week_start param (YYYY-MM-DD); default current week
     week_start_str = request.args.get('week_start', '').strip()
     teacher_id_param = request.args.get('teacher_id', '').strip()
+    dept_id_param = request.args.get('department_id', '').strip()
     today = datetime.today().date()
     if week_start_str:
         try:
@@ -559,8 +722,28 @@ def timetable():
             pass
         links = ParentStudentLink.query.filter_by(parent_username=user_email).all()
         student_ids = [l.student_id for l in links]
-        # Filter sessions for courses where any of the parent's children are enrolled
-        q_sessions = q_sessions.filter(CourseSession.course.has(Course.students.any(Student.id.in_(student_ids))))
+        students = Student.query.filter(Student.id.in_(student_ids)).all()
+        dept_ids = [s.department_id for s in students if s.department_id]
+        
+        # Filter sessions for courses in the departments of the parent's children
+        if dept_ids:
+            q_sessions = q_sessions.join(Course).filter(Course.department_id.in_(dept_ids))
+        else:
+            q_sessions = q_sessions.filter(CourseSession.course.has(Course.students.any(Student.id.in_(student_ids))))
+            
+    elif role == 'student':
+        student = Student.query.filter_by(email=user_email).first()
+        if student and student.department_id:
+            q_sessions = q_sessions.join(Course).filter(Course.department_id == student.department_id)
+        elif student:
+            q_sessions = q_sessions.filter(CourseSession.course.has(Course.students.any(Student.id == student.id)))
+    
+    # Apply department filter for staff/admin/faculty
+    elif dept_id_param:
+        try:
+            q_sessions = q_sessions.join(Course).filter(Course.department_id == int(dept_id_param))
+        except ValueError:
+            pass
     
     if teacher_filter_id:
         q_sessions = q_sessions.join(Course).filter(Course.teacher_id == teacher_filter_id)
@@ -587,12 +770,16 @@ def timetable():
     teachers = {}
     for s in sessions:
         teachers[s.course.teacher.id] = s.course.teacher
+    
+    departments = Department.query.order_by(Department.name.asc()).all()
     return render_template('timetable.html',
                            title='Timetable',
                            week_start=week_start,
                            week_end=week_end,
                            items=items,
                            teachers=teachers,
+                           departments=departments,
+                           selected_dept_id=dept_id_param,
                            violations_day=violations_day,
                            violations_week=violations_week,
                            max_day=max_day,
@@ -2154,7 +2341,10 @@ def admin_parent_links():
     for photo in UserPhoto.query.filter(UserPhoto.username.in_(list(usernames))).all():
         photos[photo.username] = url_for('static', filename=photo.file_path.lstrip('/'))
         
-    return render_template('admin_parent_links.html', title='Parent Links', links=links, photos=photos)
+    parents = User.query.filter_by(role='parent').order_by(User.username.asc()).all()
+    students = Student.query.order_by(Student.name.asc()).all()
+        
+    return render_template('admin_parent_links.html', title='Parent Links', links=links, photos=photos, parents=parents, students=students)
 
 @app.route('/admin/parent-links/<int:link_id>/delete', methods=['POST'])
 @crud_required('parent_link', 'delete')
@@ -2259,6 +2449,8 @@ def admin_policies():
     return render_template('policies.html', title='Policies', current=current)
 
 @app.route("/students")
+@login_required
+@crud_required('student', 'read')
 def students():
     q = request.args.get('q', '').strip()
     page = request.args.get('page', 1, type=int)
@@ -2274,6 +2466,8 @@ def students():
         links = ParentStudentLink.query.filter_by(parent_username=user_email).all()
         student_ids = [l.student_id for l in links]
         query = query.filter(Student.id.in_(student_ids))
+    elif role == 'student':
+        query = query.filter(Student.email == user_email)
     
     if q:
         like = f"%{q}%"
@@ -2382,10 +2576,16 @@ def import_students():
         if Student.query.filter_by(email=email).first():
             skipped += 1
             continue
+        # Map department name to ID
+        department_obj = None
+        if department:
+            department_obj = Department.query.filter(Department.name.ilike(department)).first()
+        
         try:
             s = Student(
                 name=name, email=email, phone=phone, roll_number=roll_number, 
-                address=address, date_of_birth=dob, department=department,
+                address=address, date_of_birth=dob, 
+                department_id=department_obj.id if department_obj else None,
                 guardian_name=guardian_name, guardian_phone=guardian_phone,
                 guardian_email=guardian_email,
                 nationality=nationality, blood_group=blood_group,
@@ -2499,9 +2699,16 @@ def import_teachers():
         if Teacher.query.filter_by(email=email).first():
             skipped += 1
             continue
+
+        # Map department name to ID
+        department_obj = None
+        if department:
+            department_obj = Department.query.filter(Department.name.ilike(department)).first()
+
         try:
             t = Teacher(
-                name=name, email=email, phone=phone, department=department,
+                name=name, email=email, phone=phone, 
+                department_id=department_obj.id if department_obj else None,
                 designation=designation, specialization=specialization,
                 qualification=qualification, subject_expertise=subject_expertise,
                 date_of_birth=dob, joining_date=joining_date,
@@ -2604,10 +2811,18 @@ def import_courses():
         if code and Course.query.filter_by(code=code).first():
             skipped += 1
             continue
+
+        # Map department name to ID
+        department_obj = None
+        if department:
+            department_obj = Department.query.filter(Department.name.ilike(department)).first()
+
         try:
             c = Course(
                 name=name, description=description, code=code, credits=credits, 
-                teacher_id=teacher.id, department=department, semester=semester,
+                teacher_id=teacher.id, 
+                department_id=department_obj.id if department_obj else None,
+                semester=semester,
                 room=room, capacity=capacity, level=level, syllabus_url=syllabus_url,
                 course_type=course_type, academic_year=academic_year
             )
@@ -2680,7 +2895,7 @@ def sample_students_csv():
     out = StringIO()
     writer = csv.writer(out)
     writer.writerow(['name','email','phone','roll_number','current_year','current_semester','section','father_name','mother_name','emergency_contact_name','emergency_contact_phone','previous_school','address','date_of_birth','department','guardian_name','guardian_phone','nationality','blood_group','religion','community','sslc_marks','hsc_marks','password'])
-    writer.writerow(['Alice Johnson','alice@example.com','+1 555 123 4567','RN-001','1','1','A','Mark Johnson','Mary Johnson','Uncle Bob','+1 555 999 8888','St. Peter High School','123 Main St','2001-05-10','CS','Mark Johnson','+1 555 000 1111','American','O+','Christian','General','450','480','password123'])
+    writer.writerow(['Alice Johnson','alice@example.com','+1 555 123 4567','RN-001','1','1','A','Mark Johnson','Mary Johnson','Uncle Bob','+1 555 999 8888','St. Peter High School','123 Main St','2001-05-10','Computer Science','Mark Johnson','+1 555 000 1111','American','O+','Christian','General','450','480','password123'])
     return Response(out.getvalue(), mimetype='text/csv', headers={'Content-Disposition': 'attachment; filename=students_sample.csv'})
 
 @app.route('/import/sample/teachers.csv')
@@ -2698,7 +2913,7 @@ def sample_courses_csv():
     out = StringIO()
     writer = csv.writer(out)
     writer.writerow(['name','description','code','credits','teacher_email','department','semester','course_type','academic_year','room','capacity','level','syllabus_url'])
-    writer.writerow(['Introduction to Python','A beginner-friendly course on Python.','PY101','3','jane.doe@example.com','CS','1','Core','2023-24','Room 101','30','Undergraduate','https://example.com/syllabus/py101'])
+    writer.writerow(['Introduction to Python','A beginner-friendly course on Python.','PY101','3','jane.doe@example.com','Computer Science','1','Core','2023-24','Room 101','30','Undergraduate','https://example.com/syllabus/py101'])
     return Response(out.getvalue(), mimetype='text/csv', headers={'Content-Disposition': 'attachment; filename=courses_sample.csv'})
 
 @app.route('/import/sample/enrollments.csv')
@@ -2724,7 +2939,7 @@ def add_student():
         dob_str = request.form.get('date_of_birth', '').strip()
         gender = request.form.get('gender', '').strip()
         admission_date_str = request.form.get('admission_date', '').strip()
-        department = request.form.get('department', '').strip()
+        department_id = request.form.get('department_id')
         guardian_name = request.form.get('guardian_name', '').strip()
         guardian_phone = request.form.get('guardian_phone', '').strip()
         guardian_email = request.form.get('guardian_email', '').strip()
@@ -2826,7 +3041,7 @@ def add_student():
                 date_of_birth=dob,
                 gender=gender or None,
                 admission_date=admission_date,
-                department=department or None,
+                department_id=int(department_id) if department_id else None,
                 guardian_name=guardian_name or None,
                 guardian_phone=guardian_phone or None,
                 guardian_email=guardian_email or None,
@@ -2870,13 +3085,15 @@ def add_student():
             logger.exception("Unexpected error adding student")
             flash(f'Unexpected error: {str(e)}', 'danger')
     teachers = Teacher.query.all()
-    return render_template('add_student.html', title='Add Student', teachers=teachers)
+    departments = Department.query.all()
+    return render_template('add_student.html', title='Add Student', teachers=teachers, departments=departments)
 
 @app.route("/students/<int:student_id>/edit", methods=['GET', 'POST'])
 @crud_required('student', 'update')
 def edit_student(student_id):
     student = Student.query.get_or_404(student_id)
     teachers = Teacher.query.all()
+    departments = Department.query.all()
     if request.method == 'POST':
         student.registration_number = request.form.get('registration_number', '').strip() or None
         student.name = request.form['name']
@@ -2885,7 +3102,10 @@ def edit_student(student_id):
         student.roll_number = request.form.get('roll_number', '').strip() or None
         student.address = request.form.get('address', '').strip() or None
         student.gender = request.form.get('gender', '').strip() or None
-        student.department = request.form.get('department', '').strip() or None
+        
+        dept_id = request.form.get('department_id')
+        student.department_id = int(dept_id) if dept_id else None
+
         student.guardian_name = request.form.get('guardian_name', '').strip() or None
         guardian_phone = request.form.get('guardian_phone', '').strip()
         student.guardian_phone = guardian_phone or None
@@ -2950,7 +3170,7 @@ def edit_student(student_id):
                 student.date_of_birth = datetime.strptime(dob_str, '%Y-%m-%d').date()
             except ValueError:
                 flash('Invalid date of birth.', 'danger')
-                return render_template('edit_student.html', title='Edit Student', student=student, teachers=teachers)
+                return render_template('edit_student.html', title='Edit Student', student=student, teachers=teachers, departments=departments)
         else:
             student.date_of_birth = None
 
@@ -2960,25 +3180,25 @@ def edit_student(student_id):
                 student.admission_date = datetime.strptime(admission_date_str, '%Y-%m-%d').date()
             except ValueError:
                 flash('Invalid admission date.', 'danger')
-                return render_template('edit_student.html', title='Edit Student', student=student, teachers=teachers)
+                return render_template('edit_student.html', title='Edit Student', student=student, teachers=teachers, departments=departments)
         else:
             student.admission_date = None
 
         if not student.name.strip():
             flash('Name is required.', 'danger')
-            return render_template('edit_student.html', title='Edit Student', student=student, teachers=teachers)
+            return render_template('edit_student.html', title='Edit Student', student=student, teachers=teachers, departments=departments)
         if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", student.email):
             flash('Invalid email format.', 'danger')
-            return render_template('edit_student.html', title='Edit Student', student=student, teachers=teachers)
+            return render_template('edit_student.html', title='Edit Student', student=student, teachers=teachers, departments=departments)
         if not re.match(r"^[0-9\-\+\s]{7,20}$", student.phone):
             flash('Invalid phone number.', 'danger')
-            return render_template('edit_student.html', title='Edit Student', student=student, teachers=teachers)
+            return render_template('edit_student.html', title='Edit Student', student=student, teachers=teachers, departments=departments)
         if guardian_phone and not re.match(r"^[0-9\-\+\s]{7,20}$", guardian_phone):
             flash('Invalid guardian phone number.', 'danger')
-            return render_template('edit_student.html', title='Edit Student', student=student, teachers=teachers)
+            return render_template('edit_student.html', title='Edit Student', student=student, teachers=teachers, departments=departments)
         if emergency_contact_phone and not re.match(r"^[0-9\-\+\s]{7,20}$", emergency_contact_phone):
             flash('Invalid emergency contact phone number.', 'danger')
-            return render_template('edit_student.html', title='Edit Student', student=student, teachers=teachers)
+            return render_template('edit_student.html', title='Edit Student', student=student, teachers=teachers, departments=departments)
         try:
             db.session.commit()
             flash('Student has been updated!', 'success')
@@ -2991,7 +3211,7 @@ def edit_student(student_id):
             db.session.rollback()
             logger.exception("Unexpected error updating student")
             flash(f'Unexpected error: {str(e)}', 'danger')
-    return render_template('edit_student.html', title='Edit Student', student=student, teachers=teachers)
+    return render_template('edit_student.html', title='Edit Student', student=student, teachers=teachers, departments=departments)
 
 @app.route("/students/<int:student_id>/delete", methods=['POST'])
 @crud_required('student', 'delete')
@@ -3004,6 +3224,8 @@ def delete_student(student_id):
     return redirect(url_for('students'))
 
 @app.route("/teachers")
+@login_required
+@crud_required('teacher', 'read')
 def teachers():
     q = request.args.get('q', '').strip()
     page = request.args.get('page', 1, type=int)
@@ -3031,7 +3253,7 @@ def add_teacher():
         name = request.form['name']
         email = request.form['email']
         phone = request.form['phone']
-        department = request.form.get('department', '').strip()
+        department_id = request.form.get('department_id')
         address = request.form.get('address', '').strip()
         gender = request.form.get('gender', '').strip()
         office_hours = request.form.get('office_hours', '').strip()
@@ -3088,12 +3310,13 @@ def add_teacher():
         if not re.match(r"^[0-9\-\+\s]{7,20}$", phone):
             flash('Invalid phone number.', 'danger')
             return render_template('add_teacher.html', title='Add Teacher')
+
         try:
             teacher = Teacher(
                 name=name, 
                 email=email, 
                 phone=phone, 
-                department=department or None,
+                department_id=int(department_id) if department_id else None,
                 address=address or None,
                 gender=gender or None,
                 date_of_birth=dob,
@@ -3121,17 +3344,22 @@ def add_teacher():
             db.session.rollback()
             logger.exception("Unexpected error adding teacher")
             flash(f'Unexpected error: {str(e)}', 'danger')
-    return render_template('add_teacher.html', title='Add Teacher')
+    departments = Department.query.all()
+    return render_template('add_teacher.html', title='Add Teacher', departments=departments)
 
 @app.route("/teachers/<int:teacher_id>/edit", methods=['GET', 'POST'])
 @crud_required('teacher', 'update')
 def edit_teacher(teacher_id):
     teacher = Teacher.query.get_or_404(teacher_id)
+    departments = Department.query.all()
     if request.method == 'POST':
         teacher.name = request.form['name']
         teacher.email = request.form['email']
         teacher.phone = request.form['phone']
-        teacher.department = request.form.get('department', '').strip() or None
+        
+        dept_id = request.form.get('department_id')
+        teacher.department_id = int(dept_id) if dept_id else None
+
         teacher.address = request.form.get('address', '').strip() or None
         teacher.gender = request.form.get('gender', '').strip() or None
         teacher.office_hours = request.form.get('office_hours', '').strip() or None
@@ -3156,7 +3384,7 @@ def edit_teacher(teacher_id):
                 teacher.max_weekly_hours = int(max_weekly_hours_str)
             except ValueError:
                 flash('Max weekly hours must be an integer.', 'danger')
-                return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher)
+                return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher, departments=departments)
 
         dob_str = request.form.get('date_of_birth', '').strip()
         if dob_str:
@@ -3164,7 +3392,7 @@ def edit_teacher(teacher_id):
                 teacher.date_of_birth = datetime.strptime(dob_str, '%Y-%m-%d').date()
             except ValueError:
                 flash('Invalid date of birth.', 'danger')
-                return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher)
+                return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher, departments=departments)
         else:
             teacher.date_of_birth = None
 
@@ -3174,19 +3402,22 @@ def edit_teacher(teacher_id):
                 teacher.joining_date = datetime.strptime(joining_date_str, '%Y-%m-%d').date()
             except ValueError:
                 flash('Invalid joining date.', 'danger')
-                return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher)
+                return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher, departments=departments)
         else:
             teacher.joining_date = None
 
         if not teacher.name.strip():
             flash('Name is required.', 'danger')
-            return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher)
+            return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher, departments=departments)
         if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", teacher.email):
             flash('Invalid email format.', 'danger')
-            return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher)
+            return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher, departments=departments)
         if not re.match(r"^[0-9\-\+\s]{7,20}$", teacher.phone):
             flash('Invalid phone number.', 'danger')
-            return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher)
+            return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher, departments=departments)
+        if not re.match(r"^[0-9\-\+\s]{7,20}$", teacher.phone):
+            flash('Invalid phone number.', 'danger')
+            return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher, departments=departments)
         try:
             db.session.commit()
             flash('Teacher has been updated!', 'success')
@@ -3199,7 +3430,7 @@ def edit_teacher(teacher_id):
             db.session.rollback()
             logger.exception("Unexpected error updating teacher")
             flash(f'Unexpected error: {str(e)}', 'danger')
-    return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher)
+    return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher, departments=departments)
 
 @app.route("/teachers/<int:teacher_id>/delete", methods=['POST'])
 @crud_required('teacher', 'delete')
@@ -3233,6 +3464,13 @@ def courses():
         student_ids = [l.student_id for l in links]
         # Filter courses where any of the parent's children are enrolled
         query = query.filter(Course.students.any(Student.id.in_(student_ids)))
+    elif role == 'student':
+        student = Student.query.filter_by(email=user_email).first()
+        if student:
+            # Filter courses where the student is enrolled
+            query = query.filter(Course.students.any(Student.id == student.id))
+        else:
+            query = query.filter(False)
     
     if q:
         like = f"%{q}%"
@@ -3245,13 +3483,14 @@ def courses():
 @crud_required('course', 'create')
 def add_course():
     teachers = Teacher.query.all()
+    departments = Department.query.all()
     if request.method == 'POST':
         name = request.form['name']
         description = request.form['description']
         teacher_id = request.form['teacher']
         code = request.form.get('code', '').strip()
         credits_str = request.form.get('credits', '').strip()
-        department = request.form.get('department', '').strip()
+        department_id = request.form.get('department_id')
         semester = request.form.get('semester', '').strip()
         room = request.form.get('room', '').strip()
         capacity_str = request.form.get('capacity', '').strip()
@@ -3271,7 +3510,7 @@ def add_course():
                 capacity = int(capacity_str)
             except ValueError:
                 flash('Capacity must be an integer.', 'danger')
-                return render_template('add_course.html', title='Add Course', teachers=teachers)
+                return render_template('add_course.html', title='Add Course', teachers=teachers, departments=departments)
         
         start_date = None
         if start_date_str:
@@ -3290,10 +3529,10 @@ def add_course():
         logger.info(f"Adding course: {name} (teacher_id={teacher_id})")
         if not name.strip():
             flash('Name is required.', 'danger')
-            return render_template('add_course.html', title='Add Course', teachers=teachers)
+            return render_template('add_course.html', title='Add Course', teachers=teachers, departments=departments)
         if app.config.get('COURSE_REQUIRE_CREDITS', False) and not credits_str:
             flash('Credits are required for course creation.', 'danger')
-            return render_template('add_course.html', title='Add Course', teachers=teachers)
+            return render_template('add_course.html', title='Add Course', teachers=teachers, departments=departments)
         credits = None
         if credits_str:
             try:
@@ -3302,23 +3541,24 @@ def add_course():
                     raise ValueError
             except ValueError:
                 flash('Credits must be a non-negative integer.', 'danger')
-                return render_template('add_course.html', title='Add Course', teachers=teachers)
+                return render_template('add_course.html', title='Add Course', teachers=teachers, departments=departments)
         try:
             tid = int(teacher_id)
         except ValueError:
             flash('Invalid teacher selection.', 'danger')
-            return render_template('add_course.html', title='Add Course', teachers=teachers)
+            return render_template('add_course.html', title='Add Course', teachers=teachers, departments=departments)
         teacher = Teacher.query.get(tid)
         if not teacher:
             flash('Selected teacher does not exist.', 'danger')
-            return render_template('add_course.html', title='Add Course', teachers=teachers)
+            return render_template('add_course.html', title='Add Course', teachers=teachers, departments=departments)
+
         course = Course(
             name=name, 
             description=description, 
             teacher_id=tid, 
             code=code or None, 
             credits=credits,
-            department=department or None,
+            department_id=int(department_id) if department_id else None,
             semester=semester or None,
             room=room or None,
             capacity=capacity,
@@ -3338,7 +3578,7 @@ def add_course():
         db.session.commit()
         flash('Course has been added!', 'success')
         return redirect(url_for('courses'))
-    return render_template('add_course.html', title='Add Course', teachers=teachers)
+    return render_template('add_course.html', title='Add Course', teachers=teachers, departments=departments)
 
 @app.route('/courses/<int:course_id>/update_progress', methods=['POST'])
 @login_required
@@ -3441,12 +3681,16 @@ def course_details(course_id):
 def edit_course(course_id):
     course = Course.query.get_or_404(course_id)
     teachers = Teacher.query.all()
+    departments = Department.query.all()
     if request.method == 'POST':
         course.name = request.form['name']
         course.description = request.form['description']
         course.teacher_id = request.form['teacher']
         course.code = request.form.get('code', '').strip() or None
-        course.department = request.form.get('department', '').strip() or None
+        
+        dept_id = request.form.get('department_id')
+        course.department_id = int(dept_id) if dept_id else None
+
         course.semester = request.form.get('semester', '').strip() or None
         course.room = request.form.get('room', '').strip() or None
         course.level = request.form.get('level', '').strip() or None
@@ -3488,7 +3732,7 @@ def edit_course(course_id):
                     raise ValueError
             except ValueError:
                 flash('Credits must be a non-negative integer.', 'danger')
-                return render_template('edit_course.html', title='Edit Course', course=course, teachers=teachers)
+                return render_template('edit_course.html', title='Edit Course', course=course, teachers=teachers, departments=departments)
         else:
             course.credits = None
         if capacity_str:
@@ -3496,22 +3740,22 @@ def edit_course(course_id):
                 course.capacity = int(capacity_str)
             except ValueError:
                 flash('Capacity must be an integer.', 'danger')
-                return render_template('edit_course.html', title='Edit Course', course=course, teachers=teachers)
+                return render_template('edit_course.html', title='Edit Course', course=course, teachers=teachers, departments=departments)
         if not course.name.strip():
             flash('Name is required.', 'danger')
-            return render_template('edit_course.html', title='Edit Course', course=course, teachers=teachers)
+            return render_template('edit_course.html', title='Edit Course', course=course, teachers=teachers, departments=departments)
         try:
             course.teacher_id = int(course.teacher_id)
         except ValueError:
             flash('Invalid teacher selection.', 'danger')
-            return render_template('edit_course.html', title='Edit Course', course=course, teachers=teachers)
+            return render_template('edit_course.html', title='Edit Course', course=course, teachers=teachers, departments=departments)
         if not Teacher.query.get(course.teacher_id):
             flash('Selected teacher does not exist.', 'danger')
-            return render_template('edit_course.html', title='Edit Course', course=course, teachers=teachers)
+            return render_template('edit_course.html', title='Edit Course', course=course, teachers=teachers, departments=departments)
         db.session.commit()
         flash('Course has been updated!', 'success')
         return redirect(url_for('courses'))
-    return render_template('edit_course.html', title='Edit Course', course=course, teachers=teachers)
+    return render_template('edit_course.html', title='Edit Course', course=course, teachers=teachers, departments=departments)
 
 @app.route("/courses/<int:course_id>/delete", methods=['POST'])
 @crud_required('course', 'delete')
@@ -3816,7 +4060,8 @@ def daily_attendance():
         sessions_today = CourseSession.query.filter_by(session_date=today).all()
         courses = Course.query.all()
         
-    return render_template('daily_attendance.html', sessions=sessions_today, courses=courses, today=today, title='Daily Attendance')
+    departments = Department.query.order_by(Department.name.asc()).all()
+    return render_template('daily_attendance.html', sessions=sessions_today, courses=courses, departments=departments, today=today, title='Daily Attendance')
 
 @app.route("/attendance/quick_session", methods=['POST'])
 @login_required
@@ -4095,19 +4340,58 @@ def monthly_attendance_report():
 @crud_required('exam', 'read')
 def exams():
     q = request.args.get('q', '').strip()
+    dept_id = request.args.get('department_id', '').strip()
+    role = session.get('role')
+    user_email = session.get('user')
+    
+    query = Exam.query.join(Course)
+    
+    if role == 'student':
+        student = Student.query.filter_by(email=user_email).first()
+        if student and student.department_id:
+            query = query.filter(Course.department_id == student.department_id)
+        elif student:
+            # Fallback to enrolled courses if department not set
+            query = query.filter(Course.students.any(Student.id == student.id))
+            
+    elif role == 'parent':
+        links = ParentStudentLink.query.filter_by(parent_username=user_email).all()
+        student_ids = [l.student_id for l in links]
+        students = Student.query.filter(Student.id.in_(student_ids)).all()
+        dept_ids = [s.department_id for s in students if s.department_id]
+        if dept_ids:
+            query = query.filter(Course.department_id.in_(dept_ids))
+        else:
+            query = query.filter(Course.students.any(Student.id.in_(student_ids)))
+    
+    # Apply department filter for staff/admin/faculty
+    elif dept_id:
+        try:
+            query = query.filter(Course.department_id == int(dept_id))
+        except ValueError:
+            pass
+
     if q:
-        exams_list = Exam.query.join(Course).filter(
+        exams_list = query.filter(
             (Exam.name.ilike(f'%{q}%')) | (Course.name.ilike(f'%{q}%'))
         ).all()
     else:
-        exams_list = Exam.query.order_by(Exam.exam_date.desc()).all()
-    return render_template('exams.html', exams=exams_list, q=q, title='Exams')
+        exams_list = query.order_by(Exam.exam_date.desc()).all()
+    
+    departments = Department.query.order_by(Department.name.asc()).all()
+    return render_template('exams.html', 
+                           exams=exams_list, 
+                           q=q, 
+                           departments=departments,
+                           selected_dept_id=dept_id,
+                           title='Exams')
 
 @app.route('/exams/add', methods=['GET', 'POST'])
 @login_required
 @crud_required('exam', 'create')
 def add_exam():
     courses = Course.query.all()
+    departments = Department.query.all()
     if request.method == 'POST':
         name = request.form['name']
         course_id = request.form['course_id']
@@ -4129,7 +4413,7 @@ def add_exam():
         flash('Exam scheduled successfully.', 'success')
         return redirect(url_for('exams'))
         
-    return render_template('add_exam.html', courses=courses, title='Schedule Exam')
+    return render_template('add_exam.html', courses=courses, departments=departments, title='Schedule Exam')
 
 @app.route('/exams/<int:exam_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -4137,6 +4421,7 @@ def add_exam():
 def edit_exam(exam_id):
     exam = Exam.query.get_or_404(exam_id)
     courses = Course.query.all()
+    departments = Department.query.all()
     if request.method == 'POST':
         exam.name = request.form['name']
         exam.course_id = request.form['course_id']
@@ -4150,7 +4435,7 @@ def edit_exam(exam_id):
         flash('Exam updated successfully.', 'success')
         return redirect(url_for('exams'))
         
-    return render_template('edit_exam.html', exam=exam, courses=courses, title='Edit Exam')
+    return render_template('edit_exam.html', exam=exam, courses=courses, departments=departments, title='Edit Exam')
 
 @app.route('/exams/<int:exam_id>/delete', methods=['POST'])
 @login_required
@@ -4209,7 +4494,10 @@ def hall_ticket(student_id):
         flash('Unauthorized.', 'danger')
         return redirect(url_for('dashboard'))
         
-    exams = Exam.query.join(Course).filter(Course.students.contains(student)).all()
+    if student.department_id:
+        exams = Exam.query.join(Course).filter(Course.department_id == student.department_id).all()
+    else:
+        exams = Exam.query.join(Course).filter(Course.students.contains(student)).all()
     return render_template('hall_ticket.html', student=student, exams=exams, title='Hall Ticket')
 
 @app.route("/students/<int:student_id>/calculate_gpa")
@@ -4659,12 +4947,20 @@ def finance_fees():
         links = ParentStudentLink.query.filter_by(parent_username=user_email).all()
         student_ids = [l.student_id for l in links]
         query = query.filter(Student.id.in_(student_ids))
+    elif role == 'student':
+        student = Student.query.filter_by(email=user_email).first()
+        if student:
+            student_ids = [student.id]
+            query = query.filter(Student.id == student.id)
+        else:
+            student_ids = []
+            query = query.filter(False)
     
     students = query.order_by(Student.name.asc()).all()
     accounts = {a.student_id: a for a in FeeAccount.query.all()}
     
     # Outstanding = sum invoices - sum payments
-    if role == 'parent':
+    if role in ['parent', 'student']:
         invoices = Invoice.query.filter(Invoice.student_id.in_(student_ids)).all()
         payments = FeePayment.query.filter(FeePayment.student_id.in_(student_ids)).all()
         recent_payments = FeePayment.query.filter(FeePayment.student_id.in_(student_ids)).order_by(FeePayment.paid_at.desc()).limit(10).all()
@@ -4681,7 +4977,8 @@ def finance_fees():
         due_totals[inv.student_id] = due_totals.get(inv.student_id, 0.0) + (inv.amount_due or 0.0)
     outstanding = {sid: max(due_totals.get(sid, 0.0) - paid_totals.get(sid, 0.0), 0.0) for sid in set(list(due_totals.keys()) + list(paid_totals.keys()))}
     
-    return render_template('fees.html', title='Fees', students=students, accounts=accounts, recent_payments=recent_payments, outstanding=outstanding)
+    departments = Department.query.order_by(Department.name.asc()).all()
+    return render_template('fees.html', title='Fees', students=students, departments=departments, accounts=accounts, recent_payments=recent_payments, outstanding=outstanding)
 
 @app.route('/finance/invoices/create', methods=['GET', 'POST'])
 @crud_required('fee', 'create')
@@ -4761,7 +5058,13 @@ def list_invoices():
     user_email = session.get('user')
     
     query = Invoice.query
-    if role == 'parent':
+    if role == 'student':
+        student = Student.query.filter_by(email=user_email).first()
+        if student:
+            query = query.filter(Invoice.student_id == student.id)
+        else:
+            query = query.filter(Invoice.id == -1) # No results
+    elif role == 'parent':
         try:
             db.create_all()
         except Exception:
@@ -5164,6 +5467,32 @@ def add_subject():
         flash('Subject added successfully!', 'success')
         return redirect(url_for('list_subjects'))
     return render_template('add_subject.html', departments=depts)
+
+@app.route('/subjects/edit/<int:subject_id>', methods=['GET', 'POST'])
+@crud_required('subject', 'update')
+def edit_subject(subject_id):
+    sub = Subject.query.get_or_404(subject_id)
+    depts = Department.query.all()
+    if request.method == 'POST':
+        sub.name = request.form.get('name')
+        sub.code = request.form.get('code')
+        sub.description = request.form.get('description')
+        sub.department_id = request.form.get('department_id')
+        sub.credits = request.form.get('credits')
+        
+        db.session.commit()
+        flash('Subject updated successfully!', 'success')
+        return redirect(url_for('list_subjects'))
+    return render_template('edit_subject.html', subject=sub, departments=depts)
+
+@app.route('/subjects/delete/<int:subject_id>', methods=['POST'])
+@crud_required('subject', 'delete')
+def delete_subject(subject_id):
+    sub = Subject.query.get_or_404(subject_id)
+    db.session.delete(sub)
+    db.session.commit()
+    flash('Subject deleted successfully!', 'success')
+    return redirect(url_for('list_subjects'))
 
 @app.route('/resources/approve/<int:booking_id>', methods=['POST'])
 @crud_required('resource', 'update')

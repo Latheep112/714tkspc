@@ -10,19 +10,30 @@
     <div class="card-body">
         <form method="POST">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-group mb-3">
                         <label for="name" class="form-label">Exam Name</label>
                         <input type="text" class="form-control" id="name" name="name" placeholder="e.g. Mid-term 1" required>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
+                    <div class="form-group mb-3">
+                        <label for="department_id" class="form-label">Department</label>
+                        <select class="form-control" id="department_id" name="department_id">
+                            <option value="">All Departments</option>
+                            {% for d in departments %}
+                            <option value="{{ d.id }}">{{ d.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
                     <div class="form-group mb-3">
                         <label for="course_id" class="form-label">Course</label>
                         <select class="form-control" id="course_id" name="course_id" required>
                             <option value="">Select Course</option>
                             {% for c in courses %}
-                            <option value="{{ c.id }}">{{ c.name }}</option>
+                            <option value="{{ c.id }}" data-department="{{ c.department_id }}">{{ c.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -57,4 +68,27 @@
         </form>
     </div>
 </div>
+
+<script>
+document.getElementById('department_id').addEventListener('change', function() {
+    const deptId = this.value;
+    const courseSelect = document.getElementById('course_id');
+    const options = courseSelect.querySelectorAll('option');
+    
+    options.forEach(opt => {
+        if (opt.value === "") return;
+        const optDept = opt.getAttribute('data-department');
+        if (deptId === "" || optDept === deptId) {
+            opt.style.display = "";
+        } else {
+            opt.style.display = "none";
+        }
+    });
+    
+    // Reset course selection if current choice is now hidden
+    if (courseSelect.selectedOptions[0] && courseSelect.selectedOptions[0].style.display === "none") {
+        courseSelect.value = "";
+    }
+});
+</script>
 {% endblock %}
