@@ -75,7 +75,7 @@
     </div>
     <div class="card">
       <div class="card-body">
-        <div class="h6 text-muted">Enrolled Courses</div>
+        <div class="h6 text-muted">Enrolled Subjects</div>
         {% if student.courses %}
         <ul class="list-unstyled mb-0">
           {% for c in student.courses %}
@@ -83,7 +83,7 @@
           {% endfor %}
         </ul>
         {% else %}
-        <div class="text-muted">No courses enrolled.</div>
+        <div class="text-muted">No subjects enrolled.</div>
         {% endif %}
       </div>
     </div>
@@ -123,7 +123,7 @@
     </div>
     <div class="card">
       <div class="card-body">
-        <div class="h6 text-muted">Assigned Courses</div>
+        <div class="h6 text-muted">Assigned Subjects</div>
         {% if teacher.courses %}
         <ul class="list-unstyled mb-0">
           {% for c in teacher.courses %}
@@ -131,7 +131,7 @@
           {% endfor %}
         </ul>
         {% else %}
-        <div class="text-muted">No courses assigned.</div>
+        <div class="text-muted">No subjects assigned.</div>
         {% endif %}
       </div>
     </div>
@@ -151,7 +151,7 @@
         {% elif role == 'staff' %}
         <div class="mt-2">
           <a class="btn btn-outline-primary btn-sm me-2" href="{{ url_for('students') }}">Students</a>
-          <a class="btn btn-outline-primary btn-sm me-2" href="{{ url_for('courses') }}">Courses</a>
+          <a class="btn btn-outline-primary btn-sm me-2" href="{{ url_for('subjects') }}">Subjects</a>
           <a class="btn btn-outline-primary btn-sm me-2" href="{{ url_for('admissions') }}">Admissions</a>
           <a class="btn btn-outline-primary btn-sm me-2" href="{{ url_for('resources') }}">Resources</a>
         </div>
@@ -161,7 +161,7 @@
         <ul class="list-unstyled mb-0">
           {% for s in parent_students %}
           <li>
-            <a href="{{ url_for('student_courses', student_id=s.id) }}">{{ s.name }}</a>
+            <a href="{{ url_for('student_subjects', student_id=s.id) }}">{{ s.name }}</a>
             <span class="text-muted"> • </span>
             <a href="{{ url_for('student_attendance_summary', student_id=s.id) }}">Attendance</a>
           </li>

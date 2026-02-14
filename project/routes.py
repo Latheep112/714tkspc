@@ -340,7 +340,7 @@ def dashboard():
             photo = UserPhoto.query.filter_by(username=faculty_member.email).first()
             photo_url = url_for('static', filename=photo.file_path.lstrip('/')) if photo else None
             
-            # 1. Active Courses
+            # 1. Active Subjects
             my_courses = Course.query.filter_by(faculty_id=faculty_member.id).all()
             active_courses_count = len(my_courses)
             
@@ -892,7 +892,7 @@ def timetable_generate():
     return redirect(url_for('timetable', week_start=week_start.isoformat()))
 
 # --- Course Planning Summary ---
-@app.route('/courses/<int:course_id>/plan')
+@app.route('/subjects/<int:course_id>/plan')
 @crud_required('course_plan', 'read')
 def course_plan(course_id):
     course = Course.query.get_or_404(course_id)
@@ -924,7 +924,7 @@ def course_plan(course_id):
                            sessions=sessions,
                            suggestions=None)
 
-@app.route('/courses/<int:course_id>/plan/suggest')
+@app.route('/subjects/<int:course_id>/plan/suggest')
 @crud_required('course_plan', 'read')
 def course_plan_suggest(course_id):
     course = Course.query.get_or_404(course_id)
@@ -1010,7 +1010,7 @@ def course_plan_suggest(course_id):
                            sessions=sessions,
                            suggestions=suggestions)
 
-@app.route('/courses/<int:course_id>/plan/apply', methods=['POST'])
+@app.route('/subjects/<int:course_id>/plan/apply', methods=['POST'])
 @crud_required('course_plan', 'update')
 def course_plan_apply(course_id):
     course = Course.query.get_or_404(course_id)
@@ -2288,7 +2288,7 @@ def admin_crud():
     entities = [
         {'name': 'Students', 'icon': 'fas fa-user-graduate', 'url': url_for('students'), 'add_url': url_for('add_student'), 'count': Student.query.count()},
         {'name': 'Faculty', 'icon': 'fas fa-chalkboard-teacher', 'url': url_for('faculty'), 'add_url': url_for('add_faculty'), 'count': Teacher.query.count()},
-        {'name': 'Courses', 'icon': 'fas fa-book', 'url': url_for('courses'), 'add_url': url_for('add_course'), 'count': Course.query.count()},
+        {'name': 'Subjects', 'icon': 'fas fa-book', 'url': url_for('subjects'), 'add_url': url_for('add_course'), 'count': Course.query.count()},
         {'name': 'Users', 'icon': 'fas fa-users-cog', 'url': url_for('admin_users'), 'add_url': url_for('add_user'), 'count': User.query.count()},
         {'name': 'Admissions', 'icon': 'fas fa-user-plus', 'url': url_for('admissions'), 'add_url': url_for('add_admission'), 'count': AdmissionApplication.query.count()},
         {'name': 'Resources', 'icon': 'fas fa-building', 'url': url_for('resources'), 'add_url': url_for('resources_add'), 'count': Resource.query.count()},
@@ -2755,10 +2755,10 @@ def import_teachers():
         flash('Some rows had issues: ' + '; '.join(errors[:5]) + ('' if len(errors) <= 5 else ' ...'), 'warning')
     return redirect(url_for('faculty'))
 
-# --- Bulk Import: Courses ---
-@app.route('/import/courses', methods=['POST'])
+# --- Bulk Import: Subjects ---
+@app.route('/import/subjects', methods=['POST'])
 @crud_required('bulk_upload', 'create')
-def import_courses():
+def import_subjects():
     file = request.files.get('file')
     rows = _csv_rows(file)
     max_rows = app.config.get('MAX_BULK_IMPORT_ROWS', 1000)
@@ -2834,12 +2834,12 @@ def import_courses():
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        flash(f'Failed to import courses: {str(e)}', 'danger')
+        flash(f'Failed to import subjects: {str(e)}', 'danger')
         return redirect(url_for('bulk_upload'))
-    flash(f'Imported courses: {created} created, {skipped} skipped.', 'success')
+    flash(f'Imported subjects: {created} created, {skipped} skipped.', 'success')
     if errors:
         flash('Some rows had issues: ' + '; '.join(errors[:5]) + ('' if len(errors) <= 5 else ' ...'), 'warning')
-    return redirect(url_for('courses'))
+    return redirect(url_for('subjects'))
 
 # --- Bulk Import: Enrollments ---
 @app.route('/import/enrollments', methods=['POST'])
@@ -2885,7 +2885,7 @@ def import_enrollments():
     flash(f'Imported enrollments: {created} created, {skipped} skipped.', 'success')
     if errors:
         flash('Some rows had issues: ' + '; '.join(errors[:5]) + ('' if len(errors) <= 5 else ' ...'), 'warning')
-    return redirect(url_for('courses'))
+    return redirect(url_for('subjects'))
 
 # --- Sample CSV Endpoints ---
 @app.route('/import/sample/students.csv')
@@ -2906,14 +2906,14 @@ def sample_teachers_csv():
     writer.writerow(['Dr Jane Doe','jane.doe@example.com','+1 555 222 3333','Mathematics','Professor','Calculus','ABCDE1234F','123456789012','10','securepass789'])
     return Response(out.getvalue(), mimetype='text/csv', headers={'Content-Disposition': 'attachment; filename=teachers_sample.csv'})
 
-@app.route('/import/sample/courses.csv')
+@app.route('/import/sample/subjects.csv')
 @crud_required('bulk_upload', 'read')
-def sample_courses_csv():
+def sample_subjects_csv():
     out = StringIO()
     writer = csv.writer(out)
     writer.writerow(['name','description','code','credits','teacher_email','department','semester','course_type','academic_year','room','capacity','level','syllabus_url'])
     writer.writerow(['Introduction to Python','A beginner-friendly course on Python.','PY101','3','jane.doe@example.com','Computer Science','1','Core','2023-24','Room 101','30','Undergraduate','https://example.com/syllabus/py101'])
-    return Response(out.getvalue(), mimetype='text/csv', headers={'Content-Disposition': 'attachment; filename=courses_sample.csv'})
+    return Response(out.getvalue(), mimetype='text/csv', headers={'Content-Disposition': 'attachment; filename=subjects_sample.csv'})
 
 @app.route('/import/sample/enrollments.csv')
 @crud_required('bulk_upload', 'read')
@@ -3446,8 +3446,8 @@ def delete_faculty(faculty_id):
         flash(f'Unexpected error: {str(e)}', 'danger')
     return redirect(url_for('faculty'))
 
-@app.route("/courses")
-def courses():
+@app.route("/subjects")
+def subjects():
     q = request.args.get('q', '').strip()
     page = request.args.get('page', 1, type=int)
     role = session.get('role')
@@ -3475,9 +3475,9 @@ def courses():
         like = f"%{q}%"
         query = query.filter(or_(Course.name.ilike(like)))
     pagination = query.order_by(Course.name.asc()).paginate(page=page, per_page=10)
-    return render_template('courses.html', courses=pagination.items, pagination=pagination, q=q, title='Courses')
+    return render_template('subjects.html', courses=pagination.items, pagination=pagination, q=q, title='Subjects')
 
-@app.route("/courses/add", methods=['GET', 'POST'])
+@app.route("/subjects/add", methods=['GET', 'POST'])
 @login_required
 @crud_required('course', 'create')
 def add_course():
@@ -3576,10 +3576,10 @@ def add_course():
         db.session.add(course)
         db.session.commit()
         flash('Course has been added!', 'success')
-        return redirect(url_for('courses'))
+        return redirect(url_for('subjects'))
     return render_template('add_course.html', title='Add Course', teachers=teachers, departments=departments)
 
-@app.route('/courses/<int:course_id>/update_progress', methods=['POST'])
+@app.route('/subjects/<int:course_id>/update_progress', methods=['POST'])
 @login_required
 @crud_required('course', 'update')
 def update_course_progress(course_id):
@@ -3593,7 +3593,7 @@ def update_course_progress(course_id):
         flash('Invalid progress value.', 'danger')
     return redirect(url_for('course_details', course_id=course_id))
 
-@app.route("/courses/<int:course_id>/enroll", methods=['GET', 'POST'])
+@app.route("/subjects/<int:course_id>/enroll", methods=['GET', 'POST'])
 @crud_required('course', 'update')
 def enroll_student(course_id):
     course = Course.query.get_or_404(course_id)
@@ -3631,12 +3631,12 @@ def enroll_student(course_id):
             skipped_total = skipped + max(len(student_ids) - added - skipped, 0)
             msg += f' Skipped {skipped_total} due to capacity/invalid/duplicate.'
         flash(msg, 'success' if added > 0 else 'warning')
-        return redirect(url_for('courses'))
+        return redirect(url_for('subjects'))
     return render_template('enroll_student.html', title='Enroll Students', course=course, students=students)
 
-@app.route("/students/<int:student_id>/courses")
+@app.route("/students/<int:student_id>/subjects")
 @crud_required('course', 'read')
-def student_courses(student_id):
+def student_subjects(student_id):
     student = Student.query.get_or_404(student_id)
     if session.get('role') == 'parent':
         try:
@@ -3647,9 +3647,9 @@ def student_courses(student_id):
         if not link:
             flash('You are not authorized to view this student.', 'danger')
             return redirect(url_for('students'))
-    return render_template('student_courses.html', student=student)
+    return render_template('student_subjects.html', student=student)
 
-@app.route("/courses/<int:course_id>")
+@app.route("/subjects/<int:course_id>")
 def course_details(course_id):
     course = Course.query.get_or_404(course_id)
     role = session.get('role')
@@ -3666,7 +3666,7 @@ def course_details(course_id):
         enrolled_student_ids = [s.id for s in course.students]
         if not any(sid in enrolled_student_ids for sid in student_ids):
             flash('You are not authorized to view this course.', 'danger')
-            return redirect(url_for('courses'))
+            return redirect(url_for('subjects'))
             
     # Fetch photos for enrolled students
     student_emails = [s.email for s in course.students]
@@ -3675,7 +3675,7 @@ def course_details(course_id):
         photos[photo.username] = url_for('static', filename=photo.file_path.lstrip('/'))
     return render_template('course_details.html', course=course, title='Course Details', photos=photos)
 
-@app.route("/courses/<int:course_id>/edit", methods=['GET', 'POST'])
+@app.route("/subjects/<int:course_id>/edit", methods=['GET', 'POST'])
 @crud_required('course', 'update')
 def edit_course(course_id):
     course = Course.query.get_or_404(course_id)
@@ -3753,10 +3753,10 @@ def edit_course(course_id):
             return render_template('edit_course.html', title='Edit Course', course=course, teachers=teachers, departments=departments)
         db.session.commit()
         flash('Course has been updated!', 'success')
-        return redirect(url_for('courses'))
+        return redirect(url_for('subjects'))
     return render_template('edit_course.html', title='Edit Course', course=course, teachers=teachers, departments=departments)
 
-@app.route("/courses/<int:course_id>/delete", methods=['POST'])
+@app.route("/subjects/<int:course_id>/delete", methods=['POST'])
 @crud_required('course', 'delete')
 def delete_course(course_id):
     course = Course.query.get_or_404(course_id)
@@ -3764,9 +3764,9 @@ def delete_course(course_id):
     db.session.delete(course)
     db.session.commit()
     flash('Course has been deleted!', 'success')
-    return redirect(url_for('courses'))
+    return redirect(url_for('subjects'))
 
-@app.route("/courses/<int:course_id>/sessions")
+@app.route("/subjects/<int:course_id>/sessions")
 @crud_required('course_session', 'read')
 def course_sessions(course_id):
     course = Course.query.get_or_404(course_id)
@@ -3796,7 +3796,7 @@ def course_sessions(course_id):
     
     if not can_view:
         flash('You are not authorized to view sessions for this course.', 'danger')
-        return redirect(url_for('courses'))
+        return redirect(url_for('subjects'))
 
     # Check if user can add/edit/delete sessions
     can_edit = False
@@ -3821,7 +3821,7 @@ def course_sessions(course_id):
 
     return render_template('sessions.html', course=course, sessions=sessions, title='Sessions', can_edit=can_edit, student_attendance=student_attendance)
 
-@app.route("/courses/<int:course_id>/sessions/add", methods=['GET', 'POST'])
+@app.route("/subjects/<int:course_id>/sessions/add", methods=['GET', 'POST'])
 @login_required
 @crud_required('course_session', 'create')
 def add_session(course_id):
@@ -4244,7 +4244,7 @@ def low_attendance_alerts():
             
     return render_template('low_attendance_alerts.html', courses=courses, course=course, alerts=alerts, threshold=threshold, title='Low Attendance Alerts')
 
-@app.route("/courses/notify_low_attendance", methods=['POST'])
+@app.route("/subjects/notify_low_attendance", methods=['POST'])
 @login_required
 @crud_required('attendance', 'update')
 def notify_low_attendance():
@@ -4621,7 +4621,7 @@ def session_attendance_csv(session_id):
     output = si.getvalue()
     return Response(output, mimetype='text/csv', headers={"Content-Disposition": f"attachment; filename=session_{session_id}_attendance.csv"})
 
-@app.route("/courses/<int:course_id>/attendance.csv")
+@app.route("/subjects/<int:course_id>/attendance.csv")
 @crud_required('attendance', 'read')
 def course_attendance_csv(course_id):
     course = Course.query.get_or_404(course_id)
@@ -4646,7 +4646,7 @@ def course_attendance_csv(course_id):
     output = si.getvalue()
     return Response(output, mimetype='text/csv', headers={"Content-Disposition": f"attachment; filename=course_{course_id}_attendance.csv"})
 
-@app.route("/courses/<int:course_id>/roster.csv")
+@app.route("/subjects/<int:course_id>/roster.csv")
 def course_roster_csv(course_id):
     course = Course.query.get_or_404(course_id)
     si = StringIO()
@@ -4657,7 +4657,7 @@ def course_roster_csv(course_id):
     output = si.getvalue()
     return Response(output, mimetype='text/csv', headers={"Content-Disposition": f"attachment; filename=course_{course_id}_roster.csv"})
 
-@app.route("/courses/<int:course_id>/attendance/summary")
+@app.route("/subjects/<int:course_id>/attendance/summary")
 def course_attendance_summary(course_id):
     course = Course.query.get_or_404(course_id)
     start_date_str = request.args.get('start_date', '').strip()
@@ -4737,7 +4737,7 @@ def student_attendance_summary(student_id):
     
     return render_template('student_attendance_summary.html', student=student, data=data, title='Student Attendance', photo_url=photo_url)
 
-@app.route("/courses/<int:course_id>/unenroll/<int:student_id>", methods=['POST'])
+@app.route("/subjects/<int:course_id>/unenroll/<int:student_id>", methods=['POST'])
 @crud_required('course', 'update')
 def unenroll_student(course_id, student_id):
     course = Course.query.get_or_404(course_id)
@@ -4761,7 +4761,7 @@ def drop_course(student_id, course_id):
         flash('Course dropped!', 'success')
     else:
         flash('Course not found.', 'warning')
-    return redirect(url_for('student_courses', student_id=student_id))
+    return redirect(url_for('student_subjects', student_id=student_id))
 
 @app.route("/healthz")
 def healthz():

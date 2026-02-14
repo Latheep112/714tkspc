@@ -21,12 +21,12 @@
       </div>
     </div>
   </div>
-  <div class="card-footer text-muted">Basic metrics aggregate across faculty's courses.</div>
+  <div class="card-footer text-muted">Basic metrics aggregate across faculty's subjects.</div>
 </div>
 
 <div class="card">
   <div class="card-body">
-    <h5 class="card-title">Courses</h5>
+    <h5 class="card-title">Subjects</h5>
     <ul class="list-group list-group-flush">
       {% for c in courses %}
       <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -35,7 +35,7 @@
       </li>
       {% endfor %}
       {% if not courses %}
-      <li class="list-group-item text-muted">No assigned courses.</li>
+      <li class="list-group-item text-muted">No assigned subjects.</li>
       {% endif %}
     </ul>
   </div>

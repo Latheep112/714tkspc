@@ -52,7 +52,7 @@
     <div class="col-md-6">
         <div class="card mb-4">
             <div class="card-header bg-white font-weight-bold">
-                <i class="fas fa-book mr-2"></i>My Courses
+                <i class="fas fa-book mr-2"></i>My Subjects
             </div>
             <div class="list-group list-group-flush">
                 {% for course in student.courses %}
@@ -64,7 +64,7 @@
                     <a href="{{ url_for('course_details', course_id=course.id) }}" class="btn btn-sm btn-light">View</a>
                 </div>
                 {% else %}
-                <div class="list-group-item text-muted">Not enrolled in any courses.</div>
+                <div class="list-group-item text-muted">Not enrolled in any subjects.</div>
                 {% endfor %}
             </div>
         </div>

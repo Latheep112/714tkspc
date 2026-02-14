@@ -17,7 +17,7 @@ os.environ['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from project import app, db
-from project.models import Teacher, User
+from project.models import Faculty, User
 
 class TeacherDashboardTests(unittest.TestCase):
 
@@ -33,7 +33,7 @@ class TeacherDashboardTests(unittest.TestCase):
         # Create a teacher
         self.teacher_email = 'prof@example.com'
         self.teacher_name = 'Professor X'
-        self.teacher = Teacher(
+        self.teacher = Faculty(
             name=self.teacher_name,
             email=self.teacher_email,
             phone='1234567890',
@@ -58,7 +58,7 @@ class TeacherDashboardTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         # Check for faculty dashboard specific content
         self.assertIn(f'Welcome, {self.teacher_name}'.encode(), response.data)
-        self.assertIn(b'Active Courses', response.data)
+        self.assertIn(b'Active Subjects', response.data)
         self.assertIn(b'Pending Leaves', response.data)
 
     def test_faculty_role_access(self):

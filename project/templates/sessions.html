@@ -2,13 +2,13 @@
 {% block page_title %}<h2 class="mb-0">Sessions for {{ course.name }} <span class="badge bg-secondary">{{ sessions|length }}</span></h2>{% endblock %}
 {% block breadcrumbs %}
   <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-  <li class="breadcrumb-item"><a href="{{ url_for('courses') }}">Courses</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('subjects') }}">Subjects</a></li>
   <li class="breadcrumb-item active" aria-current="page">Sessions</li>
 {% endblock %}
 {% block content %}
     <div class="mb-3">
       <div class="btn-group" role="group" aria-label="Session actions">
-        <a href="{{ url_for('courses') }}" class="btn btn-outline-secondary">Back to Courses</a>
+        <a href="{{ url_for('subjects') }}" class="btn btn-outline-secondary">Back to Subjects</a>
         {% if can_edit %}
         <a href="{{ url_for('add_session', course_id=course.id) }}" class="btn btn-primary">Add Session</a>
         {% endif %}

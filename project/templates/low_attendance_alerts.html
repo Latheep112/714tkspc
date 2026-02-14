@@ -2,7 +2,7 @@
 {% block page_title %}<h2 class="mb-0">{{ title }}{% if course %} for {{ course.name }}{% endif %}</h2>{% endblock %}
 {% block breadcrumbs %}
   <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-  <li class="breadcrumb-item"><a href="{{ url_for('courses') }}">Courses</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('subjects') }}">Subjects</a></li>
   {% if course %}
   <li class="breadcrumb-item"><a href="{{ url_for('course_details', course_id=course.id) }}">{{ course.name }}</a></li>
   {% endif %}

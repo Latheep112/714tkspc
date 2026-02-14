@@ -13,7 +13,7 @@ os.environ['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from project import app, db
-from project.models import Teacher, Course, CourseSession
+from project.models import Faculty, Course, CourseSession
 
 class TimetableTeacherFilterTests(unittest.TestCase):
     def setUp(self):
@@ -24,14 +24,14 @@ class TimetableTeacherFilterTests(unittest.TestCase):
         self.ctx.push()
         db.create_all()
 
-        # Create two teachers
-        self.t1 = Teacher(name='Alice', email='alice@school.edu', phone='1111111')
-        self.t2 = Teacher(name='Bob', email='bob@school.edu', phone='2222222')
-        db.session.add_all([self.t1, self.t2])
+        # Create two faculty members
+        self.f1 = Faculty(name='Alice', email='alice@school.edu', phone='1111111')
+        self.f2 = Faculty(name='Bob', email='bob@school.edu', phone='2222222')
+        db.session.add_all([self.f1, self.f2])
         db.session.flush()
         # Create courses
-        c1 = Course(name='Math 101', description='', teacher_id=self.t1.id)
-        c2 = Course(name='Physics 101', description='', teacher_id=self.t2.id)
+        c1 = Course(name='Math 101', description='', faculty_id=self.f1.id)
+        c2 = Course(name='Physics 101', description='', faculty_id=self.f2.id)
         db.session.add_all([c1, c2])
         db.session.flush()
         # Create sessions within current week
@@ -50,10 +50,10 @@ class TimetableTeacherFilterTests(unittest.TestCase):
         self.ctx.pop()
 
     def test_role_based_filter_for_teacher(self):
-        # Login as t1 (faculty)
+        # Login as f1 (faculty)
         with self.client.session_transaction() as sess:
             sess['logged_in'] = True
-            sess['user'] = self.t1.email
+            sess['user'] = self.f1.email
             sess['role'] = 'faculty'
         resp = self.client.get('/timetable', follow_redirects=True)
         self.assertEqual(resp.status_code, 200)
@@ -63,12 +63,12 @@ class TimetableTeacherFilterTests(unittest.TestCase):
         self.assertNotIn(b'Physics 101', data)
 
     def test_query_param_teacher_id_filter(self):
-        # Login as admin to test explicit teacher_id filtering
+        # Login as admin to test explicit faculty_id filtering
         with self.client.session_transaction() as sess:
             sess['logged_in'] = True
             sess['user'] = 'admin'
             sess['role'] = 'admin'
-        resp = self.client.get(f'/timetable?teacher_id={self.t2.id}', follow_redirects=True)
+        resp = self.client.get(f'/timetable?faculty_id={self.f2.id}', follow_redirects=True)
         self.assertEqual(resp.status_code, 200)
         data = resp.data
         # Should see only Bob's course

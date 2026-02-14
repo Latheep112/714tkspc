@@ -17,7 +17,7 @@
                       <td>{{ course.teacher.name }}</td>
                       <td class="text-nowrap">
                           <form action="{{ url_for('drop_course', student_id=student.id, course_id=course.id) }}" method="POST" class="d-inline">
-                          <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Drop this subject?');">Drop</button>
+                              <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Drop this subject?');">Drop</button>
                           </form>
                       </td>
                   </tr>

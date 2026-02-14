@@ -32,7 +32,7 @@
                         {% if session.get('role') in ['admin', 'staff'] %}
                         <li><a class="dropdown-item {% if request.endpoint == 'faculty' %}active{% endif %}" href="{{ url_for('faculty') }}">Faculty</a></li>
                         {% endif %}
-                        <li><a class="dropdown-item {% if request.endpoint == 'courses' %}active{% endif %}" href="{{ url_for('courses') }}">Courses</a></li>
+                        <li><a class="dropdown-item {% if request.endpoint == 'subjects' %}active{% endif %}" href="{{ url_for('subjects') }}">Subjects</a></li>
                         {% if session.get('role') in ['admin', 'staff', 'faculty', 'student'] %}
                          <li><a class="dropdown-item {% if request.endpoint == 'list_departments' %}active{% endif %}" href="{{ url_for('list_departments') }}">Departments</a></li>
                          <li><a class="dropdown-item {% if request.endpoint == 'list_semesters' %}active{% endif %}" href="{{ url_for('list_semesters') }}">Semesters</a></li>

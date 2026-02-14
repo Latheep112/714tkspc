@@ -45,12 +45,12 @@
         </thead>
         <tbody>
           {% for it in items %}
-          {% set vday = violations_day.get((it.teacher.id, it.date)) %}
-          {% set vweek = violations_week.get(it.teacher.id) %}
+          {% set vday = violations_day.get((it.faculty.id, it.date)) %}
+          {% set vweek = violations_week.get(it.faculty.id) %}
           <tr>
             <td>{{ it.date.isoformat() }}</td>
             <td>{{ it.course.name }}{% if it.title %} — {{ it.title }}{% endif %}</td>
-            <td>{{ it.teacher.name }}</td>
+            <td>{{ it.faculty.name }}</td>
             <td>{{ it.hours }}</td>
             <td>
               {% if vday and vday > max_day %}<span class="badge bg-danger">Daily cap {{ vday }}/{{ max_day }}</span>{% endif %}

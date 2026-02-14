@@ -77,15 +77,15 @@ table.table td, table.table th { vertical-align: middle; }
 
 /* Responsive column visibility for smaller screens */
 @media (max-width: 992px) {
-  .courses-table .col-desc,
-  .courses-table .col-notes { display: none; }
+  .subjects-table .col-desc,
+  .subjects-table .col-notes { display: none; }
 }
 @media (max-width: 768px) {
   #studentsTable .col-guardian-name,
   #studentsTable .col-guardian-phone { display: none; }
   #teachersTable .col-employment,
   #teachersTable .col-max-hours { display: none; }
-  .courses-table .col-room { display: none; }
+  .subjects-table .col-room { display: none; }
 }
 
 .compact .table td,

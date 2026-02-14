@@ -2,7 +2,7 @@
 {% block page_title %}<h2 class="mb-0">{{ title }} for {{ course.name }} on {{ course_session.session_date }}</h2>{% endblock %}
 {% block breadcrumbs %}
   <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-  <li class="breadcrumb-item"><a href="{{ url_for('courses') }}">Courses</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('subjects') }}">Subjects</a></li>
   <li class="breadcrumb-item"><a href="{{ url_for('course_sessions', course_id=course.id) }}">Sessions</a></li>
   <li class="breadcrumb-item active" aria-current="page">Mark Attendance</li>
 {% endblock %}
