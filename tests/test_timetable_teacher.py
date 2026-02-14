@@ -50,11 +50,11 @@ class TimetableTeacherFilterTests(unittest.TestCase):
         self.ctx.pop()
 
     def test_role_based_filter_for_teacher(self):
-        # Login as t1 (teacher)
+        # Login as t1 (faculty)
         with self.client.session_transaction() as sess:
             sess['logged_in'] = True
             sess['user'] = self.t1.email
-            sess['role'] = 'teacher'
+            sess['role'] = 'faculty'
         resp = self.client.get('/timetable', follow_redirects=True)
         self.assertEqual(resp.status_code, 200)
         # Should see Math 101, not Physics 101

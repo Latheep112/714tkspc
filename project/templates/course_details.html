@@ -7,7 +7,7 @@
         <div class="col-md-6">
           {% if course.level %}<p class="mb-2"><strong>Level:</strong> {{ course.level }}</p>{% endif %}
           {% if course.credits is not none %}<p class="mb-2"><strong>Credits:</strong> {{ course.credits }}</p>{% endif %}
-          <p class="mb-2"><strong>Teacher:</strong> {{ course.teacher.name }}</p>
+          <p class="mb-2"><strong>Faculty:</strong> {{ course.teacher.name }}</p>
           <p class="mb-2"><strong>Department:</strong> {{ course.department or '-' }}</p>
           <p class="mb-2"><strong>Semester:</strong> {{ course.semester or '-' }}</p>
         </div>
@@ -35,7 +35,7 @@
               {{ course.syllabus_progress }}%
             </div>
           </div>
-          {% if session.get('role') in ['admin', 'faculty', 'teacher'] %}
+          {% if session.get('role') in ['admin', 'faculty'] %}
           <form action="{{ url_for('update_course_progress', course_id=course.id) }}" method="POST" class="form-inline mt-2">
             <div class="input-group input-group-sm">
               <input type="number" name="progress" class="form-control" value="{{ course.syllabus_progress }}" min="0" max="100">
@@ -59,7 +59,7 @@
       <div class="btn-group" role="group" aria-label="Course actions">
         <a href="{{ url_for('courses') }}" class="btn btn-secondary">Back to Courses</a>
         <a href="{{ url_for('course_sessions', course_id=course.id) }}" class="btn btn-info">Sessions</a>
-        {% if session.get('role') in ['admin', 'faculty', 'teacher'] %}
+        {% if session.get('role') in ['admin', 'faculty'] %}
         <a href="{{ url_for('course_attendance_summary', course_id=course.id) }}" class="btn btn-warning">Attendance Summary</a>
         <a href="{{ url_for('course_plan', course_id=course.id) }}" class="btn btn-primary">Plan</a>
         <a href="{{ url_for('course_roster_csv', course_id=course.id) }}" class="btn btn-outline-success">Roster CSV</a>
@@ -69,7 +69,7 @@
     </div>
   </div>
 
-  {% if session.get('role') in ['admin', 'faculty', 'teacher'] %}
+  {% if session.get('role') in ['admin', 'faculty'] %}
   <h3>Enrolled Students</h3>
   <div class="table-responsive">
     <table class="table table-sm table-hover">

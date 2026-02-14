@@ -11,11 +11,11 @@ class Department(db.Model):
     name = db.Column(db.String(100), nullable=False, unique=True)
     code = db.Column(db.String(20), unique=True)
     description = db.Column(db.Text)
-    head_of_department_id = db.Column(db.Integer, db.ForeignKey('teacher.id'), nullable=True)
+    head_of_department_id = db.Column(db.Integer, db.ForeignKey('faculty.id'), nullable=True)
     
     # Relationships
     students = db.relationship('Student', backref='department', lazy=True, foreign_keys='Student.department_id')
-    teachers = db.relationship('Teacher', backref='department', lazy=True, foreign_keys='Teacher.department_id')
+    faculty = db.relationship('Faculty', backref='department', lazy=True, foreign_keys='Faculty.department_id')
     courses = db.relationship('Course', backref='department', lazy=True, foreign_keys='Course.department_id')
     subjects = db.relationship('Subject', backref='department', lazy=True, foreign_keys='Subject.department_id')
 
@@ -67,7 +67,7 @@ class Student(db.Model):
     guardian_phone = db.Column(db.String(20))
     guardian_email = db.Column(db.String(100))
     status = db.Column(db.String(20), default='active')
-    tutor_id = db.Column(db.Integer, db.ForeignKey('teacher.id'))
+    faculty_id = db.Column(db.Integer, db.ForeignKey('faculty.id'))
     nationality = db.Column(db.String(50))
     blood_group = db.Column(db.String(10))
     religion = db.Column(db.String(50))
@@ -97,7 +97,7 @@ class Student(db.Model):
     payments = db.relationship('FeePayment', backref='student', lazy=True, cascade="all, delete-orphan")
     parent_links = db.relationship('ParentStudentLink', backref='student', lazy=True, cascade="all, delete-orphan")
 
-class Teacher(db.Model):
+class Faculty(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -118,9 +118,9 @@ class Teacher(db.Model):
     qualification = db.Column(db.String(200))
     subject_expertise = db.Column(db.String(200))
 
-    courses = db.relationship('Course', backref='teacher', lazy=True)
-    tutored_students = db.relationship('Student', backref='tutor', lazy=True)
-    leaves = db.relationship('TeacherLeave', backref='teacher', lazy=True, cascade="all, delete-orphan")
+    courses = db.relationship('Course', backref='faculty', lazy=True)
+    tutored_students = db.relationship('Student', backref='tutor', lazy=True, foreign_keys='Student.faculty_id')
+    leaves = db.relationship('FacultyLeave', backref='faculty', lazy=True, cascade="all, delete-orphan")
     managed_departments = db.relationship('Department', backref='head_of_department', lazy=True, foreign_keys='Department.head_of_department_id')
 
 class Course(db.Model):
@@ -128,7 +128,7 @@ class Course(db.Model):
     name = db.Column(db.String(100), nullable=False)
     code = db.Column(db.String(20), unique=True)
     description = db.Column(db.Text)
-    teacher_id = db.Column(db.Integer, db.ForeignKey('teacher.id'))
+    faculty_id = db.Column(db.Integer, db.ForeignKey('faculty.id'))
     department_id = db.Column(db.Integer, db.ForeignKey('department.id'))
     semester_id = db.Column(db.Integer, db.ForeignKey('semester.id'))
     subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'))
@@ -210,9 +210,9 @@ class Attendance(db.Model):
     def __repr__(self):
         return f"Attendance(session_id={self.session_id}, student_id={self.student_id}, status='{self.status}')"
 
-class TeacherLeave(db.Model):
+class FacultyLeave(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    teacher_id = db.Column(db.Integer, db.ForeignKey('teacher.id'), nullable=False)
+    faculty_id = db.Column(db.Integer, db.ForeignKey('faculty.id'), nullable=False)
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
     reason = db.Column(db.String(200), nullable=True)
@@ -220,7 +220,7 @@ class TeacherLeave(db.Model):
     approved_by = db.Column(db.String(80), nullable=True)
 
     def __repr__(self):
-        return f"TeacherLeave(teacher_id={self.teacher_id}, {self.start_date}->{self.end_date}, approved={self.approved})"
+        return f"FacultyLeave(faculty_id={self.faculty_id}, {self.start_date}->{self.end_date}, approved={self.approved})"
 
 class Grade(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -450,7 +450,7 @@ class Invoice(db.Model):
 
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    recipient_type = db.Column(db.String(20), nullable=False) # 'parent', 'student', 'teacher'
+    recipient_type = db.Column(db.String(20), nullable=False) # 'parent', 'student', 'faculty'
     recipient_id = db.Column(db.String(100), nullable=False) # email or username
     title = db.Column(db.String(200), nullable=False)
     message = db.Column(db.Text, nullable=False)
@@ -464,7 +464,7 @@ class Notice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    target_role = db.Column(db.String(20), default='all') # 'all', 'student', 'teacher', 'parent'
+    target_role = db.Column(db.String(20), default='all') # 'all', 'student', 'faculty', 'parent'
     department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=True)
     created_by = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

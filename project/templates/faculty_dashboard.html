@@ -63,7 +63,7 @@
             <div class="card-body">
                 <h5 class="card-title text-muted">Pending Leaves</h5>
                 <h2 class="display-4">{{ pending_leaves_count }}</h2>
-                <a href="{{ url_for('teacher_leave', teacher_id=teacher.id) }}" class="btn btn-outline-primary btn-sm mt-2">Manage Leave</a>
+                <a href="{{ url_for('faculty_leave', faculty_id=teacher.id) }}" class="btn btn-outline-primary btn-sm mt-2">Manage Leave</a>
             </div>
         </div>
     </div>

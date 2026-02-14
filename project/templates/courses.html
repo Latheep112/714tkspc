@@ -8,7 +8,7 @@
     <div class="row mb-3">
         <div class="col-md-8">
             <form method="get" action="{{ url_for('courses') }}" class="form-inline">
-                <input type="text" class="form-control mr-2 js-table-filter" data-target="#coursesTable" name="q" placeholder="Search name/code/teacher" value="{{ q }}">
+                <input type="text" class="form-control mr-2 js-table-filter" data-target="#coursesTable" name="q" placeholder="Search name/code/faculty" value="{{ q }}">
                 <button type="submit" class="btn btn-outline-secondary btn-icon"><i class="fas fa-search"></i> Search</button>
             </form>
         </div>
@@ -29,7 +29,7 @@
                 <th class="col-year">Year</th>
                 <th class="col-level">Level</th>
                 <th class="col-credits">Credits</th>
-                <th class="col-teacher">Teacher</th>
+                <th class="col-teacher">Faculty</th>
                 <th class="col-room">Room</th>
                 <th class="col-capacity">Capacity</th>
                 <th class="col-remaining">Rem</th>

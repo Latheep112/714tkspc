@@ -3,7 +3,7 @@ from project import app, db
 import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
-from project.models import Student, Teacher, Course, User, CourseSession, Attendance, Grade, AdmissionApplication, AuditLog, FeeAccount, FeePayment, BudgetCategory, BudgetTransaction, Resource, ResourceBooking, ResourceBookingApproval, Invoice, ParentStudentLink, UserPhoto, Department, Semester, Subject, Exam, Notice
+from project.models import Student, Faculty, Course, User, CourseSession, Attendance, Grade, AdmissionApplication, AuditLog, FeeAccount, FeePayment, BudgetCategory, BudgetTransaction, Resource, ResourceBooking, ResourceBookingApproval, Invoice, ParentStudentLink, UserPhoto, Department, Semester, Subject, Exam, Notice, FacultyLeave
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_, and_, func, extract
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -49,38 +49,38 @@ def roles_required(*roles):
 CRUD_PERMISSIONS = {
     'student': {
         'create': ['admin', 'staff'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student', 'parent'],
+        'read':   ['admin', 'staff', 'faculty', 'student', 'parent'],
         'update': ['admin', 'staff'],
         'delete': ['admin'],
     },
-    'teacher': {
+    'faculty': {
         'create': ['admin'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher'],
+        'read':   ['admin', 'staff', 'faculty'],
         'update': ['admin'],
         'delete': ['admin'],
     },
     'course': {
-        'create': ['admin', 'staff', 'faculty', 'teacher'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student', 'parent'],
-        'update': ['admin', 'staff', 'faculty', 'teacher'],
+        'create': ['admin', 'staff', 'faculty'],
+        'read':   ['admin', 'staff', 'faculty', 'student', 'parent'],
+        'update': ['admin', 'staff', 'faculty'],
         'delete': ['admin'],
     },
     'course_session': {
-        'create': ['admin', 'faculty', 'teacher'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student', 'parent'],
-        'update': ['admin', 'faculty', 'teacher'],
+        'create': ['admin', 'faculty'],
+        'read':   ['admin', 'staff', 'faculty', 'student', 'parent'],
+        'update': ['admin', 'faculty'],
         'delete': ['admin'],
     },
     'grade': {
-        'create': ['admin', 'faculty', 'teacher'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student', 'parent'],
-        'update': ['admin', 'faculty', 'teacher'],
+        'create': ['admin', 'faculty'],
+        'read':   ['admin', 'staff', 'faculty', 'student', 'parent'],
+        'update': ['admin', 'faculty'],
         'delete': ['admin'],
     },
     'attendance': {
-        'create': ['admin', 'faculty', 'teacher'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student', 'parent'],
-        'update': ['admin', 'faculty', 'teacher'],
+        'create': ['admin', 'faculty'],
+        'read':   ['admin', 'staff', 'faculty', 'student', 'parent'],
+        'update': ['admin', 'faculty'],
         'delete': ['admin'],
     },
     'admission': {
@@ -91,19 +91,19 @@ CRUD_PERMISSIONS = {
     },
     'department': {
         'create': ['admin'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student'],
+        'read':   ['admin', 'staff', 'faculty', 'student'],
         'update': ['admin'],
         'delete': ['admin'],
     },
     'semester': {
         'create': ['admin'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student'],
+        'read':   ['admin', 'staff', 'faculty', 'student'],
         'update': ['admin'],
         'delete': ['admin'],
     },
     'subject': {
         'create': ['admin', 'staff'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student'],
+        'read':   ['admin', 'staff', 'faculty', 'student'],
         'update': ['admin', 'staff'],
         'delete': ['admin'],
     },
@@ -114,9 +114,9 @@ CRUD_PERMISSIONS = {
         'delete': ['admin'],
     },
     'timetable': {
-        'create': ['admin', 'faculty', 'teacher'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student', 'parent'],
-        'update': ['admin', 'faculty', 'teacher'],
+        'create': ['admin', 'faculty'],
+        'read':   ['admin', 'staff', 'faculty', 'student', 'parent'],
+        'update': ['admin', 'faculty'],
         'delete': ['admin'],
     },
     'audit': {
@@ -127,13 +127,13 @@ CRUD_PERMISSIONS = {
     },
     'user': {
         'create': ['admin'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student', 'parent'],
-        'update': ['admin', 'staff', 'faculty', 'teacher', 'student', 'parent'],
+        'read':   ['admin', 'staff', 'faculty', 'student', 'parent'],
+        'update': ['admin', 'staff', 'faculty', 'student', 'parent'],
         'delete': ['admin'],
     },
     'analytics': {
         'create': ['admin'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student', 'parent'],
+        'read':   ['admin', 'staff', 'faculty', 'student', 'parent'],
         'update': ['admin'],
         'delete': ['admin'],
     },
@@ -144,21 +144,21 @@ CRUD_PERMISSIONS = {
         'delete': ['admin'],
     },
     'course_plan': {
-        'create': ['admin', 'faculty', 'teacher'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student', 'parent'],
-        'update': ['admin', 'faculty', 'teacher'],
+        'create': ['admin', 'faculty'],
+        'read':   ['admin', 'staff', 'faculty', 'student', 'parent'],
+        'update': ['admin', 'faculty'],
         'delete': ['admin'],
     },
     'workload': {
         'create': ['admin'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher'],
+        'read':   ['admin', 'staff', 'faculty'],
         'update': ['admin'],
         'delete': ['admin'],
     },
     'leave': {
-        'create': ['admin', 'faculty', 'teacher'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher'],
-        'update': ['admin', 'faculty', 'teacher'],
+        'create': ['admin', 'faculty'],
+        'read':   ['admin', 'staff', 'faculty'],
+        'update': ['admin', 'faculty'],
         'delete': ['admin'],
     },
     'parent_link': {
@@ -169,19 +169,19 @@ CRUD_PERMISSIONS = {
     },
     'resource': {
         'create': ['admin'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student', 'parent'],
+        'read':   ['admin', 'staff', 'faculty', 'student', 'parent'],
         'update': ['admin'],
         'delete': ['admin'],
     },
     'exam': {
-        'create': ['admin', 'staff', 'faculty', 'teacher'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student', 'parent'],
-        'update': ['admin', 'staff', 'faculty', 'teacher'],
+        'create': ['admin', 'staff', 'faculty'],
+        'read':   ['admin', 'staff', 'faculty', 'student', 'parent'],
+        'update': ['admin', 'staff', 'faculty'],
         'delete': ['admin', 'staff'],
     },
     'notice': {
         'create': ['admin', 'staff'],
-        'read':   ['admin', 'staff', 'faculty', 'teacher', 'student', 'parent'],
+        'read':   ['admin', 'staff', 'faculty', 'student', 'parent'],
         'update': ['admin', 'staff'],
         'delete': ['admin', 'staff'],
     },
@@ -208,27 +208,27 @@ def assign_tutor(student):
     """
     Auto-assigns a tutor to a student.
     Logic: 
-    1. Find teachers in the same department as the student.
+    1. Find faculty in the same department as the student.
     2. Among those, find the one with the fewest tutees.
-    3. If no teacher in the department, find the teacher with the fewest tutees overall.
+    3. If no faculty in the department, find the faculty with the fewest tutees overall.
     """
-    teacher = None
+    faculty_member = None
     if student.department:
         # 1 & 2: Same department, fewest tutees
-        teachers_in_dept = Teacher.query.filter_by(department=student.department).all()
-        if teachers_in_dept:
-            teacher = min(teachers_in_dept, key=lambda t: len(t.tutees))
+        faculty_in_dept = Faculty.query.filter_by(department=student.department).all()
+        if faculty_in_dept:
+            faculty_member = min(faculty_in_dept, key=lambda f: len(f.tutored_students))
     
-    if not teacher:
+    if not faculty_member:
         # 3: Fewest tutees overall
-        all_teachers = Teacher.query.all()
-        if all_teachers:
-            teacher = min(all_teachers, key=lambda t: len(t.tutees))
+        all_faculty = Faculty.query.all()
+        if all_faculty:
+            faculty_member = min(all_faculty, key=lambda f: len(f.tutored_students))
     
-    if teacher:
-        student.tutor_id = teacher.id
+    if faculty_member:
+        student.faculty_id = faculty_member.id
         db.session.commit()
-        return teacher
+        return faculty_member
     return None
 
 def get_recent_notices(role, user_email, limit=3):
@@ -242,11 +242,11 @@ def get_recent_notices(role, user_email, limit=3):
             (Notice.target_role.in_(['all', 'student'])) & 
             ((Notice.department_id == None) | (Notice.department_id == dept_id))
         )
-    elif role in ['teacher', 'faculty']:
-        teacher = Teacher.query.filter_by(email=user_email).first()
-        dept_id = teacher.department_id if teacher else None
+    elif role == 'faculty':
+        faculty_member = Faculty.query.filter_by(email=user_email).first()
+        dept_id = faculty_member.department_id if faculty_member else None
         query = query.filter(
-            (Notice.target_role.in_(['all', 'teacher'])) & 
+            (Notice.target_role.in_(['all', 'faculty'])) & 
             ((Notice.department_id == None) | (Notice.department_id == dept_id))
         )
     elif role == 'parent':
@@ -333,15 +333,15 @@ def dashboard():
                                    recent_notices=recent_notices)
 
     # Faculty View
-    if session.get('role') in ['faculty', 'teacher']:
-        teacher = Teacher.query.filter_by(email=session.get('user')).first()
-        if teacher:
+    if session.get('role') == 'faculty':
+        faculty_member = Faculty.query.filter_by(email=session.get('user')).first()
+        if faculty_member:
             # Fetch user photo
-            photo = UserPhoto.query.filter_by(username=teacher.email).first()
+            photo = UserPhoto.query.filter_by(username=faculty_member.email).first()
             photo_url = url_for('static', filename=photo.file_path.lstrip('/')) if photo else None
             
             # 1. Active Courses
-            my_courses = Course.query.filter_by(teacher_id=teacher.id).all()
+            my_courses = Course.query.filter_by(faculty_id=faculty_member.id).all()
             active_courses_count = len(my_courses)
             
             # 2. Weekly Hours
@@ -350,7 +350,7 @@ def dashboard():
             week_end = week_start + timedelta(days=6)
             
             sessions_week = CourseSession.query.join(Course).filter(
-                Course.teacher_id == teacher.id,
+                Course.faculty_id == faculty_member.id,
                 CourseSession.session_date >= week_start,
                 CourseSession.session_date <= week_end
             ).all()
@@ -360,19 +360,18 @@ def dashboard():
             max_weekly_hours = int(app.config.get('TEACHER_MAX_HOURS_PER_WEEK', 30))
             
             # 3. Pending Leaves
-            from project.models import TeacherLeave
-            pending_leaves_count = TeacherLeave.query.filter_by(teacher_id=teacher.id, approved=False).count()
+            pending_leaves_count = FacultyLeave.query.filter_by(faculty_id=faculty_member.id, approved=False).count()
             
             # 4. Upcoming Sessions
             upcoming_sessions = CourseSession.query.join(Course).filter(
-                Course.teacher_id == teacher.id,
+                Course.faculty_id == faculty_member.id,
                 CourseSession.session_date >= today
             ).order_by(CourseSession.session_date.asc()).limit(5).all()
             
             # 5. Recent Sessions (for attendance)
             week_ago = today - timedelta(days=7)
             recent_sessions_objs = CourseSession.query.join(Course).filter(
-                Course.teacher_id == teacher.id,
+                Course.faculty_id == faculty_member.id,
                 CourseSession.session_date < today,
                 CourseSession.session_date >= week_ago
             ).order_by(CourseSession.session_date.desc()).all()
@@ -395,9 +394,9 @@ def dashboard():
 
             recent_notices = get_recent_notices(session.get('role'), session.get('user'))
 
-            return render_template('teacher_dashboard.html',
+            return render_template('faculty_dashboard.html',
                                    title='Faculty Dashboard',
-                                   teacher=teacher,
+                                   faculty=faculty_member,
                                    active_courses_count=active_courses_count,
                                    weekly_hours=weekly_hours,
                                    max_weekly_hours=max_weekly_hours,
@@ -461,7 +460,7 @@ def dashboard():
                                recent_notices=recent_notices)
 
     student_count = Student.query.count()
-    teacher_count = Teacher.query.count()
+    faculty_count = Faculty.query.count()
     course_count = Course.query.count()
 
     # Finance & Admin insights
@@ -485,18 +484,18 @@ def dashboard():
     week_end = week_start + timedelta(days=6)
     sessions_week = CourseSession.query.filter(CourseSession.session_date >= week_start, CourseSession.session_date <= week_end).all()
     default_hours = int(app.config.get('SESSION_DEFAULT_DURATION_HOURS', 1))
-    teacher_day_hours = {}
-    teacher_week_hours = {}
+    faculty_day_hours = {}
+    faculty_week_hours = {}
     for s in sessions_week:
         course = s.course
         date = s.session_date
-        key_day = (course.teacher_id, date)
-        teacher_day_hours[key_day] = teacher_day_hours.get(key_day, 0) + default_hours
-        teacher_week_hours[course.teacher_id] = teacher_week_hours.get(course.teacher_id, 0) + default_hours
+        key_day = (course.faculty_id, date)
+        faculty_day_hours[key_day] = faculty_day_hours.get(key_day, 0) + default_hours
+        faculty_week_hours[course.faculty_id] = faculty_week_hours.get(course.faculty_id, 0) + default_hours
     max_day = int(app.config.get('TEACHER_MAX_HOURS_PER_DAY', 6))
     max_week = int(app.config.get('TEACHER_MAX_HOURS_PER_WEEK', 30))
-    violations_day_count = sum(1 for (_, _), h in teacher_day_hours.items() if h > max_day)
-    violations_week_count = sum(1 for _, h in teacher_week_hours.items() if h > max_week)
+    violations_day_count = sum(1 for (_, _), h in faculty_day_hours.items() if h > max_day)
+    violations_week_count = sum(1 for _, h in faculty_week_hours.items() if h > max_week)
     today = datetime.today().date()
     upcoming = CourseSession.query.filter(CourseSession.session_date >= today).order_by(CourseSession.session_date.asc()).limit(10).all()
     recent = CourseSession.query.order_by(CourseSession.session_date.desc()).limit(10).all()
@@ -506,7 +505,7 @@ def dashboard():
     return render_template('dashboard.html',
                            title='Dashboard',
                            student_count=student_count,
-                           teacher_count=teacher_count,
+                           faculty_count=faculty_count,
                            course_count=course_count,
                            pending_admissions=pending_admissions,
                            outstanding_total=outstanding_total,
@@ -600,11 +599,11 @@ def notices():
             (Notice.target_role.in_(['all', 'student'])) & 
             ((Notice.department_id == None) | (Notice.department_id == dept_id))
         )
-    elif role == 'teacher' or role == 'faculty':
-        teacher = Teacher.query.filter_by(email=user_email).first()
-        dept_id = teacher.department_id if teacher else None
+    elif role == 'faculty':
+        faculty_member = Faculty.query.filter_by(email=user_email).first()
+        dept_id = faculty_member.department_id if faculty_member else None
         query = query.filter(
-            (Notice.target_role.in_(['all', 'teacher'])) & 
+            (Notice.target_role.in_(['all', 'faculty'])) & 
             ((Notice.department_id == None) | (Notice.department_id == dept_id))
         )
     elif role == 'parent':
@@ -689,7 +688,7 @@ def delete_notice(notice_id):
 def timetable():
     # week_start param (YYYY-MM-DD); default current week
     week_start_str = request.args.get('week_start', '').strip()
-    teacher_id_param = request.args.get('teacher_id', '').strip()
+    faculty_id_param = request.args.get('faculty_id', '').strip()
     dept_id_param = request.args.get('department_id', '').strip()
     today = datetime.today().date()
     if week_start_str:
@@ -701,17 +700,17 @@ def timetable():
     else:
         week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
-    # Optional filter by teacher role or explicit teacher_id
-    teacher_filter_id = None
-    if teacher_id_param:
+    # Optional filter by faculty role or explicit faculty_id
+    faculty_filter_id = None
+    if faculty_id_param:
         try:
-            teacher_filter_id = int(teacher_id_param)
+            faculty_filter_id = int(faculty_id_param)
         except Exception:
-            teacher_filter_id = None
-    if session.get('role') in ['teacher', 'faculty'] and not teacher_filter_id:
-        t = Teacher.query.filter_by(email=session.get('user')).first()
-        if t:
-            teacher_filter_id = t.id
+            faculty_filter_id = None
+    if session.get('role') == 'faculty' and not faculty_filter_id:
+        f = Faculty.query.filter_by(email=session.get('user')).first()
+        if f:
+            faculty_filter_id = f.id
     q_sessions = CourseSession.query.filter(CourseSession.session_date >= week_start, CourseSession.session_date <= week_end)
     role = session.get('role')
     user_email = session.get('user')
@@ -745,31 +744,31 @@ def timetable():
         except ValueError:
             pass
     
-    if teacher_filter_id:
-        q_sessions = q_sessions.join(Course).filter(Course.teacher_id == teacher_filter_id)
+    if faculty_filter_id:
+        q_sessions = q_sessions.join(Course).filter(Course.faculty_id == faculty_filter_id)
     sessions = q_sessions.order_by(CourseSession.session_date.asc()).all()
-    # Aggregate hours per teacher per day
+    # Aggregate hours per faculty per day
     default_hours = int(app.config.get('SESSION_DEFAULT_DURATION_HOURS', 1))
-    teacher_day_hours = {}
-    teacher_week_hours = {}
+    faculty_day_hours = {}
+    faculty_week_hours = {}
     items = []
     for s in sessions:
         course = s.course
-        teacher = course.teacher
+        faculty_member = course.faculty
         date = s.session_date
-        key_day = (teacher.id, date)
-        teacher_day_hours[key_day] = teacher_day_hours.get(key_day, 0) + default_hours
-        teacher_week_hours[teacher.id] = teacher_week_hours.get(teacher.id, 0) + default_hours
-        items.append({'date': date, 'course': course, 'teacher': teacher, 'title': s.title, 'hours': default_hours})
+        key_day = (faculty_member.id, date)
+        faculty_day_hours[key_day] = faculty_day_hours.get(key_day, 0) + default_hours
+        faculty_week_hours[faculty_member.id] = faculty_week_hours.get(faculty_member.id, 0) + default_hours
+        items.append({'date': date, 'course': course, 'faculty': faculty_member, 'title': s.title, 'hours': default_hours})
     max_day = int(app.config.get('TEACHER_MAX_HOURS_PER_DAY', 6))
     max_week = int(app.config.get('TEACHER_MAX_HOURS_PER_WEEK', 30))
     # Flags
-    violations_day = {(tid, d): h for (tid, d), h in teacher_day_hours.items() if h > max_day}
-    violations_week = {tid: h for tid, h in teacher_week_hours.items() if h > max_week}
-    # Teachers index
-    teachers = {}
+    violations_day = {(fid, d): h for (fid, d), h in faculty_day_hours.items() if h > max_day}
+    violations_week = {fid: h for fid, h in faculty_week_hours.items() if h > max_week}
+    # Faculty index
+    faculty_index = {}
     for s in sessions:
-        teachers[s.course.teacher.id] = s.course.teacher
+        faculty_index[s.course.faculty.id] = s.course.faculty
     
     departments = Department.query.order_by(Department.name.asc()).all()
     return render_template('timetable.html',
@@ -777,7 +776,7 @@ def timetable():
                            week_start=week_start,
                            week_end=week_end,
                            items=items,
-                           teachers=teachers,
+                           faculty_index=faculty_index,
                            departments=departments,
                            selected_dept_id=dept_id_param,
                            violations_day=violations_day,
@@ -1155,11 +1154,11 @@ def workload():
     items.sort(key=lambda x: (x['status'] != 'under', -x['hours']))
     return render_template('workload.html', title='Workload', week_start=week_start, week_end=week_end, items=items, target=target, tolerance=tol, default_hours=default_hours)
 
-# --- Teacher Leave Management ---
-@app.route('/teachers/<int:teacher_id>/leave', methods=['GET', 'POST'])
+# --- Faculty Leave Management ---
+@app.route('/faculty/<int:faculty_id>/leave', methods=['GET', 'POST'])
 @crud_required('leave', 'read')
-def teacher_leave(teacher_id):
-    teacher = Teacher.query.get_or_404(teacher_id)
+def faculty_leave(faculty_id):
+    teacher = Teacher.query.get_or_404(faculty_id)
     from project.models import TeacherLeave
     if request.method == 'POST':
         start_str = request.form.get('start_date', '').strip()
@@ -1171,15 +1170,15 @@ def teacher_leave(teacher_id):
             end_d = datetime.strptime(end_str, '%Y-%m-%d').date()
         except ValueError:
             flash('Invalid dates.', 'danger')
-            leaves = TeacherLeave.query.filter_by(teacher_id=teacher_id).order_by(TeacherLeave.start_date.desc()).all()
-            return render_template('teacher_leave.html', title='Teacher Leave', teacher=teacher, leaves=leaves)
+            leaves = TeacherLeave.query.filter_by(teacher_id=faculty_id).order_by(TeacherLeave.start_date.desc()).all()
+            return render_template('faculty_leave.html', title='Faculty Leave', teacher=teacher, leaves=leaves)
         if end_d < start_d:
             flash('End date must be after start date.', 'danger')
-            leaves = TeacherLeave.query.filter_by(teacher_id=teacher_id).order_by(TeacherLeave.start_date.desc()).all()
-            return render_template('teacher_leave.html', title='Teacher Leave', teacher=teacher, leaves=leaves)
+            leaves = TeacherLeave.query.filter_by(teacher_id=faculty_id).order_by(TeacherLeave.start_date.desc()).all()
+            return render_template('faculty_leave.html', title='Faculty Leave', teacher=teacher, leaves=leaves)
         approved = True if approved_val in ('on', 'true', '1') else False
         try:
-            leave = TeacherLeave(teacher_id=teacher_id, start_date=start_d, end_date=end_d, reason=reason or None, approved=approved)
+            leave = TeacherLeave(teacher_id=faculty_id, start_date=start_d, end_date=end_d, reason=reason or None, approved=approved)
             if approved:
                 leave.approved_by = session.get('user')
             db.session.add(leave)
@@ -1188,32 +1187,32 @@ def teacher_leave(teacher_id):
         except Exception as e:
             db.session.rollback()
             flash(f'Failed to record leave: {str(e)}', 'danger')
-    leaves = TeacherLeave.query.filter_by(teacher_id=teacher_id).order_by(TeacherLeave.start_date.desc()).all()
-    return render_template('teacher_leave.html', title='Teacher Leave', teacher=teacher, leaves=leaves)
+    leaves = TeacherLeave.query.filter_by(teacher_id=faculty_id).order_by(TeacherLeave.start_date.desc()).all()
+    return render_template('faculty_leave.html', title='Faculty Leave', teacher=teacher, leaves=leaves)
 
-@app.route('/teachers/<int:teacher_id>/leave/<int:leave_id>/delete', methods=['POST'])
+@app.route('/faculty/<int:faculty_id>/leave/<int:leave_id>/delete', methods=['POST'])
 @crud_required('leave', 'delete')
-def delete_teacher_leave(teacher_id, leave_id):
+def delete_faculty_leave(faculty_id, leave_id):
     from project.models import TeacherLeave
     leave = TeacherLeave.query.get_or_404(leave_id)
-    if leave.teacher_id != teacher_id:
+    if leave.teacher_id != faculty_id:
         flash('Leave entry mismatch.', 'danger')
-        return redirect(url_for('teacher_leave', teacher_id=teacher_id))
+        return redirect(url_for('faculty_leave', faculty_id=faculty_id))
     db.session.delete(leave)
     db.session.commit()
     flash('Leave entry deleted.', 'success')
-    return redirect(url_for('teacher_leave', teacher_id=teacher_id))
+    return redirect(url_for('faculty_leave', faculty_id=faculty_id))
 
-# --- Teacher Performance ---
-@app.route('/teachers/<int:teacher_id>/performance')
+# --- Faculty Performance ---
+@app.route('/faculty/<int:faculty_id>/performance')
 @crud_required('analytics', 'read')
-def teacher_performance(teacher_id):
+def faculty_performance(faculty_id):
     if not app.config.get('PERFORMANCE_ENABLED', True):
         flash('Performance reporting is disabled.', 'warning')
-        return redirect(url_for('teachers'))
-    teacher = Teacher.query.get_or_404(teacher_id)
-    courses = Course.query.filter_by(teacher_id=teacher_id).all()
-    sessions = CourseSession.query.join(Course).filter(Course.teacher_id == teacher_id).order_by(CourseSession.session_date.asc()).all()
+        return redirect(url_for('faculty'))
+    teacher = Teacher.query.get_or_404(faculty_id)
+    courses = Course.query.filter_by(teacher_id=faculty_id).all()
+    sessions = CourseSession.query.join(Course).filter(Course.teacher_id == faculty_id).order_by(CourseSession.session_date.asc()).all()
     total_sessions = len(sessions)
     total_attendance = 0
     present_late_count = 0
@@ -1223,7 +1222,7 @@ def teacher_performance(teacher_id):
         present_late_count += len([r for r in records if r.status in ('present', 'late')])
     attendance_rate = (present_late_count / total_attendance * 100.0) if total_attendance else None
     min_sessions = int(app.config.get('PERFORMANCE_MIN_SESSIONS_FOR_REPORT', 5))
-    return render_template('teacher_performance.html', title='Performance', teacher=teacher, courses=courses, total_sessions=total_sessions, attendance_rate=attendance_rate, min_sessions=min_sessions)
+    return render_template('faculty_performance.html', title='Faculty Performance', teacher=teacher, courses=courses, total_sessions=total_sessions, attendance_rate=attendance_rate, min_sessions=min_sessions)
 
 # --- IDE Preview Helper APIs to avoid timeouts ---
 @app.route('/api/getThemeColors', methods=['GET'])
@@ -2102,7 +2101,7 @@ def profile():
         photo_url = url_for('static', filename=photo.file_path)
     if role == 'student':
         student = Student.query.filter_by(email=user_id).first()
-    elif role in ('faculty', 'teacher'):
+    elif role == 'faculty':
         teacher = Teacher.query.filter_by(email=user_id).first()
     parent_students = []
     if role == 'parent':
@@ -2227,7 +2226,7 @@ def add_user():
 def admin_update_user_role(user_id):
     user = User.query.get_or_404(user_id)
     new_role = request.form.get('role')
-    if new_role not in ['admin', 'staff', 'faculty', 'teacher', 'student', 'parent']:
+    if new_role not in ['admin', 'staff', 'faculty', 'student', 'parent']:
         flash('Invalid role selected.', 'danger')
         return redirect(url_for('admin_users'))
     
@@ -2288,7 +2287,7 @@ def admin_delete_user(user_id):
 def admin_crud():
     entities = [
         {'name': 'Students', 'icon': 'fas fa-user-graduate', 'url': url_for('students'), 'add_url': url_for('add_student'), 'count': Student.query.count()},
-        {'name': 'Teachers', 'icon': 'fas fa-chalkboard-teacher', 'url': url_for('teachers'), 'add_url': url_for('add_teacher'), 'count': Teacher.query.count()},
+        {'name': 'Faculty', 'icon': 'fas fa-chalkboard-teacher', 'url': url_for('faculty'), 'add_url': url_for('add_faculty'), 'count': Teacher.query.count()},
         {'name': 'Courses', 'icon': 'fas fa-book', 'url': url_for('courses'), 'add_url': url_for('add_course'), 'count': Course.query.count()},
         {'name': 'Users', 'icon': 'fas fa-users-cog', 'url': url_for('admin_users'), 'add_url': url_for('add_user'), 'count': User.query.count()},
         {'name': 'Admissions', 'icon': 'fas fa-user-plus', 'url': url_for('admissions'), 'add_url': url_for('add_admission'), 'count': AdmissionApplication.query.count()},
@@ -2732,7 +2731,7 @@ def import_teachers():
                         u = User(
                             username=email,
                             password_hash=generate_password_hash(password),
-                            role='teacher'
+                            role='faculty'
                         )
                         db.session.add(u)
                         users_created += 1
@@ -2754,7 +2753,7 @@ def import_teachers():
     flash(f'Imported teachers: {created} created, {users_created} user accounts created, {skipped} skipped.', 'success')
     if errors:
         flash('Some rows had issues: ' + '; '.join(errors[:5]) + ('' if len(errors) <= 5 else ' ...'), 'warning')
-    return redirect(url_for('teachers'))
+    return redirect(url_for('faculty'))
 
 # --- Bulk Import: Courses ---
 @app.route('/import/courses', methods=['POST'])
@@ -3223,10 +3222,10 @@ def delete_student(student_id):
     flash('Student has been deleted!', 'success')
     return redirect(url_for('students'))
 
-@app.route("/teachers")
+@app.route("/faculty")
 @login_required
-@crud_required('teacher', 'read')
-def teachers():
+@crud_required('faculty', 'read')
+def faculty():
     q = request.args.get('q', '').strip()
     page = request.args.get('page', 1, type=int)
     query = Teacher.query
@@ -3244,11 +3243,11 @@ def teachers():
         recs = UserPhoto.query.filter(UserPhoto.username.in_(emails)).all()
         for r in recs:
             photos[r.username] = url_for('static', filename=r.file_path)
-    return render_template('teachers.html', teachers=pagination.items, pagination=pagination, q=q, title='Teachers', photos=photos)
+    return render_template('faculty.html', teachers=pagination.items, pagination=pagination, q=q, title='Faculty', photos=photos)
 
-@app.route("/teachers/add", methods=['GET', 'POST'])
-@crud_required('teacher', 'create')
-def add_teacher():
+@app.route("/faculty/add", methods=['GET', 'POST'])
+@crud_required('faculty', 'create')
+def add_faculty():
     if request.method == 'POST':
         name = request.form['name']
         email = request.form['email']
@@ -3273,7 +3272,7 @@ def add_teacher():
                 max_weekly_hours = int(max_weekly_hours_str)
             except ValueError:
                 flash('Max weekly hours must be an integer.', 'danger')
-                return render_template('add_teacher.html', title='Add Teacher')
+                return render_template('add_faculty.html', title='Add Faculty')
         
         experience_years = None
         if experience_years_str:
@@ -3289,7 +3288,7 @@ def add_teacher():
                 dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
             except ValueError:
                 flash('Invalid date of birth.', 'danger')
-                return render_template('add_teacher.html', title='Add Teacher')
+                return render_template('add_faculty.html', title='Add Faculty')
 
         joining_date_str = request.form.get('joining_date', '').strip()
         joining_date = None
@@ -3298,18 +3297,18 @@ def add_teacher():
                 joining_date = datetime.strptime(joining_date_str, '%Y-%m-%d').date()
             except ValueError:
                 flash('Invalid joining date.', 'danger')
-                return render_template('add_teacher.html', title='Add Teacher')
+                return render_template('add_faculty.html', title='Add Faculty')
 
         logger.info(f"Adding teacher: {name} ({email})")
         if not name.strip():
             flash('Name is required.', 'danger')
-            return render_template('add_teacher.html', title='Add Teacher')
+            return render_template('add_faculty.html', title='Add Faculty')
         if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
             flash('Invalid email format.', 'danger')
-            return render_template('add_teacher.html', title='Add Teacher')
+            return render_template('add_faculty.html', title='Add Faculty')
         if not re.match(r"^[0-9\-\+\s]{7,20}$", phone):
             flash('Invalid phone number.', 'danger')
-            return render_template('add_teacher.html', title='Add Teacher')
+            return render_template('add_faculty.html', title='Add Faculty')
 
         try:
             teacher = Teacher(
@@ -3334,23 +3333,23 @@ def add_teacher():
             )
             db.session.add(teacher)
             db.session.commit()
-            flash('Teacher has been added!', 'success')
-            return redirect(url_for('teachers'))
+            flash('Faculty has been added!', 'success')
+            return redirect(url_for('faculty'))
         except IntegrityError:
             db.session.rollback()
-            logger.warning(f"Failed to add teacher due to duplicate email: {email}")
+            logger.warning(f"Failed to add faculty due to duplicate email: {email}")
             flash('Email already exists. Please use a different email.', 'danger')
         except Exception as e:
             db.session.rollback()
-            logger.exception("Unexpected error adding teacher")
+            logger.exception("Unexpected error adding faculty")
             flash(f'Unexpected error: {str(e)}', 'danger')
     departments = Department.query.all()
-    return render_template('add_teacher.html', title='Add Teacher', departments=departments)
+    return render_template('add_faculty.html', title='Add Faculty', departments=departments)
 
-@app.route("/teachers/<int:teacher_id>/edit", methods=['GET', 'POST'])
-@crud_required('teacher', 'update')
-def edit_teacher(teacher_id):
-    teacher = Teacher.query.get_or_404(teacher_id)
+@app.route("/faculty/<int:faculty_id>/edit", methods=['GET', 'POST'])
+@crud_required('faculty', 'update')
+def edit_faculty(faculty_id):
+    teacher = Teacher.query.get_or_404(faculty_id)
     departments = Department.query.all()
     if request.method == 'POST':
         teacher.name = request.form['name']
@@ -3384,7 +3383,7 @@ def edit_teacher(teacher_id):
                 teacher.max_weekly_hours = int(max_weekly_hours_str)
             except ValueError:
                 flash('Max weekly hours must be an integer.', 'danger')
-                return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher, departments=departments)
+                return render_template('edit_faculty.html', title='Edit Faculty', teacher=teacher, departments=departments)
 
         dob_str = request.form.get('date_of_birth', '').strip()
         if dob_str:
@@ -3392,7 +3391,7 @@ def edit_teacher(teacher_id):
                 teacher.date_of_birth = datetime.strptime(dob_str, '%Y-%m-%d').date()
             except ValueError:
                 flash('Invalid date of birth.', 'danger')
-                return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher, departments=departments)
+                return render_template('edit_faculty.html', title='Edit Faculty', teacher=teacher, departments=departments)
         else:
             teacher.date_of_birth = None
 
@@ -3402,50 +3401,50 @@ def edit_teacher(teacher_id):
                 teacher.joining_date = datetime.strptime(joining_date_str, '%Y-%m-%d').date()
             except ValueError:
                 flash('Invalid joining date.', 'danger')
-                return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher, departments=departments)
+                return render_template('edit_faculty.html', title='Edit Faculty', teacher=teacher, departments=departments)
         else:
             teacher.joining_date = None
 
         if not teacher.name.strip():
             flash('Name is required.', 'danger')
-            return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher, departments=departments)
+            return render_template('edit_faculty.html', title='Edit Faculty', teacher=teacher, departments=departments)
         if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", teacher.email):
             flash('Invalid email format.', 'danger')
-            return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher, departments=departments)
+            return render_template('edit_faculty.html', title='Edit Faculty', teacher=teacher, departments=departments)
         if not re.match(r"^[0-9\-\+\s]{7,20}$", teacher.phone):
             flash('Invalid phone number.', 'danger')
-            return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher, departments=departments)
+            return render_template('edit_faculty.html', title='Edit Faculty', teacher=teacher, departments=departments)
         if not re.match(r"^[0-9\-\+\s]{7,20}$", teacher.phone):
             flash('Invalid phone number.', 'danger')
-            return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher, departments=departments)
+            return render_template('edit_faculty.html', title='Edit Faculty', teacher=teacher, departments=departments)
         try:
             db.session.commit()
-            flash('Teacher has been updated!', 'success')
-            return redirect(url_for('teachers'))
+            flash('Faculty has been updated!', 'success')
+            return redirect(url_for('faculty'))
         except IntegrityError:
             db.session.rollback()
-            logger.warning(f"Failed to update teacher due to duplicate email: {teacher.email}")
+            logger.warning(f"Failed to update faculty due to duplicate email: {teacher.email}")
             flash('Email already exists. Please use a different email.', 'danger')
         except Exception as e:
             db.session.rollback()
-            logger.exception("Unexpected error updating teacher")
+            logger.exception("Unexpected error updating faculty")
             flash(f'Unexpected error: {str(e)}', 'danger')
-    return render_template('edit_teacher.html', title='Edit Teacher', teacher=teacher, departments=departments)
+    return render_template('edit_faculty.html', title='Edit Faculty', teacher=teacher, departments=departments)
 
-@app.route("/teachers/<int:teacher_id>/delete", methods=['POST'])
-@crud_required('teacher', 'delete')
-def delete_teacher(teacher_id):
-    teacher = Teacher.query.get_or_404(teacher_id)
-    logger.info(f"Deleting teacher id={teacher_id}")
+@app.route("/faculty/<int:faculty_id>/delete", methods=['POST'])
+@crud_required('faculty', 'delete')
+def delete_faculty(faculty_id):
+    teacher = Teacher.query.get_or_404(faculty_id)
+    logger.info(f"Deleting teacher id={faculty_id}")
     try:
         db.session.delete(teacher)
         db.session.commit()
-        flash('Teacher has been deleted!', 'success')
+        flash('Faculty has been deleted!', 'success')
     except Exception as e:
         db.session.rollback()
-        logger.exception("Unexpected error deleting teacher")
+        logger.exception("Unexpected error deleting faculty")
         flash(f'Unexpected error: {str(e)}', 'danger')
-    return redirect(url_for('teachers'))
+    return redirect(url_for('faculty'))
 
 @app.route("/courses")
 def courses():
@@ -3778,7 +3777,7 @@ def course_sessions(course_id):
     can_view = False
     if role in ('admin', 'staff', 'faculty'):
         can_view = True
-    elif role == 'teacher':
+    elif role == 'faculty':
         teacher = Teacher.query.filter_by(email=user_email).first()
         if teacher and teacher.id == course.teacher_id:
             can_view = True
@@ -3803,7 +3802,7 @@ def course_sessions(course_id):
     can_edit = False
     if role == 'admin':
         can_edit = True
-    elif role in ('faculty', 'teacher'):
+    elif role == 'faculty':
         teacher = Teacher.query.filter_by(email=user_email).first()
         if teacher and teacher.id == course.teacher_id:
             can_edit = True
@@ -3828,7 +3827,7 @@ def course_sessions(course_id):
 def add_session(course_id):
     course = Course.query.get_or_404(course_id)
     role = session.get('role')
-    if role in ('faculty', 'teacher'):
+    if role == 'faculty':
         current_teacher = Teacher.query.filter_by(email=session.get('user')).first()
         if not current_teacher or current_teacher.id != course.teacher_id:
             flash('You are not authorized to modify sessions for this course.', 'danger')
@@ -3934,7 +3933,7 @@ def edit_session(session_id):
     s = CourseSession.query.get_or_404(session_id)
     course = s.course
     role = session.get('role')
-    if role in ('faculty', 'teacher'):
+    if role == 'faculty':
         current_teacher = Teacher.query.filter_by(email=session.get('user')).first()
         if not current_teacher or current_teacher.id != course.teacher_id:
             flash('You are not authorized to modify sessions for this course.', 'danger')
@@ -4045,7 +4044,7 @@ def daily_attendance():
     today = datetime.utcnow().date()
     # Filter sessions for today. If teacher/faculty, only show their courses.
     role = session.get('role')
-    if role in ('faculty', 'teacher'):
+    if role == 'faculty':
         teacher = Teacher.query.filter_by(email=session.get('user')).first()
         if teacher:
             sessions_today = CourseSession.query.join(Course).filter(
@@ -4104,7 +4103,7 @@ def mark_attendance(session_id):
     
     # Ownership check
     role = session.get('role')
-    if role in ('faculty', 'teacher'):
+    if role == 'faculty':
         current_teacher = Teacher.query.filter_by(email=session.get('user')).first()
         if not current_teacher or current_teacher.id != course.teacher_id:
             flash('You are not authorized to mark attendance for this course.', 'danger')
@@ -4169,7 +4168,7 @@ def attendance_report(session_id):
     can_view = False
     if role in ('admin', 'staff', 'faculty'):
         can_view = True
-    elif role == 'teacher':
+    elif role == 'faculty':
         teacher = Teacher.query.filter_by(email=user_email).first()
         if teacher and teacher.id == course.teacher_id:
             can_view = True
@@ -4582,7 +4581,7 @@ def session_attendance_csv(session_id):
     can_access = False
     if role in ('admin', 'staff', 'faculty'):
         can_access = True
-    elif role == 'teacher':
+    elif role == 'faculty':
         teacher = Teacher.query.filter_by(email=user_email).first()
         if teacher and teacher.id == course.teacher_id:
             can_access = True

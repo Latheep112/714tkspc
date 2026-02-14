@@ -26,14 +26,14 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navAcademics" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-book me-1"></i><span class="nav-label">Academics</span></a>
                     <ul class="dropdown-menu" aria-labelledby="navAcademics">
-                        {% if session.get('role') in ['admin', 'staff', 'faculty', 'teacher'] %}
+                        {% if session.get('role') in ['admin', 'staff', 'faculty'] %}
                         <li><a class="dropdown-item {% if request.endpoint == 'students' %}active{% endif %}" href="{{ url_for('students') }}">Students</a></li>
                         {% endif %}
                         {% if session.get('role') in ['admin', 'staff'] %}
-                        <li><a class="dropdown-item {% if request.endpoint == 'teachers' %}active{% endif %}" href="{{ url_for('teachers') }}">Teachers</a></li>
+                        <li><a class="dropdown-item {% if request.endpoint == 'faculty' %}active{% endif %}" href="{{ url_for('faculty') }}">Faculty</a></li>
                         {% endif %}
                         <li><a class="dropdown-item {% if request.endpoint == 'courses' %}active{% endif %}" href="{{ url_for('courses') }}">Courses</a></li>
-                        {% if session.get('role') in ['admin', 'staff', 'faculty', 'teacher', 'student'] %}
+                        {% if session.get('role') in ['admin', 'staff', 'faculty', 'student'] %}
                          <li><a class="dropdown-item {% if request.endpoint == 'list_departments' %}active{% endif %}" href="{{ url_for('list_departments') }}">Departments</a></li>
                          <li><a class="dropdown-item {% if request.endpoint == 'list_semesters' %}active{% endif %}" href="{{ url_for('list_semesters') }}">Semesters</a></li>
                          <li><a class="dropdown-item {% if request.endpoint == 'list_subjects' %}active{% endif %}" href="{{ url_for('list_subjects') }}">Subjects</a></li>
@@ -42,7 +42,7 @@
                         <li><a class="dropdown-item {% if request.endpoint == 'timetable' %}active{% endif %}" href="{{ url_for('timetable') }}">Timetable</a></li>
                         <li><a class="dropdown-item {% if request.endpoint == 'exams' %}active{% endif %}" href="{{ url_for('exams') }}">Exams</a></li>
                         <li><a class="dropdown-item {% if request.endpoint == 'notices' %}active{% endif %}" href="{{ url_for('notices') }}">Notice Board</a></li>
-                        {% if session.get('role') in ['admin', 'staff', 'faculty', 'teacher'] %}
+                        {% if session.get('role') in ['admin', 'staff', 'faculty'] %}
                         <li><a class="dropdown-item {% if request.endpoint == 'workload' %}active{% endif %}" href="{{ url_for('workload') }}">Workload</a></li>
                         {% endif %}
                         <li><a class="dropdown-item {% if request.endpoint == 'resources' %}active{% endif %}" href="{{ url_for('resources') }}">Resources</a></li>
@@ -51,7 +51,7 @@
                         {% endif %}
                     </ul>
                 </li>
-                {% if session.get('role') in ['admin', 'staff', 'faculty', 'teacher'] %}
+                {% if session.get('role') in ['admin', 'staff', 'faculty'] %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navAttendance" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-calendar-check me-1"></i><span class="nav-label">Attendance</span></a>
                     <ul class="dropdown-menu" aria-labelledby="navAttendance">

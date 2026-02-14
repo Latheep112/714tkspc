@@ -2,12 +2,12 @@
 {% block content %}
 <div class="d-flex align-items-center mb-3">
   <h4 class="mb-0">{{ teacher.name }} — Leave</h4>
-  <a href="{{ url_for('teachers') }}" class="btn btn-link ml-auto">Back to Teachers</a>
+  <a href="{{ url_for('faculty') }}" class="btn btn-link ml-auto">Back to Faculty</a>
 </div>
 
 <div class="card mb-3">
   <div class="card-body">
-    <form method="post" action="{{ url_for('teacher_leave', teacher_id=teacher.id) }}">
+    <form method="post" action="{{ url_for('faculty_leave', faculty_id=teacher.id) }}">
       <div class="form-row">
         <div class="form-group col-md-3">
           <label for="start_date">Start date</label>
@@ -65,7 +65,7 @@
             </td>
             <td class="text-nowrap">
               {% if session.get('role') == 'admin' %}
-              <form method="post" action="{{ url_for('delete_teacher_leave', teacher_id=teacher.id, leave_id=leave.id) }}" class="d-inline">
+              <form method="post" action="{{ url_for('delete_faculty_leave', faculty_id=teacher.id, leave_id=leave.id) }}" class="d-inline">
                 <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this leave entry?');">Delete</button>
               </form>
               {% endif %}

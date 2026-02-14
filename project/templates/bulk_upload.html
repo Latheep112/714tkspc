@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <div class="card mb-4">
       <div class="card-body">
-        <h4>Teachers</h4>
+        <h4>Faculty</h4>
         <p class="mb-1">Columns: <code>name, email, phone, department, designation, specialization, password (optional)</code></p>
         <p class="mb-3"><a href="{{ url_for('sample_teachers_csv') }}" target="_blank">Download sample CSV</a></p>
         <form method="POST" action="{{ url_for('import_teachers') }}" enctype="multipart/form-data" class="form-inline align-items-end">
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <label class="d-block mb-1">Fixed Password</label>
             <input type="text" name="fixed_password" class="form-control" placeholder="Enter password">
           </div>
-          <button type="submit" class="btn btn-primary mb-2">Upload Teachers</button>
+          <button type="submit" class="btn btn-primary mb-2">Upload Faculty</button>
         </form>
       </div>
     </div>
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="card mb-4">
       <div class="card-body">
         <h4>Courses</h4>
-        <p class="mb-1">Columns: <code>name, description, code, credits, teacher_email, department, semester, room, capacity, level, syllabus_url</code></p>
+        <p class="mb-1">Columns: <code>name, description, code, credits, faculty_email, department, semester, room, capacity, level, syllabus_url</code></p>
         <p class="mb-3"><a href="{{ url_for('sample_courses_csv') }}" target="_blank">Download sample CSV</a></p>
         <form method="POST" action="{{ url_for('import_courses') }}" enctype="multipart/form-data" class="form-inline">
           <div class="form-group mb-2 mr-2">

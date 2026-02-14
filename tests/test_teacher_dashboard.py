@@ -48,21 +48,21 @@ class TeacherDashboardTests(unittest.TestCase):
         self.app_context.pop()
 
     def test_teacher_dashboard_access(self):
-        # Mock login as teacher
+        # Mock login as faculty
         with self.client.session_transaction() as sess:
             sess['user'] = self.teacher_email
-            sess['role'] = 'teacher'
+            sess['role'] = 'faculty'
             sess['logged_in'] = True
         
         response = self.client.get('/dashboard', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
-        # Check for teacher dashboard specific content
+        # Check for faculty dashboard specific content
         self.assertIn(f'Welcome, {self.teacher_name}'.encode(), response.data)
         self.assertIn(b'Active Courses', response.data)
         self.assertIn(b'Pending Leaves', response.data)
 
     def test_faculty_role_access(self):
-        # Mock login as faculty (legacy role name)
+        # Mock login as faculty
         with self.client.session_transaction() as sess:
             sess['user'] = self.teacher_email
             sess['role'] = 'faculty'

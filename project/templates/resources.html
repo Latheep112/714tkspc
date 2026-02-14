@@ -67,7 +67,7 @@
     <div class="card mb-3">
       <div class="card-header d-flex justify-content-between align-items-center">
         <span>Upcoming Bookings</span>
-        {% if session.get('role') in ['faculty','teacher','admin'] %}
+        {% if session.get('role') in ['faculty','admin'] %}
         <form class="form-inline" method="post" action="{{ url_for('resources_book') }}">
           <select name="resource_id" class="form-control form-control-sm mr-2" required>
             {% for r in resources %}

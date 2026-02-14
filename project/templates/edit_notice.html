@@ -27,7 +27,7 @@
                         <select class="form-select" id="target_role" name="target_role">
                             <option value="all" {% if notice.target_role == 'all' %}selected{% endif %}>All</option>
                             <option value="student" {% if notice.target_role == 'student' %}selected{% endif %}>Students Only</option>
-                            <option value="teacher" {% if notice.target_role == 'teacher' %}selected{% endif %}>Teachers Only</option>
+                            <option value="faculty" {% if notice.target_role == 'faculty' %}selected{% endif %}>Faculty Only</option>
                             <option value="parent" {% if notice.target_role == 'parent' %}selected{% endif %}>Parents Only</option>
                         </select>
                     </div>
