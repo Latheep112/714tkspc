@@ -34,13 +34,18 @@ def update_database():
             print("merit_score already exists or error adding it")
             
         try:
-            conn.execute(db.text('ALTER TABLE admission_application ADD COLUMN seat_allotted BOOLEAN DEFAULT 0'))
+            # Use 0 for SQLite, False for PostgreSQL (PostgreSQL usually handles False/0 correctly if boolean, but db.text might be picky)
+            is_pg = db.engine.url.drivername.startswith('postgresql')
+            default_val = 'FALSE' if is_pg else '0'
+            conn.execute(db.text(f'ALTER TABLE admission_application ADD COLUMN seat_allotted BOOLEAN DEFAULT {default_val}'))
             print("Added seat_allotted to admission_application table")
         except Exception:
             print("seat_allotted already exists or error adding it")
 
         try:
-            conn.execute(db.text('ALTER TABLE admission_application ADD COLUMN documents_verified BOOLEAN DEFAULT 0'))
+            is_pg = db.engine.url.drivername.startswith('postgresql')
+            default_val = 'FALSE' if is_pg else '0'
+            conn.execute(db.text(f'ALTER TABLE admission_application ADD COLUMN documents_verified BOOLEAN DEFAULT {default_val}'))
             print("Added documents_verified to admission_application table")
         except Exception:
             print("documents_verified already exists or error adding it")

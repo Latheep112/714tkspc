@@ -11,7 +11,9 @@ if not hasattr(werkzeug, "__version__"):
 
 # Set environment to testing before importing app
 os.environ['FLASK_ENV'] = 'testing'
-os.environ['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+# Use TEST_DATABASE_URL from environment if available, otherwise default to sqlite memory for speed
+if 'TEST_DATABASE_URL' not in os.environ:
+    os.environ['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))

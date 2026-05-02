@@ -1,8 +1,5 @@
-Flask==2.3.2
+Flask==3.0.0
 Flask-SQLAlchemy==3.1.1
-SQLAlchemy==2.0.25
-Werkzeug==2.3.6
-itsdangerous==2.1.2
+psycopg2-binary==2.9.9
+Werkzeug==3.0.1
 python-dotenv==1.0.0
-pytest==7.4.3
-gunicorn==21.2.0

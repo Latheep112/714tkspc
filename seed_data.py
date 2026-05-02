@@ -1,5 +1,5 @@
 from project import app, db
-from project.models import Student, Teacher, Course, User, CourseSession, Attendance, Grade, AdmissionApplication, FeeAccount, FeePayment, Resource, ResourceBooking, Invoice, BudgetCategory, BudgetTransaction
+from project.models import Student, Faculty, Department, Course, User, CourseSession, Attendance, Grade, AdmissionApplication, FeeAccount, FeePayment, Resource, ResourceBooking, Invoice, BudgetCategory, BudgetTransaction
 from werkzeug.security import generate_password_hash
 from datetime import datetime, timedelta, date
 import random
@@ -15,13 +15,13 @@ def seed():
             print("Created admin user.")
 
         # Create Teachers
-        teachers = []
+        faculties = []
         departments = ['Computer Science', 'Mathematics', 'Physics', 'History', 'Literature']
         for i in range(1, 6):
-            name = f"Teacher {i}"
-            email = f"teacher{i}@school.com"
-            if not Teacher.query.filter_by(email=email).first():
-                t = Teacher(
+            name = f"Faculty {i}"
+            email = f"faculty{i}@school.com"
+            if not Faculty.query.filter_by(email=email).first():
+                t = Faculty(
                     name=name,
                     email=email,
                     phone=f"555-010{i}",
@@ -30,14 +30,14 @@ def seed():
                     gender=random.choice(['Male', 'Female'])
                 )
                 db.session.add(t)
-                teachers.append(t)
+                faculties.append(t)
         db.session.commit()
-        teachers = Teacher.query.all() # Refresh with IDs
-        print(f"Created {len(teachers)} teachers.")
+        faculties = Faculty.query.all() # Refresh with IDs
+        print(f"Created {len(faculties)} faculties.")
 
         # Create Courses
         courses = []
-        for i, t in enumerate(teachers):
+        for i, t in enumerate(faculties):
             code = f"CS10{i}"
             if not Course.query.filter_by(code=code).first():
                 c = Course(
@@ -45,7 +45,7 @@ def seed():
                     code=code,
                     credits=3,
                     department=t.department,
-                    teacher_id=t.id,
+                    faculty_id=t.id,
                     semester='Fall 2025'
                 )
                 db.session.add(c)

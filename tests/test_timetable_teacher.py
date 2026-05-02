@@ -8,7 +8,9 @@ if not hasattr(werkzeug, "__version__"):
     werkzeug.__version__ = "3.0.0"
 
 os.environ['FLASK_ENV'] = 'testing'
-os.environ['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+# Use TEST_DATABASE_URL from environment if available, otherwise default to sqlite memory for speed
+if 'TEST_DATABASE_URL' not in os.environ:
+    os.environ['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 

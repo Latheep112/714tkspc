@@ -7,7 +7,6 @@ from werkzeug.security import generate_password_hash
 
 app = Flask(__name__, instance_relative_config=True)
 
-# Select config based on FLASK_ENV
 env = os.environ.get("FLASK_ENV", "development").lower()
 if env == "production":
     app.config.from_object(ProductionConfig)
@@ -16,45 +15,21 @@ elif env == "testing":
 else:
     app.config.from_object(DevelopmentConfig)
 
-# Compute DB URI for development using instance path
 if env == "development":
     instance_path = app.instance_path
     app.config['SQLALCHEMY_DATABASE_URI'] = DevelopmentConfig.database_uri(instance_path)
+elif env == "testing":
+    env_uri = os.environ.get("SQLALCHEMY_DATABASE_URI")
+    if env_uri:
+        app.config['SQLALCHEMY_DATABASE_URI'] = env_uri
 
 db = SQLAlchemy(app)
 
-# Ensure database tables are created before anything else
+# Ensure database tables are created
 try:
     from project import models
-    import sqlite3
     with app.app_context():
         db.create_all()
-        
-        # Manual migration for missing columns
-        db_path = app.config.get('SQLALCHEMY_DATABASE_URI').replace('sqlite:///', '')
-        if os.name == 'nt' and db_path.startswith('/'):
-            db_path = db_path[1:] # Handle Windows paths
-        
-        try:
-            conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
-            
-            # Add department_id to admission_application
-            cursor.execute("PRAGMA table_info(admission_application)")
-            columns = [column[1] for column in cursor.fetchall()]
-            if 'department_id' not in columns:
-                cursor.execute("ALTER TABLE admission_application ADD COLUMN department_id INTEGER REFERENCES department(id)")
-            
-            # Add department_id to student
-            cursor.execute("PRAGMA table_info(student)")
-            columns = [column[1] for column in cursor.fetchall()]
-            if 'department_id' not in columns:
-                cursor.execute("ALTER TABLE student ADD COLUMN department_id INTEGER REFERENCES department(id)")
-                
-            conn.commit()
-            conn.close()
-        except Exception as e:
-            print(f"Migration error: {e}")
 except Exception as e:
     print(f"Error creating database tables: {e}")
 

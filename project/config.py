@@ -10,8 +10,8 @@ class BaseConfig:
     PASSWORD_RESET_ENABLED = os.environ.get("PASSWORD_RESET_ENABLED", "true").lower() in ("1","true","yes","on")
     MAX_BULK_IMPORT_ROWS = int(os.environ.get("MAX_BULK_IMPORT_ROWS", 1000))
     # Scheduling & Timetabling governance
-    TEACHER_MAX_SESSIONS_PER_DAY = int(os.environ.get("TEACHER_MAX_SESSIONS_PER_DAY", 4))
-    TEACHER_MAX_SESSIONS_PER_WEEK = int(os.environ.get("TEACHER_MAX_SESSIONS_PER_WEEK", 20))
+    FACULTY_MAX_SESSIONS_PER_DAY = int(os.environ.get("FACULTY_MAX_SESSIONS_PER_DAY", os.environ.get("TEACHER_MAX_SESSIONS_PER_DAY", 4)))
+    FACULTY_MAX_SESSIONS_PER_WEEK = int(os.environ.get("FACULTY_MAX_SESSIONS_PER_WEEK", os.environ.get("TEACHER_MAX_SESSIONS_PER_WEEK", 20)))
     COURSE_MAX_SESSIONS_PER_WEEK = int(os.environ.get("COURSE_MAX_SESSIONS_PER_WEEK", 10))
     COURSE_REQUIRE_CREDITS = os.environ.get("COURSE_REQUIRE_CREDITS", "false").lower() in ("1","true","yes","on")
     LAB_SESSION_KEYWORD = os.environ.get("LAB_SESSION_KEYWORD", "Lab")
@@ -25,8 +25,8 @@ class BaseConfig:
     ATTENDANCE_ALLOW_EDIT = os.environ.get("ATTENDANCE_ALLOW_EDIT", "true").lower() in ("1","true","yes","on")
     # Timetable hour caps (approximate without per-session times)
     SESSION_DEFAULT_DURATION_HOURS = int(os.environ.get("SESSION_DEFAULT_DURATION_HOURS", 1))
-    TEACHER_MAX_HOURS_PER_DAY = int(os.environ.get("TEACHER_MAX_HOURS_PER_DAY", 6))
-    TEACHER_MAX_HOURS_PER_WEEK = int(os.environ.get("TEACHER_MAX_HOURS_PER_WEEK", 30))
+    FACULTY_MAX_HOURS_PER_DAY = int(os.environ.get("FACULTY_MAX_HOURS_PER_DAY", os.environ.get("TEACHER_MAX_HOURS_PER_DAY", 6)))
+    FACULTY_MAX_HOURS_PER_WEEK = int(os.environ.get("FACULTY_MAX_HOURS_PER_WEEK", os.environ.get("TEACHER_MAX_HOURS_PER_WEEK", 30)))
     HOURS_PER_CREDIT = int(os.environ.get("HOURS_PER_CREDIT", 15))
     # Faculty & Staff Management governance
     WORKLOAD_FAIRNESS_ENABLED = os.environ.get("WORKLOAD_FAIRNESS_ENABLED", "true").lower() in ("1","true","yes","on")
@@ -54,18 +54,19 @@ class BaseConfig:
     )
 
 class DevelopmentConfig(BaseConfig):
-    # Default to instance/site.db unless overridden
-    INSTANCE_PATH = os.environ.get("FLASK_INSTANCE_PATH")
     @staticmethod
     def database_uri(instance_path: str) -> str:
-        db_path = os.environ.get("DATABASE_PATH")
-        if db_path:
-            return f"sqlite:///{db_path}"
-        return "sqlite:///" + os.path.join(instance_path, "site.db")
+        db_url = os.environ.get("DATABASE_URL")
+        if db_url:
+            if db_url.startswith("postgres://"):
+                db_url = db_url.replace("postgres://", "postgresql://", 1)
+            return db_url
+        db_path = os.path.join(instance_path, "school.db")
+        return f"sqlite:///{db_path}"
 
 class TestingConfig(BaseConfig):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get("TEST_DATABASE_URI", "sqlite:///:memory:")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("TEST_DATABASE_URL", "sqlite:///:memory:")
 
 class ProductionConfig(BaseConfig):
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URI", "sqlite:///site.db")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
