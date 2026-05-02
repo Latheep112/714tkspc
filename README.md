@@ -4,14 +4,14 @@ A comprehensive school management system built with Flask and SQLAlchemy.
 
 ## Features
 
-- **Multi-role Dashboard**: Separate views for Admins, Staff, Teachers, Students, and Parents.
+- **Multi-role Dashboard**: Separate views for Admins, Staff, Faculty, Students, and Parents.
 - **Student Management**: Profiles, transcripts, attendance, and fee management.
 - **Course Management**: Course planning, sessions, enrollment, and materials.
 - **Attendance Tracking**: Session-based attendance with CSV exports and status reporting.
 - **Finance Module**: Invoice generation, fee payments, and budget tracking.
 - **Parent Portal**: Linked access for parents to monitor their children's progress.
 - **Resource Booking**: Management and booking of labs, classrooms, and equipment.
-- **Teacher Management**: Workload tracking, performance monitoring, and leave management.
+- **Faculty Management**: Workload tracking, performance monitoring, and leave management.
 - **Admin Tools**: User management, audit logs, and system policy configuration.
 
 ## Installation

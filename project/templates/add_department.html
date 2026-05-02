@@ -18,8 +18,8 @@
             <label for="hod_id">Head of Department</label>
             <select class="form-control" id="hod_id" name="hod_id">
                 <option value="">Select HOD</option>
-                {% for teacher in teachers %}
-                <option value="{{ teacher.id }}">{{ teacher.name }}</option>
+                {% for faculty in faculties %}
+                <option value="{{ faculty.id }}">{{ faculty.name }}</option>
                 {% endfor %}
             </select>
         </div>

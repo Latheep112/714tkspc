@@ -2,13 +2,13 @@
 {% block content %}
 <div class="d-flex align-items-center mb-4">
     {% if photo_url %}
-    <img src="{{ photo_url }}" alt="{{ teacher.name }} avatar" class="rounded-circle me-3" style="width:64px;height:64px;object-fit:cover;border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <img src="{{ photo_url }}" alt="{{ faculty.name }} avatar" class="rounded-circle me-3" style="width:64px;height:64px;object-fit:cover;border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
     {% else %}
     <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center me-3" style="width:64px;height:64px;font-size: 24px; font-weight: bold; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        {{ teacher.name[0]|upper }}
+        {{ faculty.name[0]|upper }}
     </div>
     {% endif %}
-    <h2 class="mb-0">Welcome, {{ teacher.name }}</h2>
+    <h2 class="mb-0">Welcome, {{ faculty.name }}</h2>
     <span class="badge bg-info ms-3">Faculty</span>
 </div>
 
@@ -19,19 +19,19 @@
                 <div class="row">
                     <div class="col-md-3">
                         <small class="text-muted d-block">Department</small>
-                        <strong>{{ teacher.department.name if teacher.department else 'N/A' }}</strong>
+                        <strong>{{ faculty.department.name if faculty.department else 'N/A' }}</strong>
                     </div>
                     <div class="col-md-3">
                         <small class="text-muted d-block">Designation</small>
-                        <strong>{{ teacher.designation or 'N/A' }}</strong>
+                        <strong>{{ faculty.designation or 'N/A' }}</strong>
                     </div>
                     <div class="col-md-3">
                         <small class="text-muted d-block">Qualification</small>
-                        <strong>{{ teacher.qualification or 'N/A' }}</strong>
+                        <strong>{{ faculty.qualification or 'N/A' }}</strong>
                     </div>
                     <div class="col-md-3">
                         <small class="text-muted d-block">Subject Expertise</small>
-                        <strong>{{ teacher.subject_expertise or 'N/A' }}</strong>
+                        <strong>{{ faculty.subject_expertise or 'N/A' }}</strong>
                     </div>
                 </div>
             </div>
@@ -63,7 +63,7 @@
             <div class="card-body">
                 <h5 class="card-title text-muted">Pending Leaves</h5>
                 <h2 class="display-4">{{ pending_leaves_count }}</h2>
-                <a href="{{ url_for('faculty_leave', faculty_id=teacher.id) }}" class="btn btn-outline-primary btn-sm mt-2">Manage Leave</a>
+                <a href="{{ url_for('faculty_leave', faculty_id=faculty.id) }}" class="btn btn-outline-primary btn-sm mt-2">Manage Leave</a>
             </div>
         </div>
     </div>
@@ -97,7 +97,7 @@
                 <i class="fas fa-users me-2"></i>My Tutees
             </div>
             <div class="list-group list-group-flush">
-                {% for tutee in teacher.tutees %}
+                {% for tutee in faculty.tutees %}
                 <div class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="mb-0">{{ tutee.name }}</h6>

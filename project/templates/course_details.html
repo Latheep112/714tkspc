@@ -7,7 +7,7 @@
         <div class="col-md-6">
           {% if course.level %}<p class="mb-2"><strong>Level:</strong> {{ course.level }}</p>{% endif %}
           {% if course.credits is not none %}<p class="mb-2"><strong>Credits:</strong> {{ course.credits }}</p>{% endif %}
-          <p class="mb-2"><strong>Faculty:</strong> {{ course.teacher.name }}</p>
+          <p class="mb-2"><strong>Faculty:</strong> {{ course.faculty.name }}</p>
           <p class="mb-2"><strong>Department:</strong> {{ course.department or '-' }}</p>
           <p class="mb-2"><strong>Semester:</strong> {{ course.semester or '-' }}</p>
         </div>

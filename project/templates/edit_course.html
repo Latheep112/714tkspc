@@ -113,13 +113,13 @@
             </div>
         </div>
         <div class="form-group">
-            <label for="teacher">Faculty</label>
-            <select class="form-control" id="teacher" name="teacher" required>
-                {% for teacher in teachers %}
-                    {% if teacher.id == course.teacher_id %}
-                        <option value="{{ teacher.id }}" selected>{{ teacher.name }}</option>
+            <label for="Faculty">Faculty</label>
+            <select class="form-control" id="Faculty" name="Faculty" required>
+                {% for faculty in faculties %}
+                    {% if faculty.id == course.faculty_id %}
+                        <option value="{{ faculty.id }}" selected>{{ faculty.name }}</option>
                     {% else %}
-                        <option value="{{ teacher.id }}">{{ teacher.name }}</option>
+                        <option value="{{ faculty.id }}">{{ faculty.name }}</option>
                     {% endif %}
                 {% endfor %}
             </select>

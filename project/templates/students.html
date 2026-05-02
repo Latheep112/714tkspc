@@ -47,7 +47,7 @@
                         {% else %}
                         <span class="badge bg-secondary me-2" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;">{{ (student.name[:1] if student.name else '?') }}</span>
                         {% endif %}
-                        {{ student.name }}
+                        <a href="{{ url_for('student_detail', student_id=student.id) }}">{{ student.name }}</a>
                     </td>
                     <td>{{ student.registration_number or '-' }}</td>
                     <td>{{ student.email }}</td>

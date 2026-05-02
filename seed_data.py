@@ -14,7 +14,7 @@ def seed():
             db.session.add(admin)
             print("Created admin user.")
 
-        # Create Teachers
+        # Create Faculties
         faculties = []
         departments = ['Computer Science', 'Mathematics', 'Physics', 'History', 'Literature']
         for i in range(1, 6):

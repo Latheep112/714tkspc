@@ -19,7 +19,7 @@ def migrate():
                 code VARCHAR(20) UNIQUE,
                 description TEXT,
                 head_of_department_id INTEGER,
-                FOREIGN KEY(head_of_department_id) REFERENCES teacher(id)
+                FOREIGN KEY(head_of_department_id) REFERENCES faculty(id)
             )
             """,
             """
@@ -57,7 +57,7 @@ def migrate():
             ("student", "registration_number", "VARCHAR(50)"),
             ("student", "department_id", "INTEGER"),
             ("student", "semester_id", "INTEGER"),
-            ("teacher", "department_id", "INTEGER"),
+            ("faculty", "department_id", "INTEGER"),
             ("course", "department_id", "INTEGER"),
             ("course", "semester_id", "INTEGER"),
             ("course", "subject_id", "INTEGER"),

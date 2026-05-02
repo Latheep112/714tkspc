@@ -152,14 +152,13 @@
                 </div>
             </div>
         </div>
+        <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="annual_income">Annual Income</label>
                     <input type="number" step="0.01" class="form-control" id="annual_income" name="annual_income">
                 </div>
             </div>
-        </div>
-        <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="income_cert_no">Income Cert No</label>
@@ -206,11 +205,11 @@
             </select>
         </div>
         <div class="form-group">
-            <label for="tutor_id">Tutor (Optional - will be auto-assigned if blank)</label>
-            <select class="form-control" id="tutor_id" name="tutor_id">
+            <label for="faculty_id">Tutor (Optional - will be auto-assigned if blank)</label>
+            <select class="form-control" id="faculty_id" name="faculty_id">
                 <option value="">Auto-assign</option>
-                {% for teacher in teachers %}
-                <option value="{{ teacher.id }}">{{ teacher.name }} ({{ teacher.department or 'No Dept' }})</option>
+                {% for faculty in faculties %}
+                <option value="{{ faculty.id }}">{{ faculty.name }} ({{ faculty.department or 'No Dept' }})</option>
                 {% endfor %}
             </select>
         </div>

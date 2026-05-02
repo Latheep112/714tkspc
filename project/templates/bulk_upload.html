@@ -66,8 +66,8 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="card-body">
         <h4>Faculty</h4>
         <p class="mb-1">Columns: <code>name, email, phone, department, designation, specialization, password (optional)</code></p>
-        <p class="mb-3"><a href="{{ url_for('sample_teachers_csv') }}" target="_blank">Download sample CSV</a></p>
-        <form method="POST" action="{{ url_for('import_teachers') }}" enctype="multipart/form-data" class="form-inline align-items-end">
+        <p class="mb-3"><a href="{{ url_for('sample_faculties_csv') }}" target="_blank">Download sample CSV</a></p>
+        <form method="POST" action="{{ url_for('import_faculties') }}" enctype="multipart/form-data" class="form-inline align-items-end">
           <div class="form-group mb-2 mr-2">
             <label class="d-block mb-1">CSV File</label>
             <input type="file" name="file" class="form-control-file" accept=".csv" required>

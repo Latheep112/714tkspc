@@ -209,12 +209,12 @@
             </select>
         </div>
         <div class="form-group">
-            <label for="tutor_id">Tutor</label>
-            <select class="form-control" id="tutor_id" name="tutor_id">
+            <label for="faculty_id">Tutor</label>
+            <select class="form-control" id="faculty_id" name="faculty_id">
                 <option value="">None / Auto-assign (if blank on creation)</option>
-                {% for teacher in teachers %}
-                <option value="{{ teacher.id }}" {% if student.tutor_id == teacher.id %}selected{% endif %}>
-                    {{ teacher.name }} ({{ teacher.department or 'No Dept' }})
+                {% for faculty in faculties %}
+                <option value="{{ faculty.id }}" {% if student.faculty_id == faculty.id %}selected{% endif %}>
+                    {{ faculty.name }} ({{ faculty.department or 'No Dept' }})
                 </option>
                 {% endfor %}
             </select>

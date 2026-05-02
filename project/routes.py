@@ -1,4 +1,4 @@
-﻿from flask import render_template, url_for, flash, redirect, request, jsonify, session, Response
+from flask import render_template, url_for, flash, redirect, request, jsonify, session, Response
 from project import app, db
 import logging
 logger = logging.getLogger(__name__)
@@ -449,7 +449,8 @@ def dashboard():
                     'student': student,
                     'gpa': gpa,
                     'attendance_rate': attendance_rate,
-                    'outstanding': outstanding
+                    'outstanding': outstanding,
+                    'courses': student.courses[:3] # Show first 3 subjects for overview
                 })
         
         recent_notices = get_recent_notices('parent', session.get('user'))
@@ -2511,13 +2512,17 @@ def import_students():
         name = (row.get('name') or '').strip()
         email = (row.get('email') or '').strip().lower()
         phone = (row.get('phone') or '').strip()
+        registration_number = (row.get('registration_number') or '').strip() or None
         roll_number = (row.get('roll_number') or '').strip() or None
+        gender = (row.get('gender') or '').strip() or None
+        admission_date_str = (row.get('admission_date') or '').strip()
         address = (row.get('address') or '').strip() or None
         dob_str = (row.get('date_of_birth') or '').strip()
         department = (row.get('department') or '').strip() or None
         guardian_name = (row.get('guardian_name') or '').strip() or None
         guardian_phone = (row.get('guardian_phone') or '').strip() or None
         guardian_email = (row.get('guardian_email') or '').strip() or None
+        status = (row.get('status') or '').strip() or 'active'
         nationality = (row.get('nationality') or '').strip() or None
         blood_group = (row.get('blood_group') or '').strip() or None
         religion = (row.get('religion') or '').strip() or None
@@ -2532,17 +2537,36 @@ def import_students():
         emergency_contact_name = (row.get('emergency_contact_name') or '').strip() or None
         emergency_contact_phone = (row.get('emergency_contact_phone') or '').strip() or None
         previous_school = (row.get('previous_school') or '').strip() or None
+        aadhar_no = (row.get('aadhar_no') or '').strip() or None
+        community_cert_no = (row.get('community_cert_no') or '').strip() or None
+        annual_income_str = (row.get('annual_income') or '').strip()
+        income_cert_no = (row.get('income_cert_no') or '').strip() or None
 
         if not name or not _valid_email(email) or not _valid_phone(phone):
             errors.append(f"Row {i}: invalid name/email/phone")
             skipped += 1
             continue
+        
         dob = None
         if dob_str:
             try:
                 dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
             except ValueError:
                 errors.append(f"Row {i}: invalid date_of_birth '{dob_str}' (expected YYYY-MM-DD)")
+        
+        admission_date = None
+        if admission_date_str:
+            try:
+                admission_date = datetime.strptime(admission_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                errors.append(f"Row {i}: invalid admission_date '{admission_date_str}'")
+
+        annual_income = None
+        if annual_income_str:
+            try:
+                annual_income = float(annual_income_str)
+            except ValueError:
+                errors.append(f"Row {i}: invalid annual_income '{annual_income_str}'")
         
         sslc_marks = None
         if sslc_marks_str:
@@ -2582,11 +2606,14 @@ def import_students():
         
         try:
             s = Student(
+                registration_number=registration_number,
                 name=name, email=email, phone=phone, roll_number=roll_number, 
                 address=address, date_of_birth=dob, 
+                gender=gender, admission_date=admission_date,
                 department_id=department_obj.id if department_obj else None,
                 guardian_name=guardian_name, guardian_phone=guardian_phone,
                 guardian_email=guardian_email,
+                status=status,
                 nationality=nationality, blood_group=blood_group,
                 religion=religion, community=community,
                 sslc_marks=sslc_marks, hsc_marks=hsc_marks,
@@ -2594,7 +2621,9 @@ def import_students():
                 section=section, father_name=father_name, mother_name=mother_name,
                 emergency_contact_name=emergency_contact_name,
                 emergency_contact_phone=emergency_contact_phone,
-                previous_school=previous_school
+                previous_school=previous_school,
+                aadhar_no=aadhar_no, community_cert_no=community_cert_no,
+                annual_income=annual_income, income_cert_no=income_cert_no
             )
             db.session.add(s)
             
@@ -2637,7 +2666,7 @@ def import_students():
         flash('Some rows had issues: ' + '; '.join(errors[:5]) + ('' if len(errors) <= 5 else ' ...'), 'warning')
     return redirect(url_for('students'))
 
-# --- Bulk Import: Teachers ---
+# --- Bulk Import: Faculty ---
 @app.route('/import/faculties', methods=['POST'])
 @crud_required('bulk_upload', 'create')
 def import_faculties():
@@ -2893,8 +2922,8 @@ def import_enrollments():
 def sample_students_csv():
     out = StringIO()
     writer = csv.writer(out)
-    writer.writerow(['name','email','phone','roll_number','current_year','current_semester','section','father_name','mother_name','emergency_contact_name','emergency_contact_phone','previous_school','address','date_of_birth','department','guardian_name','guardian_phone','nationality','blood_group','religion','community','sslc_marks','hsc_marks','password'])
-    writer.writerow(['Alice Johnson','alice@example.com','+1 555 123 4567','RN-001','1','1','A','Mark Johnson','Mary Johnson','Uncle Bob','+1 555 999 8888','St. Peter High School','123 Main St','2001-05-10','Computer Science','Mark Johnson','+1 555 000 1111','American','O+','Christian','General','450','480','password123'])
+    writer.writerow(['name','email','phone','registration_number','roll_number','gender','admission_date','status','current_year','current_semester','section','father_name','mother_name','emergency_contact_name','emergency_contact_phone','previous_school','address','date_of_birth','department','guardian_name','guardian_phone','guardian_email','nationality','blood_group','religion','community','sslc_marks','hsc_marks','aadhar_no','community_cert_no','annual_income','income_cert_no','password'])
+    writer.writerow(['Alice Johnson','alice@example.com','+1 555 123 4567','REG001','RN-001','Female','2023-08-01','active','1','1','A','Mark Johnson','Mary Johnson','Uncle Bob','+1 555 999 8888','St. Peter High School','123 Main St','2001-05-10','Computer Science','Mark Johnson','+1 555 000 1111','mark@example.com','American','O+','Christian','General','450','480','123456789012','CERT123','50000.00','INC789','password123'])
     return Response(out.getvalue(), mimetype='text/csv', headers={'Content-Disposition': 'attachment; filename=students_sample.csv'})
 
 @app.route('/import/sample/faculties.csv')
@@ -3154,14 +3183,14 @@ def edit_student(student_id):
         else:
             student.hsc_marks = None
         
-        tutor_id = request.form.get('tutor_id')
-        if tutor_id:
+        fac_id = request.form.get('faculty_id')
+        if fac_id:
             try:
-                student.tutor_id = int(tutor_id)
+                student.faculty_id = int(fac_id)
             except ValueError:
-                student.tutor_id = None
+                student.faculty_id = None
         else:
-            student.tutor_id = None
+            student.faculty_id = None
 
         dob_str = request.form.get('date_of_birth', '').strip()
         if dob_str:
@@ -3221,6 +3250,46 @@ def delete_student(student_id):
     db.session.commit()
     flash('Student has been deleted!', 'success')
     return redirect(url_for('students'))
+
+@app.route("/students/<int:student_id>")
+@login_required
+@crud_required('student', 'read')
+def student_detail(student_id):
+    student = Student.query.get_or_404(student_id)
+    # Fetch user photo
+    photo = UserPhoto.query.filter_by(username=student.email).first()
+    photo_url = url_for('static', filename=photo.file_path.lstrip('/')) if photo else None
+    
+    # GPA and Attendance logic similar to dashboard
+    grades = Grade.query.filter_by(student_id=student.id).all()
+    total_pts = 0.0
+    total_cr = 0
+    for g in grades:
+        pts = g.points if g.points is not None else 0.0 # simplified
+        course = Course.query.get(g.course_id)
+        cr = course.credits or 1
+        total_pts += pts * cr
+        total_cr += cr
+    gpa = (total_pts / total_cr) if total_cr > 0 else None
+    
+    sessions_all = []
+    for c in student.courses:
+        sessions_all.extend(c.sessions)
+    session_ids = [s.id for s in sessions_all]
+    attendance_rate = 0.0
+    attendance_counts = {'present': 0, 'absent': 0, 'late': 0, 'excused': 0}
+    if session_ids:
+        recs = Attendance.query.filter(Attendance.session_id.in_(session_ids), Attendance.student_id == student.id).all()
+        if recs:
+            for r in recs:
+                if r.status in attendance_counts:
+                    attendance_counts[r.status] += 1
+            present_late = attendance_counts['present'] + attendance_counts['late']
+            attendance_rate = (present_late / len(recs)) * 100.0
+
+    return render_template('student_detail.html', title=f'Student: {student.name}', 
+                           student=student, photo_url=photo_url, gpa=gpa, 
+                           attendance_rate=attendance_rate, attendance_counts=attendance_counts)
 
 @app.route("/faculty")
 @login_required

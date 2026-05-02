@@ -17,7 +17,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from project import app, db
 from project.models import Faculty, Course, CourseSession
 
-class TimetableTeacherFilterTests(unittest.TestCase):
+class TimetableFacultyFilterTests(unittest.TestCase):
     def setUp(self):
         self.app = app
         self.app.config['TESTING'] = True
@@ -51,7 +51,7 @@ class TimetableTeacherFilterTests(unittest.TestCase):
         db.drop_all()
         self.ctx.pop()
 
-    def test_role_based_filter_for_teacher(self):
+    def test_role_based_filter_for_faculty(self):
         # Login as f1 (faculty)
         with self.client.session_transaction() as sess:
             sess['logged_in'] = True
@@ -64,7 +64,7 @@ class TimetableTeacherFilterTests(unittest.TestCase):
         self.assertIn(b'Math 101', data)
         self.assertNotIn(b'Physics 101', data)
 
-    def test_query_param_teacher_id_filter(self):
+    def test_query_param_faculty_id_filter(self):
         # Login as admin to test explicit faculty_id filtering
         with self.client.session_transaction() as sess:
             sess['logged_in'] = True

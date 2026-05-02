@@ -30,12 +30,12 @@ def update_database_v3():
         except Exception as e:
             print(f"Error adding semester_id to student: {e}")
 
-        # Teacher table
+        # Faculty table
         try:
-            conn.execute(db.text('ALTER TABLE teacher ADD COLUMN department_id INTEGER REFERENCES department(id)'))
-            print("Added department_id to teacher table")
+            conn.execute(db.text('ALTER TABLE faculty ADD COLUMN department_id INTEGER REFERENCES department(id)'))
+            print("Added department_id to faculty table")
         except Exception as e:
-            print(f"Error adding department_id to teacher: {e}")
+            print(f"Error adding department_id to faculty: {e}")
 
         # Course table
         try:

@@ -21,7 +21,7 @@ if __name__ == "__main__":
     add_column("student", "guardian_email", "VARCHAR(100)")
     add_column("student", "emergency_contact_name", "VARCHAR(100)")
     add_column("student", "emergency_contact_phone", "VARCHAR(20)")
-    add_column("student", "tutor_id", "INTEGER")
+    add_column("student", "faculty_id", "INTEGER")
     
     # New student demographic and academic fields
     add_column("student", "nationality", "VARCHAR(50)")
@@ -39,23 +39,23 @@ if __name__ == "__main__":
     add_column("student", "emergency_contact_phone", "VARCHAR(20)")
     add_column("student", "previous_school", "VARCHAR(255)")
     
-    # Teacher
-    add_column("teacher", "gender", "VARCHAR(10)")
-    add_column("teacher", "joining_date", "DATE")
-    add_column("teacher", "address", "VARCHAR(200)")
-    add_column("teacher", "date_of_birth", "DATE")
-    add_column("teacher", "office_hours", "VARCHAR(120)")
-    add_column("teacher", "employment_status", "VARCHAR(20)")
-    add_column("teacher", "max_weekly_hours", "INTEGER")
-    add_column("teacher", "qualifications", "VARCHAR(120)")
-    add_column("teacher", "experience_years", "INTEGER")
-    add_column("teacher", "tenure_status", "VARCHAR(20)")
+    # Faculty
+    add_column("faculty", "gender", "VARCHAR(10)")
+    add_column("faculty", "joining_date", "DATE")
+    add_column("faculty", "address", "VARCHAR(200)")
+    add_column("faculty", "date_of_birth", "DATE")
+    add_column("faculty", "office_hours", "VARCHAR(120)")
+    add_column("faculty", "employment_status", "VARCHAR(20)")
+    add_column("faculty", "max_weekly_hours", "INTEGER")
+    add_column("faculty", "qualifications", "VARCHAR(120)")
+    add_column("faculty", "experience_years", "INTEGER")
+    add_column("faculty", "tenure_status", "VARCHAR(20)")
     
-    # New teacher professional fields
-    add_column("teacher", "designation", "VARCHAR(100)")
-    add_column("teacher", "specialization", "VARCHAR(100)")
-    add_column("teacher", "pan_number", "VARCHAR(20)")
-    add_column("teacher", "aadhaar_number", "VARCHAR(20)")
+    # New faculty professional fields
+    add_column("faculty", "designation", "VARCHAR(100)")
+    add_column("faculty", "specialization", "VARCHAR(100)")
+    add_column("faculty", "pan_number", "VARCHAR(20)")
+    add_column("faculty", "aadhaar_number", "VARCHAR(20)")
     
     # Course
     add_column("course", "department", "VARCHAR(100)")
@@ -74,8 +74,8 @@ if __name__ == "__main__":
     # Attendance
     add_column("attendance", "remarks", "VARCHAR(200)")
     
-    # TeacherLeave
-    add_column("teacher_leave", "approved_by", "VARCHAR(80)")
+    # FacultyLeave
+    add_column("faculty_leave", "approved_by", "VARCHAR(80)")
     
     # AdmissionApplication
     add_column("admission_application", "gender", "VARCHAR(20)")

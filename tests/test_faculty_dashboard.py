@@ -21,7 +21,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from project import app, db
 from project.models import Faculty, User
 
-class TeacherDashboardTests(unittest.TestCase):
+class FacultyDashboardTests(unittest.TestCase):
 
     def setUp(self):
         self.app = app
@@ -32,16 +32,16 @@ class TeacherDashboardTests(unittest.TestCase):
         self.app_context.push()
         db.create_all()
 
-        # Create a teacher
-        self.teacher_email = 'prof@example.com'
-        self.teacher_name = 'Professor X'
-        self.teacher = Faculty(
-            name=self.teacher_name,
-            email=self.teacher_email,
+        # Create a faculty
+        self.faculty_email = 'prof@example.com'
+        self.faculty_name = 'Professor X'
+        self.faculty = Faculty(
+            name=self.faculty_name,
+            email=self.faculty_email,
             phone='1234567890',
             joining_date=datetime.now(UTC).date()
         )
-        db.session.add(self.teacher)
+        db.session.add(self.faculty)
         db.session.commit()
 
     def tearDown(self):
@@ -49,30 +49,30 @@ class TeacherDashboardTests(unittest.TestCase):
         db.drop_all()
         self.app_context.pop()
 
-    def test_teacher_dashboard_access(self):
+    def test_faculty_dashboard_access(self):
         # Mock login as faculty
         with self.client.session_transaction() as sess:
-            sess['user'] = self.teacher_email
+            sess['user'] = self.faculty_email
             sess['role'] = 'faculty'
             sess['logged_in'] = True
         
         response = self.client.get('/dashboard', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         # Check for faculty dashboard specific content
-        self.assertIn(f'Welcome, {self.teacher_name}'.encode(), response.data)
+        self.assertIn(f'Welcome, {self.faculty_name}'.encode(), response.data)
         self.assertIn(b'Active Subjects', response.data)
         self.assertIn(b'Pending Leaves', response.data)
 
     def test_faculty_role_access(self):
         # Mock login as faculty
         with self.client.session_transaction() as sess:
-            sess['user'] = self.teacher_email
+            sess['user'] = self.faculty_email
             sess['role'] = 'faculty'
             sess['logged_in'] = True
         
         response = self.client.get('/dashboard', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(f'Welcome, {self.teacher_name}'.encode(), response.data)
+        self.assertIn(f'Welcome, {self.faculty_name}'.encode(), response.data)
 
 if __name__ == "__main__":
     unittest.main()

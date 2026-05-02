@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                {% if photo_url %}
+                <img src="{{ photo_url }}" alt="{{ student.name }} avatar" class="rounded-circle mb-3" style="width:150px;height:150px;object-fit:cover;border: 3px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                {% else %}
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width:150px;height:150px;font-size: 64px; font-weight: bold; border: 3px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                    {{ student.name[0]|upper }}
+                </div>
+                {% endif %}
+                <h4>{{ student.name }}</h4>
+                <p class="text-muted">{{ student.roll_number or 'No Roll Number' }}</p>
+                <span class="badge bg-{{ 'success' if student.status == 'active' else 'secondary' }} mb-3">{{ student.status|capitalize }}</span>
+                
+                <div class="border-top pt-3 mt-3">
+                    <div class="row">
+                        <div class="col-6">
+                            <h6 class="mb-0">GPA</h6>
+                            <p class="text-primary fw-bold">{{ "%.2f"|format(gpa) if gpa else "-" }}</p>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="mb-0">Attendance</h6>
+                            <p class="text-info fw-bold">{{ "%.1f"|format(attendance_rate) }}%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-white font-weight-bold">Quick Actions</div>
+            <div class="list-group list-group-flush">
+                <a href="{{ url_for('edit_student', student_id=student.id) }}" class="list-group-item list-group-item-action"><i class="fas fa-edit me-2"></i>Edit Profile</a>
+                <a href="{{ url_for('student_subjects', student_id=student.id) }}" class="list-group-item list-group-item-action"><i class="fas fa-book me-2"></i>Enrolled Subjects</a>
+                <a href="{{ url_for('student_attendance_summary', student_id=student.id) }}" class="list-group-item list-group-item-action"><i class="fas fa-calendar-check me-2"></i>Attendance Report</a>
+                <a href="{{ url_for('student_transcript', student_id=student.id) }}" class="list-group-item list-group-item-action"><i class="fas fa-file-alt me-2"></i>Full Transcript</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-white font-weight-bold">Personal Information</div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Full Name</div>
+                    <div class="col-sm-8 fw-bold">{{ student.name }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Email Address</div>
+                    <div class="col-sm-8">{{ student.email }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Phone Number</div>
+                    <div class="col-sm-8">{{ student.phone }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Date of Birth</div>
+                    <div class="col-sm-8">{{ student.date_of_birth or '-' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Gender</div>
+                    <div class="col-sm-8">{{ student.gender or '-' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Nationality</div>
+                    <div class="col-sm-8">{{ student.nationality or '-' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Blood Group</div>
+                    <div class="col-sm-8">{{ student.blood_group or '-' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Residential Address</div>
+                    <div class="col-sm-8">{{ student.address or '-' }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-white font-weight-bold">Academic Details</div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Registration Number</div>
+                    <div class="col-sm-8">{{ student.registration_number or '-' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Roll Number</div>
+                    <div class="col-sm-8">{{ student.roll_number or '-' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Department</div>
+                    <div class="col-sm-8">{{ student.department.name if student.department else '-' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Admission Date</div>
+                    <div class="col-sm-8">{{ student.admission_date or '-' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Current Academic Status</div>
+                    <div class="col-sm-8">Year {{ student.current_year or '-' }} / Semester {{ student.current_semester or '-' }} / Section {{ student.section or '-' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Personal Tutor</div>
+                    <div class="col-sm-8">{{ student.tutor.name if student.tutor else 'Not Assigned' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-white font-weight-bold">Family & Emergency Contact</div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Father's Name</div>
+                    <div class="col-sm-8">{{ student.father_name or '-' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Mother's Name</div>
+                    <div class="col-sm-8">{{ student.mother_name or '-' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Guardian Name</div>
+                    <div class="col-sm-8">{{ student.guardian_name or '-' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Guardian Phone</div>
+                    <div class="col-sm-8">{{ student.guardian_phone or '-' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted small">Emergency Contact</div>
+                    <div class="col-sm-8">{{ student.emergency_contact_name or '-' }} ({{ student.emergency_contact_phone or '-' }})</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

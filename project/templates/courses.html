@@ -29,7 +29,7 @@
                 <th class="col-year">Year</th>
                 <th class="col-level">Level</th>
                 <th class="col-credits">Credits</th>
-                <th class="col-teacher">Faculty</th>
+                <th class="col-Faculty">Faculty</th>
                 <th class="col-room">Room</th>
                 <th class="col-capacity">Capacity</th>
                 <th class="col-remaining">Rem</th>
@@ -47,7 +47,7 @@
                     <td class="col-year">{{ course.academic_year or '-' }}</td>
                     <td class="col-level">{{ course.level or '-' }}</td>
                     <td class="col-credits">{{ course.credits }}</td>
-                    <td class="col-teacher">{{ course.teacher.name }}</td>
+                    <td class="col-Faculty">{{ course.faculty.name }}</td>
                     <td class="col-room">{{ course.room or '-' }}</td>
                     <td class="col-capacity">{{ course.capacity or '-' }}</td>
                     <td class="col-remaining">

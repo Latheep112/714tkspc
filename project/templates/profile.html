@@ -88,35 +88,35 @@
       </div>
     </div>
   </div>
-  {% elif role == 'faculty' and teacher %}
+  {% elif role == 'faculty' and faculty %}
   <div class="col-md-8">
     <div class="card mb-3">
       <div class="card-body">
         <div class="h6 text-muted">Faculty Details</div>
         <div class="row">
           <div class="col-md-6">
-            <div><strong>Name:</strong> {{ teacher.name }}</div>
-            <div><strong>Email:</strong> {{ teacher.email }}</div>
-            <div><strong>Phone:</strong> {{ teacher.phone }}</div>
-            <div><strong>Department:</strong> {{ teacher.department or '-' }}</div>
-            <div><strong>Designation:</strong> {{ teacher.designation or '-' }}</div>
-            <div><strong>Experience:</strong> {{ teacher.experience_years or '0' }} yrs</div>
+            <div><strong>Name:</strong> {{ faculty.name }}</div>
+            <div><strong>Email:</strong> {{ faculty.email }}</div>
+            <div><strong>Phone:</strong> {{ faculty.phone }}</div>
+            <div><strong>Department:</strong> {{ faculty.department or '-' }}</div>
+            <div><strong>Designation:</strong> {{ faculty.designation or '-' }}</div>
+            <div><strong>Experience:</strong> {{ faculty.experience_years or '0' }} yrs</div>
           </div>
           <div class="col-md-6">
-            <div><strong>DOB:</strong> {{ teacher.date_of_birth or '-' }}</div>
-            <div><strong>Joining Date:</strong> {{ teacher.joining_date or '-' }}</div>
-            <div><strong>Qualification:</strong> {{ teacher.qualification or '-' }}</div>
-            <div><strong>Expertise:</strong> {{ teacher.subject_expertise or '-' }}</div>
-            <div><strong>Office Hours:</strong> {{ teacher.office_hours or '-' }}</div>
-            <div><strong>Employment:</strong> {{ teacher.employment_status or '-' }}</div>
+            <div><strong>DOB:</strong> {{ faculty.date_of_birth or '-' }}</div>
+            <div><strong>Joining Date:</strong> {{ faculty.joining_date or '-' }}</div>
+            <div><strong>Qualification:</strong> {{ faculty.qualification or '-' }}</div>
+            <div><strong>Expertise:</strong> {{ faculty.subject_expertise or '-' }}</div>
+            <div><strong>Office Hours:</strong> {{ faculty.office_hours or '-' }}</div>
+            <div><strong>Employment:</strong> {{ faculty.employment_status or '-' }}</div>
           </div>
         </div>
         <div class="row mt-2 border-top pt-2">
           <div class="col-md-6">
-            <div><strong>PAN Number:</strong> {{ teacher.pan_number or '-' }}</div>
+            <div><strong>PAN Number:</strong> {{ faculty.pan_number or '-' }}</div>
           </div>
           <div class="col-md-6">
-            <div><strong>Aadhaar Number:</strong> {{ teacher.aadhaar_number or '-' }}</div>
+            <div><strong>Aadhaar Number:</strong> {{ faculty.aadhaar_number or '-' }}</div>
           </div>
         </div>
       </div>
@@ -124,9 +124,9 @@
     <div class="card">
       <div class="card-body">
         <div class="h6 text-muted">Assigned Subjects</div>
-        {% if teacher.courses %}
+        {% if faculty.courses %}
         <ul class="list-unstyled mb-0">
-          {% for c in teacher.courses %}
+          {% for c in faculty.courses %}
           <li><a href="{{ url_for('course_details', course_id=c.id) }}">{{ c.name }}</a></li>
           {% endfor %}
         </ul>

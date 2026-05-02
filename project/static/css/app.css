@@ -83,8 +83,8 @@ table.table td, table.table th { vertical-align: middle; }
 @media (max-width: 768px) {
   #studentsTable .col-guardian-name,
   #studentsTable .col-guardian-phone { display: none; }
-  #teachersTable .col-employment,
-  #teachersTable .col-max-hours { display: none; }
+  #facultiesTable .col-employment,
+  #facultiesTable .col-max-hours { display: none; }
   .subjects-table .col-room { display: none; }
 }
 
