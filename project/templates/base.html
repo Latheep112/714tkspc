@@ -7,156 +7,142 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.2/dist/lux/bootstrap.min.css">
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <!-- Plus Jakarta Sans font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
     <!-- App styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
 </head>
 <body class="loading">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-tkspc sticky-top">
-        <a class="navbar-brand" href="{{ url_for('students') }}"><i class="fas fa-university me-1"></i> TKSPC</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navMain">
-            <ul class="navbar-nav me-auto">
-                {% if session.get('logged_in') %}
-                <li class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
-                    <a class="nav-link" href="{{ url_for('dashboard') }}" aria-label="Dashboard" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Dashboard"><i class="fas fa-home me-1"></i><span class="nav-label">Dashboard</span></a>
-                </li>
-                <li class="nav-item {% if request.endpoint == 'my_notifications' %}active{% endif %}">
-                    <a class="nav-link" href="{{ url_for('my_notifications') }}" aria-label="Notifications" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Notifications">
-                        <i class="fas fa-bell me-1"></i><span class="nav-label">Notifications</span>
-                    </a>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navAcademics" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-book me-1"></i><span class="nav-label">Academics</span></a>
-                    <ul class="dropdown-menu" aria-labelledby="navAcademics">
-                        {% if session.get('role') in ['admin', 'staff', 'faculty'] %}
-                        <li><a class="dropdown-item {% if request.endpoint == 'students' %}active{% endif %}" href="{{ url_for('students') }}">Students</a></li>
-                        {% endif %}
-                        {% if session.get('role') in ['admin', 'staff'] %}
-                        <li><a class="dropdown-item {% if request.endpoint == 'faculty' %}active{% endif %}" href="{{ url_for('faculty') }}">Faculty</a></li>
-                        {% endif %}
-                        <li><a class="dropdown-item {% if request.endpoint == 'subjects' %}active{% endif %}" href="{{ url_for('subjects') }}">Subjects</a></li>
-                        {% if session.get('role') in ['admin', 'staff', 'faculty', 'student'] %}
-                         <li><a class="dropdown-item {% if request.endpoint == 'list_departments' %}active{% endif %}" href="{{ url_for('list_departments') }}">Departments</a></li>
-                         <li><a class="dropdown-item {% if request.endpoint == 'list_semesters' %}active{% endif %}" href="{{ url_for('list_semesters') }}">Semesters</a></li>
-                         <li><a class="dropdown-item {% if request.endpoint == 'list_subjects' %}active{% endif %}" href="{{ url_for('list_subjects') }}">Subjects</a></li>
-                         {% endif %}
-                        <li><a class="dropdown-item {% if request.endpoint == 'calendar' %}active{% endif %}" href="{{ url_for('calendar') }}">Calendar</a></li>
-                        <li><a class="dropdown-item {% if request.endpoint == 'timetable' %}active{% endif %}" href="{{ url_for('timetable') }}">Timetable</a></li>
-                        <li><a class="dropdown-item {% if request.endpoint == 'exams' %}active{% endif %}" href="{{ url_for('exams') }}">Exams</a></li>
-                        <li><a class="dropdown-item {% if request.endpoint == 'notices' %}active{% endif %}" href="{{ url_for('notices') }}">Notice Board</a></li>
-                        {% if session.get('role') in ['admin', 'staff', 'faculty'] %}
-                        <li><a class="dropdown-item {% if request.endpoint == 'workload' %}active{% endif %}" href="{{ url_for('workload') }}">Workload</a></li>
-                        {% endif %}
-                        <li><a class="dropdown-item {% if request.endpoint == 'resources' %}active{% endif %}" href="{{ url_for('resources') }}">Resources</a></li>
-                        {% if session.get('role') in ['admin', 'staff'] %}
-                        <li><a class="dropdown-item {% if request.endpoint == 'admissions' %}active{% endif %}" href="{{ url_for('admissions') }}">Admissions</a></li>
-                        {% endif %}
-                    </ul>
-                </li>
-                {% if session.get('role') in ['admin', 'staff', 'faculty'] %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navAttendance" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-calendar-check me-1"></i><span class="nav-label">Attendance</span></a>
-                    <ul class="dropdown-menu" aria-labelledby="navAttendance">
-                        <li><a class="dropdown-item {% if request.endpoint == 'daily_attendance' %}active{% endif %}" href="{{ url_for('daily_attendance') }}">Daily Attendance</a></li>
-                        {% if session.get('role') in ['admin', 'staff'] %}
-                        <li><a class="dropdown-item {% if request.endpoint == 'low_attendance_alerts' %}active{% endif %}" href="{{ url_for('low_attendance_alerts') }}">Low Attendance Alerts</a></li>
-                        {% endif %}
-                        <li><a class="dropdown-item {% if request.endpoint == 'monthly_attendance_report' %}active{% endif %}" href="{{ url_for('monthly_attendance_report') }}">Monthly Reports</a></li>
-                    </ul>
-                </li>
-                {% endif %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navFinance" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-wallet me-1"></i><span class="nav-label">Finance</span></a>
-                    <ul class="dropdown-menu" aria-labelledby="navFinance">
-                        <li><a class="dropdown-item {% if request.endpoint == 'finance_fees' %}active{% endif %}" href="{{ url_for('finance_fees') }}">{% if session.get('role') == 'parent' %}My Children's Fees{% else %}Fees{% endif %}</a></li>
-                        {% if session.get('role') == 'admin' %}
-                        <li><a class="dropdown-item {% if request.endpoint == 'finance_budget' %}active{% endif %}" href="{{ url_for('finance_budget') }}">Budget</a></li>
-                        {% endif %}
-                    </ul>
-                </li>
-                {% if session.get('role') in ['admin', 'staff'] %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navAdmin" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-tools me-1"></i><span class="nav-label">Admin</span></a>
-                    <ul class="dropdown-menu" aria-labelledby="navAdmin">
-                        {% if session.get('role') == 'admin' %}
-                        <li><a class="dropdown-item {% if request.endpoint == 'bulk_upload' %}active{% endif %}" href="{{ url_for('bulk_upload') }}">Import</a></li>
-                        {% endif %}
-                        <li><a class="dropdown-item {% if request.endpoint == 'analytics' %}active{% endif %}" href="{{ url_for('analytics') }}">Analytics</a></li>
-                        {% if session.get('role') == 'admin' %}
-                        <li><a class="dropdown-item {% if request.endpoint == 'admin_crud' %}active{% endif %}" href="{{ url_for('admin_crud') }}">Master CRUD</a></li>
-                        <li><a class="dropdown-item {% if request.endpoint == 'admin_users' %}active{% endif %}" href="{{ url_for('admin_users') }}">Users</a></li>
-                        <li><a class="dropdown-item {% if request.endpoint == 'admin_notifications' %}active{% endif %}" href="{{ url_for('admin_notifications') }}">Manage Notifications</a></li>
-                        <li><a class="dropdown-item {% if request.endpoint == 'admin_audit' %}active{% endif %}" href="{{ url_for('admin_audit') }}">Audit Logs</a></li>
-                        <li><a class="dropdown-item {% if request.endpoint == 'admin_parent_links' %}active{% endif %}" href="{{ url_for('admin_parent_links') }}">Parent Links</a></li>
-                        <li><a class="dropdown-item {% if request.endpoint == 'admin_policies' %}active{% endif %}" href="{{ url_for('admin_policies') }}">Policies</a></li>
-                        {% endif %}
-                    </ul>
-                </li>
-                {% endif %}
-                {% else %}
-                <li class="nav-item">
-                     <a class="nav-link" href="{{ url_for('add_admission') }}"><i class="fas fa-file-signature me-1"></i>Admission Form</a>
-                 </li>
-                 <li class="nav-item">
-                     <a class="nav-link" href="{{ url_for('admission_status') }}"><i class="fas fa-search me-1"></i>Check Status</a>
-                 </li>
-                {% endif %}
-            </ul>
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <button id="themeToggle" class="btn btn-sm btn-outline-secondary me-2" type="button">Dark Mode</button>
-                </li>
-                <li class="nav-item">
-                    <button id="compactToggle" class="btn btn-sm btn-outline-secondary me-2" type="button">Compact Mode</button>
-                </li>
-                {% if session.get('logged_in') %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navAccount" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="far fa-user me-1"></i>{{ session.get('user') }} ({{ session.get('role', 'staff') }})</a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navAccount">
-                        <li><a class="dropdown-item {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Profile</a></li>
-                        <li><a class="dropdown-item {% if request.endpoint == 'change_password' %}active{% endif %}" href="{{ url_for('change_password') }}">Change Password</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
-                    </ul>
-                </li>
-                {% else %}
-                <li class="nav-item {% if request.endpoint == 'login' %}active{% endif %}"><a class="nav-link" href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt mr-1"></i>Login</a></li>
-                {% endif %}
-            </ul>
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+                <div class="bg-primary p-2 rounded-3 me-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                    <i class="fas fa-university text-white fa-xs"></i>
+                </div>
+                TKSPC
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMain">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    {% if session.get('logged_in') %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                            <i class="fas fa-grid-2 me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'my_notifications' %}active{% endif %}" href="{{ url_for('my_notifications') }}">
+                            <i class="fas fa-bell me-1"></i>Notifications
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navAcademics" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-graduation-cap me-1"></i>Academics
+                        </a>
+                        <ul class="dropdown-menu shadow-lg border-0 rounded-3" aria-labelledby="navAcademics">
+                            {% if session.get('role') in ['admin', 'staff', 'faculty'] %}
+                            <li><a class="dropdown-item" href="{{ url_for('students') }}">Students</a></li>
+                            {% endif %}
+                            {% if session.get('role') in ['admin', 'staff'] %}
+                            <li><a class="dropdown-item" href="{{ url_for('faculty') }}">Faculty</a></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{{ url_for('subjects') }}">Courses</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('calendar') }}">Calendar</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('timetable') }}">Timetable</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('exams') }}">Exams</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('notices') }}">Notice Board</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navFinance" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-wallet me-1"></i>Finance
+                        </a>
+                        <ul class="dropdown-menu shadow-lg border-0 rounded-3" aria-labelledby="navFinance">
+                            <li><a class="dropdown-item" href="{{ url_for('finance_fees') }}">{% if session.get('role') == 'parent' %}My Children's Fees{% else %}Fees{% endif %}</a></li>
+                            {% if session.get('role') == 'admin' %}
+                            <li><a class="dropdown-item" href="{{ url_for('finance_budget') }}">Budget</a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    {% if session.get('role') in ['admin', 'staff'] %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navAdmin" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-shield-alt me-1"></i>Admin
+                        </a>
+                        <ul class="dropdown-menu shadow-lg border-0 rounded-3" aria-labelledby="navAdmin">
+                            <li><a class="dropdown-item" href="{{ url_for('admin_crud') }}">Master CRUD</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin_users') }}">Users</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin_notifications') }}">Manage Notifications</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin_audit') }}">Audit Logs</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin_policies') }}">System Policies</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    {% else %}
+                    <li class="nav-item">
+                         <a class="nav-link" href="{{ url_for('add_admission') }}"><i class="fas fa-file-signature me-1"></i>Admission</a>
+                     </li>
+                    {% endif %}
+                </ul>
+                <div class="d-flex align-items-center gap-2">
+                    <button id="themeToggle" class="btn btn-icon btn-sm" title="Toggle Theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    {% if session.get('logged_in') %}
+                    <div class="dropdown">
+                        <button class="btn btn-primary btn-sm dropdown-toggle d-flex align-items-center gap-2" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <span>{{ session.get('user') }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i class="fas fa-user me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('change_password') }}"><i class="fas fa-key me-2"></i>Security</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm">Login</a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </nav>
-    <div class="container-fluid mt-4 px-3">
-        <div class="d-flex justify-content-between align-items-center mb-3 page-header">
+
+    <main class="container-fluid animate-fade-in">
+        <header class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 {% block page_title %}{% endblock %}
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        {% block breadcrumbs %}{% endblock %}
+                    </ol>
+                </nav>
             </div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    {% block breadcrumbs %}{% endblock %}
-                </ol>
-            </nav>
-        </div>
+            <div class="header-actions">
+                {% block header_actions %}{% endblock %}
+            </div>
+        </header>
 
-        <div id="toastContainer" class="toast-container position-fixed p-3" style="top: 1rem; right: 1rem; z-index: 1080;">
-            {% with messages = get_flashed_messages(with_categories=true) %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
                 {% for category, message in messages %}
-                <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-delay="4000">
-                    <div class="toast-header">
-                        <strong class="me-auto">{{ category|capitalize }}</strong>
-                        <small>now</small>
-                        <button type="button" class="btn-close ms-2 mb-1" data-bs-dismiss="toast" aria-label="Close"></button>
+                <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show border-0 shadow-sm mb-4 rounded-3" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {{ message }}
                     </div>
-                    <div class="toast-body">{{ message }}</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
                 {% endfor %}
-            {% endwith %}
-        </div>
+            {% endif %}
+        {% endwith %}
 
         {% block content %}{% endblock %}
-    </div>
+    </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   </body>
