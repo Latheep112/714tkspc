@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow">
+      <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Edit Semester</h4>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label for="number" class="form-label">Semester Number</label>
+            <input type="number" class="form-control" id="number" name="number" value="{{ semester.number }}" required>
+          </div>
+          <div class="mb-3">
+            <label for="academic_year" class="form-label">Academic Year</label>
+            <input type="text" class="form-control" id="academic_year" name="academic_year" value="{{ semester.academic_year }}" placeholder="e.g. 2023-2024" required>
+          </div>
+          <div class="mb-3">
+            <label for="start_date" class="form-label">Start Date</label>
+            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ semester.start_date }}">
+          </div>
+          <div class="mb-3">
+            <label for="end_date" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="end_date" name="end_date" value="{{ semester.end_date }}">
+          </div>
+          <div class="d-flex justify-content-between">
+            <a href="{{ url_for('list_semesters') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Update Semester</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

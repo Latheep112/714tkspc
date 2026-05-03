@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow">
+      <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Edit Resource: {{ resource.name }}</h4>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label for="name" class="form-label">Resource Name</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ resource.name }}" required>
+          </div>
+          <div class="mb-3">
+            <label for="type" class="form-label">Type</label>
+            <select name="type" id="type" class="form-select" required>
+              <option value="lab" {% if resource.type == 'lab' %}selected{% endif %}>Lab</option>
+              <option value="classroom" {% if resource.type == 'classroom' %}selected{% endif %}>Classroom</option>
+              <option value="equipment" {% if resource.type == 'equipment' %}selected{% endif %}>Equipment</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="capacity" class="form-label">Capacity</label>
+            <input type="number" class="form-control" id="capacity" name="capacity" value="{{ resource.capacity }}">
+          </div>
+          <div class="mb-3">
+            <label for="location" class="form-label">Location</label>
+            <input type="text" class="form-control" id="location" name="location" value="{{ resource.location }}">
+          </div>
+          <div class="mb-3">
+            <label for="status" class="form-label">Status</label>
+            <select name="status" id="status" class="form-select">
+              <option value="available" {% if resource.status == 'available' %}selected{% endif %}>Available</option>
+              <option value="unavailable" {% if resource.status == 'unavailable' %}selected{% endif %}>Unavailable</option>
+              <option value="maintenance" {% if resource.status == 'maintenance' %}selected{% endif %}>Maintenance</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="tags" class="form-label">Tags</label>
+            <input type="text" class="form-control" id="tags" name="tags" value="{{ resource.tags }}" placeholder="comma-separated">
+          </div>
+          <div class="d-flex justify-content-between">
+            <a href="{{ url_for('resources') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Update Resource</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

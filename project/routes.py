@@ -2289,10 +2289,13 @@ def admin_crud():
     entities = [
         {'name': 'Students', 'icon': 'fas fa-user-graduate', 'url': url_for('students'), 'add_url': url_for('add_student'), 'count': Student.query.count()},
         {'name': 'Faculty', 'icon': 'fas fa-chalkboard-faculty', 'url': url_for('faculty'), 'add_url': url_for('add_faculty'), 'count': Faculty.query.count()},
-        {'name': 'Subjects', 'icon': 'fas fa-book', 'url': url_for('subjects'), 'add_url': url_for('add_course'), 'count': Course.query.count()},
+        {'name': 'Departments', 'icon': 'fas fa-building', 'url': url_for('list_departments'), 'add_url': url_for('add_department'), 'count': Department.query.count()},
+        {'name': 'Courses', 'icon': 'fas fa-book', 'url': url_for('subjects'), 'add_url': url_for('add_course'), 'count': Course.query.count()},
+        {'name': 'Subjects', 'icon': 'fas fa-book-open', 'url': url_for('list_subjects'), 'add_url': url_for('add_subject'), 'count': Subject.query.count()},
+        {'name': 'Semesters', 'icon': 'fas fa-calendar-alt', 'url': url_for('list_semesters'), 'add_url': url_for('add_semester'), 'count': Semester.query.count()},
         {'name': 'Users', 'icon': 'fas fa-users-cog', 'url': url_for('admin_users'), 'add_url': url_for('add_user'), 'count': User.query.count()},
         {'name': 'Admissions', 'icon': 'fas fa-user-plus', 'url': url_for('admissions'), 'add_url': url_for('add_admission'), 'count': AdmissionApplication.query.count()},
-        {'name': 'Resources', 'icon': 'fas fa-building', 'url': url_for('resources'), 'add_url': url_for('resources_add'), 'count': Resource.query.count()},
+        {'name': 'Resources', 'icon': 'fas fa-tools', 'url': url_for('resources'), 'add_url': url_for('resources'), 'count': Resource.query.count()},
     ]
     return render_template('admin_crud.html', title='System CRUD', entities=entities)
 
@@ -5587,3 +5590,138 @@ def resources_reject(booking_id):
     db.session.commit()
     flash('Booking rejected.', 'warning')
     return redirect(url_for('resources'))
+
+@app.route('/departments/edit/<int:department_id>', methods=['GET', 'POST'])
+@crud_required('department', 'update')
+def edit_department(department_id):
+    dept = Department.query.get_or_404(department_id)
+    faculties = Faculty.query.all()
+    if request.method == 'POST':
+        dept.name = request.form.get('name')
+        dept.code = request.form.get('code')
+        dept.description = request.form.get('description')
+        hod_id = request.form.get('hod_id')
+        dept.head_of_department_id = hod_id if hod_id else None
+        
+        db.session.commit()
+        flash('Department updated successfully!', 'success')
+        return redirect(url_for('list_departments'))
+    return render_template('edit_department.html', department=dept, faculties=faculties)
+
+@app.route('/departments/delete/<int:department_id>', methods=['POST'])
+@crud_required('department', 'delete')
+def delete_department(department_id):
+    dept = Department.query.get_or_404(department_id)
+    db.session.delete(dept)
+    db.session.commit()
+    flash('Department deleted successfully!', 'success')
+    return redirect(url_for('list_departments'))
+
+@app.route('/semesters/edit/<int:semester_id>', methods=['GET', 'POST'])
+@crud_required('semester', 'update')
+def edit_semester(semester_id):
+    sem = Semester.query.get_or_404(semester_id)
+    if request.method == 'POST':
+        sem.number = request.form.get('number')
+        sem.academic_year = request.form.get('academic_year')
+        start = request.form.get('start_date')
+        end = request.form.get('end_date')
+        
+        if start: sem.start_date = datetime.strptime(start, '%Y-%m-%d').date()
+        if end: sem.end_date = datetime.strptime(end, '%Y-%m-%d').date()
+        
+        db.session.commit()
+        flash('Semester updated successfully!', 'success')
+        return redirect(url_for('list_semesters'))
+    return render_template('edit_semester.html', semester=sem)
+
+@app.route('/semesters/delete/<int:semester_id>', methods=['POST'])
+@crud_required('semester', 'delete')
+def delete_semester(semester_id):
+    sem = Semester.query.get_or_404(semester_id)
+    db.session.delete(sem)
+    db.session.commit()
+    flash('Semester deleted successfully!', 'success')
+    return redirect(url_for('list_semesters'))
+
+@app.route('/resources/edit/<int:resource_id>', methods=['GET', 'POST'])
+@crud_required('resource', 'update')
+def edit_resource(resource_id):
+    res = Resource.query.get_or_404(resource_id)
+    if request.method == 'POST':
+        res.name = request.form.get('name')
+        res.type = request.form.get('type')
+        capacity = request.form.get('capacity')
+        res.capacity = int(capacity) if capacity else None
+        res.location = request.form.get('location')
+        res.status = request.form.get('status')
+        res.tags = request.form.get('tags')
+        
+        db.session.commit()
+        flash('Resource updated successfully!', 'success')
+        return redirect(url_for('resources'))
+    return render_template('edit_resource.html', resource=res)
+
+@app.route('/resources/delete/<int:resource_id>', methods=['POST'])
+@crud_required('resource', 'delete')
+def delete_resource(resource_id):
+    res = Resource.query.get_or_404(resource_id)
+    db.session.delete(res)
+    db.session.commit()
+    flash('Resource deleted successfully!', 'success')
+    return redirect(url_for('resources'))
+
+@app.route('/admin/notifications', methods=['GET', 'POST'])
+@crud_required('notice', 'read') # Using notice read permission for notifications
+def admin_notifications():
+    if request.method == 'POST':
+        recipient_type = request.form.get('recipient_type')
+        recipient_id = request.form.get('recipient_id') # email or 'all'
+        title = request.form.get('title')
+        message = request.form.get('message')
+        
+        if recipient_id == 'all':
+            # Send to all users of that type
+            if recipient_type == 'student':
+                users = Student.query.all()
+                ids = [u.email for u in users]
+            elif recipient_type == 'faculty':
+                users = Faculty.query.all()
+                ids = [u.email for u in users]
+            else: # parent
+                users = User.query.filter_by(role='parent').all()
+                ids = [u.username for u in users]
+            
+            for uid in ids:
+                notif = Notification(recipient_type=recipient_type, recipient_id=uid, title=title, message=message)
+                db.session.add(notif)
+        else:
+            notif = Notification(recipient_type=recipient_type, recipient_id=recipient_id, title=title, message=message)
+            db.session.add(notif)
+            
+        db.session.commit()
+        flash('Notification(s) sent successfully!', 'success')
+        return redirect(url_for('admin_notifications'))
+        
+    notifications = Notification.query.order_by(Notification.created_at.desc()).limit(50).all()
+    students = Student.query.order_by(Student.name.asc()).all()
+    faculty_list = Faculty.query.order_by(Faculty.name.asc()).all()
+    parents = User.query.filter_by(role='parent').order_by(User.username.asc()).all()
+    
+    return render_template('admin_notifications.html', 
+                           notifications=notifications, 
+                           students=students, 
+                           faculty=faculty_list, 
+                           parents=parents)
+
+@app.route('/notifications')
+@login_required
+def my_notifications():
+    user_email = session.get('user')
+    notifs = Notification.query.filter_by(recipient_id=user_email).order_by(Notification.created_at.desc()).all()
+    # Mark as read
+    for n in notifs:
+        if not n.read:
+            n.read = True
+    db.session.commit()
+    return render_template('my_notifications.html', notifications=notifs, title='My Notifications')

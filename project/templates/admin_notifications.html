@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row">
+  <div class="col-md-4">
+    <div class="card shadow mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Send Notification</h5>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label">Recipient Type</label>
+            <select name="recipient_type" id="recipient_type" class="form-select" required>
+              <option value="student">Student</option>
+              <option value="faculty">Faculty</option>
+              <option value="parent">Parent</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Recipient</label>
+            <select name="recipient_id" id="recipient_id" class="form-select" required>
+              <option value="all">All</option>
+              <optgroup label="Students" id="opt-students">
+                {% for s in students %}
+                <option value="{{ s.email }}">{{ s.name }} ({{ s.email }})</option>
+                {% endfor %}
+              </optgroup>
+              <optgroup label="Faculty" id="opt-faculty" style="display:none;">
+                {% for f in faculty %}
+                <option value="{{ f.email }}">{{ f.name }} ({{ f.email }})</option>
+                {% endfor %}
+              </optgroup>
+              <optgroup label="Parents" id="opt-parents" style="display:none;">
+                {% for p in parents %}
+                <option value="{{ p.username }}">{{ p.username }}</option>
+                {% endfor %}
+              </optgroup>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Title</label>
+            <input type="text" name="title" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Message</label>
+            <textarea name="message" class="form-control" rows="4" required></textarea>
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary">Send Notification</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-8">
+    <div class="card shadow">
+      <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">Recent Notifications</h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Recipient</th>
+                <th>Title</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for n in notifications %}
+              <tr>
+                <td class="small">{{ n.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td><span class="badge bg-info text-dark">{{ n.recipient_type }}</span> {{ n.recipient_id }}</td>
+                <td>{{ n.title }}</td>
+                <td>
+                  {% if n.read %}
+                  <span class="badge bg-success">Read</span>
+                  {% else %}
+                  <span class="badge bg-secondary">Unread</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+              {% if not notifications %}
+              <tr><td colspan="4" class="text-center text-muted p-4">No notifications sent yet.</td></tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('recipient_type').addEventListener('change', function() {
+    const type = this.value;
+    document.getElementById('opt-students').style.display = type === 'student' ? '' : 'none';
+    document.getElementById('opt-faculty').style.display = type === 'faculty' ? '' : 'none';
+    document.getElementById('opt-parents').style.display = type === 'parent' ? '' : 'none';
+    document.getElementById('recipient_id').value = 'all';
+});
+</script>
+{% endblock %}

@@ -23,6 +23,11 @@
                 <li class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
                     <a class="nav-link" href="{{ url_for('dashboard') }}" aria-label="Dashboard" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Dashboard"><i class="fas fa-home me-1"></i><span class="nav-label">Dashboard</span></a>
                 </li>
+                <li class="nav-item {% if request.endpoint == 'my_notifications' %}active{% endif %}">
+                    <a class="nav-link" href="{{ url_for('my_notifications') }}" aria-label="Notifications" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Notifications">
+                        <i class="fas fa-bell me-1"></i><span class="nav-label">Notifications</span>
+                    </a>
+                </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navAcademics" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-book me-1"></i><span class="nav-label">Academics</span></a>
                     <ul class="dropdown-menu" aria-labelledby="navAcademics">
@@ -83,8 +88,10 @@
                         {% if session.get('role') == 'admin' %}
                         <li><a class="dropdown-item {% if request.endpoint == 'admin_crud' %}active{% endif %}" href="{{ url_for('admin_crud') }}">Master CRUD</a></li>
                         <li><a class="dropdown-item {% if request.endpoint == 'admin_users' %}active{% endif %}" href="{{ url_for('admin_users') }}">Users</a></li>
+                        <li><a class="dropdown-item {% if request.endpoint == 'admin_notifications' %}active{% endif %}" href="{{ url_for('admin_notifications') }}">Manage Notifications</a></li>
                         <li><a class="dropdown-item {% if request.endpoint == 'admin_audit' %}active{% endif %}" href="{{ url_for('admin_audit') }}">Audit Logs</a></li>
                         <li><a class="dropdown-item {% if request.endpoint == 'admin_parent_links' %}active{% endif %}" href="{{ url_for('admin_parent_links') }}">Parent Links</a></li>
+                        <li><a class="dropdown-item {% if request.endpoint == 'admin_policies' %}active{% endif %}" href="{{ url_for('admin_policies') }}">Policies</a></li>
                         {% endif %}
                     </ul>
                 </li>

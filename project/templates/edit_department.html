@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow">
+      <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Edit Department: {{ department.name }}</h4>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label for="name" class="form-label">Department Name</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ department.name }}" required>
+          </div>
+          <div class="mb-3">
+            <label for="code" class="form-label">Department Code</label>
+            <input type="text" class="form-control" id="code" name="code" value="{{ department.code }}">
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" id="description" name="description" rows="3">{{ department.description }}</textarea>
+          </div>
+          <div class="mb-3">
+            <label for="hod_id" class="form-label">Head of Department</label>
+            <select class="form-select" id="hod_id" name="hod_id">
+              <option value="">Select HOD</option>
+              {% for faculty in faculties %}
+              <option value="{{ faculty.id }}" {% if faculty.id == department.head_of_department_id %}selected{% endif %}>{{ faculty.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="d-flex justify-content-between">
+            <a href="{{ url_for('list_departments') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Update Department</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
