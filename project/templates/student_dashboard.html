@@ -1,152 +1,90 @@
 {% extends "base.html" %}
-{% block page_title %}<h2 class="fw-bold mb-0">Student Dashboard</h2>{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
 {% block breadcrumbs %}
-  <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+  <li class="breadcrumb-item active" aria-current="page">Student Portal</li>
 {% endblock %}
 
 {% block content %}
-<div class="row mb-4 align-items-center">
-    <div class="col-auto">
+<div class="card-panel mb-4">
+    <div class="d-flex align-items-center">
         {% if photo_url %}
-        <img src="{{ photo_url }}" alt="{{ student.name }} avatar" class="rounded-circle shadow-sm" style="width:80px;height:80px;object-fit:cover;border: 3px solid var(--card-bg);">
+        <img src="{{ photo_url }}" alt="{{ student.name }} avatar" class="rounded-circle shadow-sm me-4" style="width:80px;height:80px;object-fit:cover;border: 3px solid #f1f5f9;">
         {% else %}
-        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center shadow-sm" style="width:80px;height:80px;font-size: 32px; font-weight: bold; border: 3px solid var(--card-bg);">
+        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center shadow-sm me-4" style="width:80px;height:80px;font-size: 32px; font-weight: bold; border: 3px solid #f1f5f9;">
             {{ student.name[0]|upper }}
         </div>
         {% endif %}
-    </div>
-    <div class="col">
-        <h2 class="fw-bold mb-0">Welcome back, <a href="{{ url_for('student_detail', student_id=student.id) }}" class="text-decoration-none">{{ student.name }}</a></h2>
-        <div class="d-flex align-items-center gap-2 mt-1">
-            <span class="badge bg-primary-subtle text-primary">Student ID: #{{ student.id }}</span>
-            <span class="text-muted small">•</span>
-            <span class="text-muted small">{{ student.email }}</span>
+        <div>
+            <h2 class="fw-bold mb-1">Welcome back, {{ student.name }}</h2>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary-subtle text-primary">ID: #{{ student.registration_number or student.id }}</span>
+                <span class="text-muted small">•</span>
+                <span class="text-muted small">{{ student.email }}</span>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <div class="card stat-card h-100">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                    <div class="stat-label">Current GPA</div>
-                    <div class="stat-value">{{ "%.2f"|format(gpa) if gpa else "N/A" }}</div>
-                </div>
-                <div class="stat-icon bg-primary-subtle text-primary">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-            </div>
-            <a href="{{ url_for('student_transcript', student_id=student.id) }}" class="btn btn-sm btn-outline-primary mt-auto">View Full Transcript</a>
+<div class="summary-grid">
+    <div class="stat-card">
+        <div class="stat-label">Current GPA</div>
+        <div class="stat-value">{{ "%.2f"|format(gpa) if gpa else "N/A" }}</div>
+        <a href="{{ url_for('student_transcript', student_id=student.id) }}" class="stat-subtext text-primary text-decoration-none">View Transcript <i class="fas fa-arrow-right ms-1"></i></a>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Attendance Rate</div>
+        <div class="stat-value">{{ "%.1f"|format(attendance_rate) }}%</div>
+        <div class="stat-subtext">
+            <span class="text-success">P:{{ attendance_counts.present }}</span> · 
+            <span class="text-warning">L:{{ attendance_counts.late }}</span> · 
+            <span class="text-danger">A:{{ attendance_counts.absent }}</span>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card stat-card h-100">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                    <div class="stat-label">Attendance Rate</div>
-                    <div class="stat-value">{{ "%.1f"|format(attendance_rate) }}%</div>
-                </div>
-                <div class="stat-icon bg-info-subtle text-info">
-                    <i class="fas fa-calendar-check"></i>
-                </div>
-            </div>
-            <div class="d-flex gap-2 mb-3">
-                <span class="badge bg-success-subtle text-success small" title="Present">P: {{ attendance_counts.present }}</span>
-                <span class="badge bg-warning-subtle text-warning small" title="Late">L: {{ attendance_counts.late }}</span>
-                <span class="badge bg-danger-subtle text-danger small" title="Absent">A: {{ attendance_counts.absent }}</span>
-            </div>
-            <a href="{{ url_for('student_attendance_summary', student_id=student.id) }}" class="btn btn-sm btn-outline-info mt-auto">Detailed Report</a>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card stat-card h-100">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                    <div class="stat-label">Outstanding Balance</div>
-                    <div class="stat-value text-{{ 'danger' if outstanding > 0 else 'success' }}">${{ "%.2f"|format(outstanding) }}</div>
-                </div>
-                <div class="stat-icon bg-success-subtle text-success">
-                    <i class="fas fa-wallet"></i>
-                </div>
-            </div>
-            <a href="{{ url_for('fee_statement', student_id=student.id) }}" class="btn btn-sm btn-outline-success mt-auto">Payment History</a>
-        </div>
+    <div class="stat-card">
+        <div class="stat-label">Fees Outstanding</div>
+        <div class="stat-value text-{{ 'danger' if outstanding > 0 else 'success' }}">${{ "%.2f"|format(outstanding) }}</div>
+        <a href="{{ url_for('fee_statement', student_id=student.id) }}" class="stat-subtext text-primary text-decoration-none">Payment History <i class="fas fa-arrow-right ms-1"></i></a>
     </div>
 </div>
 
-<div class="row g-4">
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-book text-primary me-2"></i>My Enrolled Courses</h5>
-            </div>
-            <div class="list-group list-group-flush">
-                {% for course in student.courses %}
-                <div class="list-group-item p-3 d-flex justify-content-between align-items-center">
+<div class="dashboard-sections">
+    <div class="card-panel">
+        <h5 class="panel-title">My Enrolled Courses</h5>
+        <div class="event-list">
+            {% for course in student.courses %}
+            <div class="event-item">
+                <div class="event-dot bg-primary"></div>
+                <div class="event-info w-100 d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="mb-1 fw-bold">{{ course.name }}</h6>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-secondary-subtle text-secondary small">{{ course.code or 'No Code' }}</span>
-                            <span class="text-muted small">Prof. {{ course.faculty.name }}</span>
-                        </div>
+                        <h6 class="mb-0">{{ course.name }}</h6>
+                        <p>{{ course.code or 'No Code' }} · Prof. {{ course.faculty.name }}</p>
                     </div>
-                    <a href="{{ url_for('course_details', course_id=course.id) }}" class="btn btn-sm btn-light border">View Details</a>
+                    <a href="{{ url_for('course_details', course_id=course.id) }}" class="btn btn-sm btn-light border">Details</a>
                 </div>
-                {% else %}
-                <div class="list-group-item p-4 text-center text-muted">You are not currently enrolled in any courses.</div>
-                {% endfor %}
             </div>
+            {% else %}
+            <p class="text-muted small">No courses enrolled.</p>
+            {% endfor %}
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-user-tie text-primary me-2"></i>Personal Tutor</h5>
-            </div>
-            <div class="card-body">
-                {% if student.tutor %}
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle bg-info-subtle text-info d-flex align-items-center justify-content-center me-3" style="width:56px;height:56px;font-size: 20px; font-weight: bold;">
-                        {{ student.tutor.name[0]|upper }}
-                    </div>
-                    <div>
-                        <h6 class="mb-1 fw-bold">{{ student.tutor.name }}</h6>
-                        <div class="text-muted small mb-2">{{ student.tutor.department.name if student.tutor.department else 'General Faculty' }}</div>
-                        <div class="d-flex gap-3">
-                            <a href="mailto:{{ student.tutor.email }}" class="text-decoration-none small text-primary"><i class="fas fa-envelope me-1"></i>Email</a>
-                            {% if student.tutor.phone %}
-                            <a href="tel:{{ student.tutor.phone }}" class="text-decoration-none small text-primary"><i class="fas fa-phone me-1"></i>Call</a>
-                            {% endif %}
-                        </div>
-                    </div>
+
+    <div class="card-panel">
+        <h5 class="panel-title">Latest Announcements</h5>
+        <div class="event-list">
+            {% for notice in recent_notices %}
+            <div class="event-item">
+                <div class="event-dot bg-warning"></div>
+                <div class="event-info">
+                    <h6>{{ notice.title }}</h6>
+                    <p>{{ notice.created_at.strftime('%b %d') }} · {{ notice.content|truncate(60) }}</p>
                 </div>
-                {% else %}
-                <div class="text-center py-2">
-                    <p class="text-muted mb-0">No personal tutor has been assigned yet.</p>
-                </div>
-                {% endif %}
             </div>
+            {% else %}
+            <p class="text-muted small">No recent notices.</p>
+            {% endfor %}
         </div>
-        
-        <div class="card">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-bullhorn text-primary me-2"></i>Latest Notices</h5>
-                <a href="{{ url_for('notices') }}" class="btn btn-sm btn-link text-decoration-none p-0">View All</a>
-            </div>
-            <div class="list-group list-group-flush">
-                {% for notice in recent_notices %}
-                <div class="list-group-item p-3">
-                    <div class="d-flex w-100 justify-content-between mb-1">
-                        <h6 class="mb-0 fw-bold text-primary small">{{ notice.title }}</h6>
-                        <small class="text-muted">{{ notice.created_at.strftime('%b %d') }}</small>
-                    </div>
-                    <p class="mb-0 text-truncate small opacity-75">{{ notice.content }}</p>
-                </div>
-                {% else %}
-                <div class="list-group-item p-4 text-center text-muted small">No recent announcements.</div>
-                {% endfor %}
-            </div>
+        <div class="mt-4 text-center">
+            <a href="{{ url_for('notices') }}" class="btn btn-sm btn-link text-decoration-none">View All Notices</a>
         </div>
     </div>
 </div>

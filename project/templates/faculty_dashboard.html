@@ -1,143 +1,93 @@
 {% extends "base.html" %}
-{% block page_title %}<h2 class="fw-bold mb-0">Faculty Portal</h2>{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
 {% block breadcrumbs %}
-  <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+  <li class="breadcrumb-item active" aria-current="page">Faculty Portal</li>
 {% endblock %}
 
 {% block content %}
-<div class="row mb-4 align-items-center">
-    <div class="col-auto">
+<div class="card-panel mb-4">
+    <div class="d-flex align-items-center">
         {% if photo_url %}
-        <img src="{{ photo_url }}" alt="{{ faculty.name }} avatar" class="rounded-circle shadow-sm" style="width:80px;height:80px;object-fit:cover;border: 3px solid var(--card-bg);">
+        <img src="{{ photo_url }}" alt="{{ faculty.name }} avatar" class="rounded-circle shadow-sm me-4" style="width:80px;height:80px;object-fit:cover;border: 3px solid #f1f5f9;">
         {% else %}
-        <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center shadow-sm" style="width:80px;height:80px;font-size: 32px; font-weight: bold; border: 3px solid var(--card-bg);">
+        <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center shadow-sm me-4" style="width:80px;height:80px;font-size: 32px; font-weight: bold; border: 3px solid #f1f5f9;">
             {{ faculty.name[0]|upper }}
         </div>
         {% endif %}
-    </div>
-    <div class="col">
-        <h2 class="fw-bold mb-0">Welcome, {{ faculty.name }}</h2>
-        <div class="d-flex align-items-center gap-2 mt-1">
-            <span class="badge bg-info-subtle text-info">{{ faculty.designation or 'Faculty Member' }}</span>
-            <span class="text-muted small">•</span>
-            <span class="text-muted small">{{ faculty.department.name if faculty.department else 'General Faculty' }}</span>
+        <div>
+            <h2 class="fw-bold mb-1">Welcome back, {{ faculty.name }}</h2>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-info-subtle text-info">{{ faculty.designation or 'Faculty Member' }}</span>
+                <span class="text-muted small">•</span>
+                <span class="text-muted small">{{ faculty.department.name if faculty.department else 'General Faculty' }}</span>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <div class="card stat-card h-100">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                    <div class="stat-label">Active Subjects</div>
-                    <div class="stat-value">{{ active_courses_count }}</div>
-                </div>
-                <div class="stat-icon bg-primary-subtle text-primary">
-                    <i class="fas fa-book"></i>
-                </div>
+<div class="summary-grid">
+    <div class="stat-card">
+        <div class="stat-label">Active Subjects</div>
+        <div class="stat-value">{{ active_courses_count }}</div>
+        <a href="{{ url_for('subjects') }}" class="stat-subtext text-primary text-decoration-none">View My Courses <i class="fas fa-arrow-right ms-1"></i></a>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Weekly Workload</div>
+        <div class="stat-value">{{ weekly_hours }} <small class="text-muted fs-6">/ {{ max_weekly_hours }}h</small></div>
+        <div class="progress-container mt-2">
+            {% set workload_pct = (weekly_hours / max_weekly_hours * 100)|round %}
+            {% set bar_width = workload_pct if workload_pct <= 100 else 100 %}
+            <div class="progress-bar-wrapper">
+                <div class="progress-fill bg-{{ 'danger' if workload_pct > 100 else 'info' }}" data-progress="{{ bar_width }}"></div>
             </div>
-            <a href="{{ url_for('subjects') }}" class="btn btn-sm btn-outline-primary mt-auto">View My Courses</a>
+            <span class="progress-value small">{{ workload_pct }}%</span>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card stat-card h-100">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                    <div class="stat-label">Weekly Workload</div>
-                    <div class="stat-value">{{ weekly_hours }} <small class="text-muted fs-6">/ {{ max_weekly_hours }}h</small></div>
-                </div>
-                <div class="stat-icon bg-info-subtle text-info">
-                    <i class="fas fa-clock"></i>
-                </div>
-            </div>
-            <div class="progress mt-2" style="height: 6px;">
-                {% set workload_pct = (weekly_hours / max_weekly_hours * 100)|round %}
-                <div class="progress-bar bg-{{ 'danger' if workload_pct > 100 else 'info' }}" role="progressbar" style="width: {{ workload_pct if workload_pct <= 100 else 100 }}%"></div>
-            </div>
-            <div class="small text-muted mt-2">{{ workload_pct }}% of target hours</div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card stat-card h-100">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                    <div class="stat-label">Pending Leaves</div>
-                    <div class="stat-value">{{ pending_leaves_count }}</div>
-                </div>
-                <div class="stat-icon bg-warning-subtle text-warning">
-                    <i class="fas fa-calendar-times"></i>
-                </div>
-            </div>
-            <a href="{{ url_for('faculty_leave', faculty_id=faculty.id) }}" class="btn btn-sm btn-outline-warning mt-auto">Manage Leave Requests</a>
-        </div>
+    <div class="stat-card">
+        <div class="stat-label">Pending Leaves</div>
+        <div class="stat-value">{{ pending_leaves_count }}</div>
+        <a href="{{ url_for('faculty_leave', faculty_id=faculty.id) }}" class="stat-subtext text-primary text-decoration-none">Manage Requests <i class="fas fa-arrow-right ms-1"></i></a>
     </div>
 </div>
 
-<div class="row g-4">
-    <div class="col-md-7">
-        <div class="card h-100">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-calendar-alt text-primary me-2"></i>Upcoming Schedule</h5>
-            </div>
-            <div class="list-group list-group-flush">
-                {% for session in upcoming_sessions %}
-                <div class="list-group-item p-3">
-                    <div class="d-flex w-100 justify-content-between mb-1">
-                        <h6 class="mb-0 fw-bold">{{ session.course.name }}</h6>
-                        <span class="badge bg-primary-subtle text-primary">{{ session.session_date.strftime('%b %d') }}</span>
+<div class="dashboard-sections">
+    <div class="card-panel">
+        <h5 class="panel-title">Upcoming Schedule</h5>
+        <div class="event-list">
+            {% for session in upcoming_sessions %}
+            <div class="event-item">
+                <div class="event-dot bg-primary"></div>
+                <div class="event-info w-100">
+                    <div class="d-flex justify-content-between">
+                        <h6>{{ session.course.name }}</h6>
+                        <span class="badge bg-light text-primary border">{{ session.session_date.strftime('%b %d') }}</span>
                     </div>
-                    <p class="mb-1 text-muted small">{{ session.title or 'Regular Session' }}</p>
-                    <div class="d-flex align-items-center gap-2 mt-2">
-                        <span class="text-muted small"><i class="fas fa-tag me-1"></i>{{ session.course.code or 'N/A' }}</span>
-                        <span class="text-muted small"><i class="fas fa-map-marker-alt me-1"></i>{{ session.location or 'Main Hall' }}</span>
-                    </div>
+                    <p>{{ session.title or 'Regular Session' }} · {{ session.location or 'Main Hall' }}</p>
                 </div>
-                {% else %}
-                <div class="list-group-item p-4 text-center text-muted">No sessions scheduled for the coming days.</div>
-                {% endfor %}
             </div>
+            {% else %}
+            <p class="text-muted small">No upcoming sessions.</p>
+            {% endfor %}
         </div>
     </div>
-    
-    <div class="col-md-5">
-        <div class="card mb-4">
-            <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-users text-primary me-2"></i>My Tutees</h5>
-            </div>
-            <div class="list-group list-group-flush">
-                {% for tutee in faculty.tutees %}
-                <div class="list-group-item p-3 d-flex justify-content-between align-items-center">
+
+    <div class="card-panel">
+        <h5 class="panel-title">My Tutees</h5>
+        <div class="event-list">
+            {% for tutee in faculty.tutees %}
+            <div class="event-item">
+                <div class="event-dot bg-success"></div>
+                <div class="event-info w-100 d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="mb-0 fw-bold">{{ tutee.name }}</h6>
-                        <small class="text-muted">{{ tutee.email }}</small>
+                        <h6>{{ tutee.name }}</h6>
+                        <p>{{ tutee.email }}</p>
                     </div>
                     <a href="{{ url_for('edit_student', student_id=tutee.id) }}" class="btn btn-sm btn-light border">Details</a>
                 </div>
-                {% else %}
-                <div class="list-group-item p-3 text-muted text-center small">No tutees currently assigned.</div>
-                {% endfor %}
             </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-bullhorn text-primary me-2"></i>Latest Notices</h5>
-                <a href="{{ url_for('notices') }}" class="btn btn-sm btn-link text-decoration-none p-0">View All</a>
-            </div>
-            <div class="list-group list-group-flush">
-                {% for notice in recent_notices %}
-                <div class="list-group-item p-3">
-                    <div class="d-flex w-100 justify-content-between mb-1">
-                        <h6 class="mb-0 fw-bold text-primary small">{{ notice.title }}</h6>
-                        <small class="text-muted">{{ notice.created_at.strftime('%b %d') }}</small>
-                    </div>
-                    <p class="mb-0 text-truncate small opacity-75">{{ notice.content }}</p>
-                </div>
-                {% else %}
-                <div class="list-group-item p-4 text-center text-muted small">No recent announcements.</div>
-                {% endfor %}
-            </div>
+            {% else %}
+            <p class="text-muted small">No tutees assigned.</p>
+            {% endfor %}
         </div>
     </div>
 </div>

@@ -12,138 +12,107 @@
     <!-- App styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
 </head>
-<body class="loading">
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
-                <div class="bg-primary p-2 rounded-3 me-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                    <i class="fas fa-university text-white fa-xs"></i>
+<body>
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-name">TKSPC-ERP</span>
+                <span class="brand-sub">THENI KAMMAVAR SANGAM POLYTECHNIC COLLEGE</span>
+            </div>
+            
+            <div class="sidebar-menu">
+                <div class="menu-category">Core</div>
+                <a href="{{ url_for('dashboard') }}" class="menu-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </a>
+                {% if session.get('role') in ['admin', 'staff'] %}
+                <a href="{{ url_for('students') }}" class="menu-item {% if request.endpoint == 'students' %}active{% endif %}">
+                    <i class="fas fa-user-graduate"></i> Students
+                </a>
+                <a href="{{ url_for('faculty') }}" class="menu-item {% if request.endpoint == 'faculty' %}active{% endif %}">
+                    <i class="fas fa-chalkboard-teacher"></i> Faculty
+                </a>
+                {% endif %}
+
+                <div class="menu-category">Academics</div>
+                <a href="{{ url_for('subjects') }}" class="menu-item {% if request.endpoint == 'subjects' %}active{% endif %}">
+                    <i class="fas fa-book"></i> Courses
+                </a>
+                <a href="{{ url_for('daily_attendance') }}" class="menu-item {% if request.endpoint == 'daily_attendance' %}active{% endif %}">
+                    <i class="fas fa-calendar-check"></i> Attendance
+                </a>
+
+                <div class="menu-category">Finance</div>
+                <a href="{{ url_for('finance_fees') }}" class="menu-item {% if request.endpoint == 'finance_fees' %}active{% endif %}">
+                    <i class="fas fa-wallet"></i> Fees & Finance
+                </a>
+
+                <div class="menu-category">Admin</div>
+                {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_audit') }}" class="menu-item {% if request.endpoint == 'admin_audit' %}active{% endif %}">
+                    <i class="fas fa-clipboard-list"></i> Audit Logs
+                </a>
+                {% endif %}
+                <a href="{{ url_for('analytics') }}" class="menu-item {% if request.endpoint == 'analytics' %}active{% endif %}">
+                    <i class="fas fa-chart-pie"></i> Reports
+                </a>
+            </div>
+
+            <div class="sidebar-footer mt-auto p-3">
+                <a href="{{ url_for('logout') }}" class="btn btn-light w-100 text-danger border">
+                    <i class="fas fa-sign-out-alt me-2"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-header">
+                <div>
+                    <h1 class="page-title mb-0">{% block page_title %}{% endblock %}</h1>
+                    {% block breadcrumbs %}{% endblock %}
                 </div>
-                TKSPC
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navMain">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    {% if session.get('logged_in') %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
-                            <i class="fas fa-grid-2 me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'my_notifications' %}active{% endif %}" href="{{ url_for('my_notifications') }}">
-                            <i class="fas fa-bell me-1"></i>Notifications
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navAcademics" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-graduation-cap me-1"></i>Academics
-                        </a>
-                        <ul class="dropdown-menu shadow-lg border-0 rounded-3" aria-labelledby="navAcademics">
-                            {% if session.get('role') in ['admin', 'staff', 'faculty'] %}
-                            <li><a class="dropdown-item" href="{{ url_for('students') }}">Students</a></li>
-                            {% endif %}
-                            {% if session.get('role') in ['admin', 'staff'] %}
-                            <li><a class="dropdown-item" href="{{ url_for('faculty') }}">Faculty</a></li>
-                            {% endif %}
-                            <li><a class="dropdown-item" href="{{ url_for('subjects') }}">Courses</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('calendar') }}">Calendar</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('timetable') }}">Timetable</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('exams') }}">Exams</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('notices') }}">Notice Board</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navFinance" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-wallet me-1"></i>Finance
-                        </a>
-                        <ul class="dropdown-menu shadow-lg border-0 rounded-3" aria-labelledby="navFinance">
-                            <li><a class="dropdown-item" href="{{ url_for('finance_fees') }}">{% if session.get('role') == 'parent' %}My Children's Fees{% else %}Fees{% endif %}</a></li>
-                            {% if session.get('role') == 'admin' %}
-                            <li><a class="dropdown-item" href="{{ url_for('finance_budget') }}">Budget</a></li>
-                            {% endif %}
-                        </ul>
-                    </li>
-                    {% if session.get('role') in ['admin', 'staff'] %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navAdmin" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-shield-alt me-1"></i>Admin
-                        </a>
-                        <ul class="dropdown-menu shadow-lg border-0 rounded-3" aria-labelledby="navAdmin">
-                            <li><a class="dropdown-item" href="{{ url_for('admin_crud') }}">Master CRUD</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('admin_users') }}">Users</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('admin_notifications') }}">Manage Notifications</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('admin_audit') }}">Audit Logs</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('admin_policies') }}">System Policies</a></li>
-                        </ul>
-                    </li>
-                    {% endif %}
-                    {% else %}
-                    <li class="nav-item">
-                         <a class="nav-link" href="{{ url_for('add_admission') }}"><i class="fas fa-file-signature me-1"></i>Admission</a>
-                     </li>
-                    {% endif %}
-                </ul>
-                <div class="d-flex align-items-center gap-2">
-                    <button id="themeToggle" class="btn btn-icon btn-sm" title="Toggle Theme">
-                        <i class="fas fa-moon"></i>
-                    </button>
-                    {% if session.get('logged_in') %}
+                <div class="header-right">
+                    {% block header_actions %}{% endblock %}
+                    <div class="semester-badge">Semester II — 2025-26</div>
                     <div class="dropdown">
-                        <button class="btn btn-primary btn-sm dropdown-toggle d-flex align-items-center gap-2" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i>
-                            <span>{{ session.get('user') }}</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i class="fas fa-user me-2"></i>Profile</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('change_password') }}"><i class="fas fa-key me-2"></i>Security</a></li>
+                        <div class="user-avatar" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
+                            {{ session.get('user')[0]|upper if session.get('user') else 'U' }}
+                        </div>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="userMenu">
+                            <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i class="fas fa-user me-2"></i> Profile</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('change_password') }}"><i class="fas fa-key me-2"></i> Security</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
                         </ul>
                     </div>
-                    {% else %}
-                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm">Login</a>
-                    {% endif %}
                 </div>
-            </div>
-        </div>
-    </nav>
+            </header>
 
-    <main class="container-fluid animate-fade-in">
-        <header class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                {% block page_title %}{% endblock %}
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        {% block breadcrumbs %}{% endblock %}
-                    </ol>
-                </nav>
-            </div>
-            <div class="header-actions">
-                {% block header_actions %}{% endblock %}
-            </div>
-        </header>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show border-0 shadow-sm mb-4 rounded-3" role="alert">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-info-circle me-2"></i>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show border-0 shadow-sm mb-4" role="alert" style="border-radius: var(--radius-md);">
                         {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
 
-        {% block content %}{% endblock %}
-    </main>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        // Utility to handle progress bars without triggering IDE CSS errors
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('[data-progress]').forEach(el => {
+                el.style.width = el.getAttribute('data-progress') + '%';
+            });
+        });
+    </script>
   </body>
 </html>

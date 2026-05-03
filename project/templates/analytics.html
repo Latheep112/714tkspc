@@ -1,45 +1,36 @@
 {% extends "base.html" %}
-{% block page_title %}<h2 class="mb-0">Analytics</h2>{% endblock %}
+{% block page_title %}System Analytics{% endblock %}
 {% block breadcrumbs %}
   <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-  <li class="breadcrumb-item active" aria-current="page">Analytics</li>
+  <li class="breadcrumb-item active" aria-current="page">Reports & Analytics</li>
 {% endblock %}
+
 {% block content %}
-<div class="d-flex align-items-center mb-3">
-  <span class="ml-auto text-muted">SIS overview</span>
-</div>
-
-<div class="row">
-  <div class="col-md-4">
-    <div class="card mb-3">
-      <div class="card-body">
-        <div class="h6 text-muted">Total Students</div>
-        <div class="h3">{{ total_students }}</div>
-      </div>
-    </div>
+<div class="summary-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Students</div>
+    <div class="stat-value">{{ total_students }}</div>
+    <div class="stat-subtext text-muted">Active enrollment</div>
   </div>
-  <div class="col-md-4">
-    <div class="card mb-3">
-      <div class="card-body">
-        <div class="h6 text-muted">Total Subjects</div>
-        <div class="h3">{{ total_courses }}</div>
-      </div>
-    </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Courses</div>
+    <div class="stat-value">{{ total_courses }}</div>
+    <div class="stat-subtext text-muted">Across all departments</div>
   </div>
-  <div class="col-md-4">
-    <div class="card mb-3">
-      <div class="card-body">
-        <div class="h6 text-muted">Average GPA</div>
-        <div class="h3">{% if avg_gpa is not none %}{{ '%.2f'|format(avg_gpa) }}{% else %}-{% endif %}</div>
-      </div>
-    </div>
+  <div class="stat-card">
+    <div class="stat-label">Institution GPA</div>
+    <div class="stat-value">{% if avg_gpa is not none %}{{ '%.2f'|format(avg_gpa) }}{% else %}N/A{% endif %}</div>
+    <div class="stat-subtext text-muted">Average academic performance</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Overall Attendance</div>
+    <div class="stat-value">{% if avg_attendance is not none %}{{ '%.1f'|format(avg_attendance) }}%{% else %}N/A{% endif %}</div>
+    <div class="stat-subtext text-muted">Institution-wide presence</div>
   </div>
 </div>
 
-<div class="card">
-  <div class="card-body">
-    <div class="h6 text-muted">Average Attendance</div>
-    <div class="h4">{% if avg_attendance is not none %}{{ '%.1f'|format(avg_attendance) }}%{% else %}-{% endif %}</div>
-  </div>
-  </div>
+<div class="card-panel">
+    <h5 class="panel-title">Data Insights</h5>
+    <p class="text-muted small mb-0">Further detailed reports and charts can be added here using data visualization libraries.</p>
+</div>
 {% endblock %}

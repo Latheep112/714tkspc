@@ -59,7 +59,7 @@ class FacultyDashboardTests(unittest.TestCase):
         response = self.client.get('/dashboard', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         # Check for faculty dashboard specific content
-        self.assertIn(f'Welcome, {self.faculty_name}'.encode(), response.data)
+        self.assertIn(f'Welcome back, {self.faculty_name}'.encode(), response.data)
         self.assertIn(b'Active Subjects', response.data)
         self.assertIn(b'Pending Leaves', response.data)
 
@@ -72,7 +72,7 @@ class FacultyDashboardTests(unittest.TestCase):
         
         response = self.client.get('/dashboard', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(f'Welcome, {self.faculty_name}'.encode(), response.data)
+        self.assertIn(f'Welcome back, {self.faculty_name}'.encode(), response.data)
 
 if __name__ == "__main__":
     unittest.main()

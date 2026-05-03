@@ -74,7 +74,7 @@
                             <div class="d-flex align-items-center gap-2">
                                 <div class="progress flex-grow-1" style="height: 6px; min-width: 60px;">
                                     {% set pct = ((course.students|length / course.capacity) * 100)|round %}
-                                    <div class="progress-bar bg-{{ 'danger' if remaining == 0 else ('warning' if remaining < 5 else 'success') }}" style="width: {{ pct }}%"></div>
+                                    <div class="progress-bar bg-{{ 'danger' if remaining == 0 else ('warning' if remaining < 5 else 'success') }}" data-progress="{{ pct }}"></div>
                                 </div>
                                 <span class="small fw-bold text-{{ 'danger' if remaining == 0 else ('warning' if remaining < 5 else 'success') }}">
                                     {{ remaining }} left
